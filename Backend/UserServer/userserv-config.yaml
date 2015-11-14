@@ -1,0 +1,50 @@
+server:
+  gzip:
+      enabled: false
+  applicationContextPath: /
+  applicationConnectors:
+    - type: http
+      port: 10004
+
+  adminContextPath: /admin
+  adminConnectors:
+    - type: http
+      bindHost: 127.0.0.1 # only bind to loopback
+      port: 10005
+
+UserCouch:
+  host: 162.243.234.243
+  bucketName: nostalgia
+  bucketPassword: nostalgia12
+  
+LocationCouch:
+  host: 162.243.234.243
+  bucketName: nostalgia
+  bucketPassword: nostalgia12
+  
+  
+VideoCouch:
+  host: 162.243.234.243
+  bucketName: nostalgia
+  bucketPassword: nostalgia12
+  
+SyncServer:
+  host: 162.243.234.243
+  port: 4985
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: DEBUG
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.apmasphere.billproto' to DEBUG.
+    com.apmasphere.billproto: DEBUG
+
+    org.hibernate.SQL: ALL
+
+  appenders:
+    - type: console
