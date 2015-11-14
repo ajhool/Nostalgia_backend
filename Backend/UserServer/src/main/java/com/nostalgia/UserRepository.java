@@ -100,6 +100,8 @@ public class UserRepository {
 	}
 
 	public static User docToUser(JsonDocument document) {
+		if(document == null) return null;
+		
 		JsonObject obj = document.content();
 		String objString = obj.toString();
 		
