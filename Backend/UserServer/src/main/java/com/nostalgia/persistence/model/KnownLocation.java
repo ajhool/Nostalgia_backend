@@ -1,12 +1,13 @@
 package com.nostalgia.persistence.model;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.geojson.GeoJsonObject;
 
 /**
  * Created by alex on 11/4/15.
@@ -27,7 +28,7 @@ public class KnownLocation implements Serializable {
 
 	private String name;
 
-	private GeoJSONObject location;
+	private GeoJsonObject location;
 
 	private Map<Long, String> sponsoredVideos;
 
@@ -59,11 +60,11 @@ public class KnownLocation implements Serializable {
 		this.name = name;
 	}
 
-	public GeoJSONObject getLocation() {
+	public GeoJsonObject getLocation() {
 		return location;
 	}
 
-	public void setLocation(GeoJSONObject location) {
+	public void setLocation(GeoJsonObject location) {
 		this.location = location;
 	}
 

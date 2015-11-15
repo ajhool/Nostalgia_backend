@@ -1,6 +1,5 @@
 package com.nostalgia.persistence.model;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -9,6 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+
+import org.geojson.GeoJsonObject;
 
 /**
  * Created by alex on 11/4/15.
@@ -44,7 +45,7 @@ public class Video implements Serializable {
 
     private int skips;
 
-    private GeoJSONObject location;
+    private GeoJsonObject location;
 
     private Map<String, String> properties;
 
@@ -72,11 +73,11 @@ public class Video implements Serializable {
         this.dateCreated = dateCreated;
     }
 
-    public GeoJSONObject getLocation() {
+    public GeoJsonObject getLocation() {
         return location;
     }
 
-    public void setLocation(GeoJSONObject location) {
+    public void setLocation(GeoJsonObject location) {
         this.location = location;
     }
 

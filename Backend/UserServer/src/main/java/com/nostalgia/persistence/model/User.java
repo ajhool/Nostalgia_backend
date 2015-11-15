@@ -1,7 +1,9 @@
 package com.nostalgia.persistence.model;
 
 import java.util.*;
-import com.cocoahero.android.geojson.GeoJSONObject;
+
+import org.geojson.GeoJsonObject;
+
 import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
@@ -40,7 +42,7 @@ public class User implements Serializable {
 
 	private String email;
 
-	private GeoJSONObject lastKnownLoc;
+	private GeoJsonObject lastKnownLoc;
 
 	private long dateJoined;
 	private long lastSeen;
@@ -128,24 +130,24 @@ public class User implements Serializable {
 	public HashSet<String> subscribeToUserChannel(String channelName){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
-		HashSet<String> existing = this.user_channels;
-		if(existing == null){
-			existing = new HashSet<String>();
+	
+		if(this.user_channels == null){
+			this.user_channels = new HashSet<String>();
 		}
 
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
 		
-		if(existing.contains(channelName)){
-			return existing;
+		if(this.user_channels.contains(channelName)){
+			return this.user_channels;
 		} else {
-			existing.add(channelName);
+			this.user_channels.add(channelName);
 			admin_channels.add(channelName);
 		}
 
 
-		return existing;
+		return this.user_channels;
 
 	}
 
@@ -259,11 +261,11 @@ public class User implements Serializable {
 		this.lastSeen = lastSeen;
 	}
 
-	public GeoJSONObject getLastKnownLoc() {
+	public GeoJsonObject getLastKnownLoc() {
 		return lastKnownLoc;
 	}
 
-	public void setLastKnownLoc(GeoJSONObject lastKnownLoc) {
+	public void setLastKnownLoc(GeoJsonObject lastKnownLoc) {
 		this.lastKnownLoc = lastKnownLoc;
 	}
 

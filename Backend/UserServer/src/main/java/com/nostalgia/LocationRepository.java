@@ -2,10 +2,10 @@ package com.nostalgia;
 
 import java.util.*;
 
+import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
@@ -95,7 +95,7 @@ public class LocationRepository {
 
 
 		}
-	public HashMap<String, KnownLocation> findKnownLocationsCoveringPoint(GeoJSONObject newLoc) {
+	public HashMap<String, KnownLocation> findKnownLocationsCoveringPoint(GeoJsonObject newLoc) {
 		SpatialViewQuery query = SpatialViewQuery.from("location_spatial", "known_points");
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){

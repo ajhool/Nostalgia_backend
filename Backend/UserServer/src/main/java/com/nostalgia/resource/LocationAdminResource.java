@@ -38,7 +38,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.codahale.metrics.annotation.Timed;
 import com.couchbase.client.java.document.JsonDocument;
 import com.google.api.client.auth.openidconnect.IdToken.Payload;

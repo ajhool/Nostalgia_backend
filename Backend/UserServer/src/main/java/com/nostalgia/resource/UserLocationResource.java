@@ -35,10 +35,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Hex;
+import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.codahale.metrics.annotation.Timed;
 import com.couchbase.client.java.document.JsonDocument;
 import com.google.api.client.auth.openidconnect.IdToken.Payload;
@@ -87,7 +87,7 @@ public class UserLocationResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Timed
-	public void userLocationUpdate(GeoJSONObject newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
+	public void userLocationUpdate(GeoJsonObject newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
 
 		if(newLoc == null){
 			throw new BadRequestException();

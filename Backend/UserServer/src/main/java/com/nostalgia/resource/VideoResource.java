@@ -79,7 +79,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.codahale.metrics.annotation.Timed;
 import com.couchbase.client.java.document.JsonDocument;
 import com.google.api.client.auth.openidconnect.IdToken.Payload;
@@ -133,9 +132,8 @@ public class VideoResource {
 	//part 1, metadata is uploaded, in return for a video upload key
 	@SuppressWarnings("unused")
 	@POST
-	//	@Produces(MediaType.APPLICATION_JSON)
-	//	@Consumes(MediaType.APPLICATION_JSON)
-	@Consumes("*/*")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/new")
 	@Timed
 	public String addVideoMeta(Video adding, @Context HttpServletRequest req) throws Exception{
@@ -178,17 +176,19 @@ public class VideoResource {
 		HashMap<String, KnownLocation> matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
 
 
-		for(KnownLocation loc : matchingLocs.values()){
-			if(loc.getMatchingVideos() == null){
-				loc.setMatchingVideos(new HashMap<String, String>());
+		if(matchingLocs != null){
+			for(KnownLocation loc : matchingLocs.values()){
+				if(loc.getMatchingVideos() == null){
+					loc.setMatchingVideos(new HashMap<String, String>());
+				}
+
+				int currentMax = loc.getMatchingVideos().size() - 1;
+
+				currentMax++;
+				loc.getMatchingVideos().put(currentMax + "", adding.get_id());
+				JsonDocument saved = locRepo.save(loc);
+
 			}
-
-			int currentMax = loc.getMatchingVideos().size() - 1;
-
-			currentMax++;
-			loc.getMatchingVideos().put(currentMax + "", adding.get_id());
-			JsonDocument saved = locRepo.save(loc);
-
 		}
 
 		JsonDocument saved = vidRepo.save(adding);
@@ -224,29 +224,13 @@ public class VideoResource {
 		}
 
 
-		String rawHeader = a_request.getHeader("Content-Disposition");
-		String fileName = null;
-
-		try {
-			fileName = rawHeader.substring(rawHeader.lastIndexOf("=\"") + 2, rawHeader.length()-1);
-		} catch (Exception e){
-			logger.error("bad content disposition header");
-		}
-
-
-
-		if(fileName == null){
-			return Response.status(412).entity("Must provide name for uploaded file in header or requestparam").build();
-		}
 
 		File dataDir = new File(FileDataWorkingDirectory);
 		dataDir.mkdirs(); 
-		String filePath = FileDataWorkingDirectory + "/" + contentKey;
-		File contentPieceWorkingDir = new File(filePath);
-		FileUtils.forceMkdir(contentPieceWorkingDir);
+		
 
 
-		String savedFilePath = filePath + "/" + fileName;
+		String savedFilePath = dataDir + "/" + matching.get_id() + ".mp4";
 		File original = new File(savedFilePath);
 
 

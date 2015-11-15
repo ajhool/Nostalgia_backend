@@ -1,12 +1,13 @@
 package com.nostalgia;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
@@ -19,6 +20,9 @@ import com.couchbase.client.java.view.SpatialView;
 import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.SpatialViewRow;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.KnownLocation;
 import com.nostalgia.persistence.model.Video;
@@ -86,24 +90,45 @@ public class VideoRepository {
 	}
 
 	public JsonDocument save(Video adding) {
-		// TODO Auto-generated method stub
-		return null;
+
+		String json = null;
+		try {
+			json = mapper.writeValueAsString(adding);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		JsonObject jsonObj = JsonObject.fromJson(json);
+
+		JsonDocument  doc = JsonDocument.create(adding.get_id(), jsonObj);
+
+		JsonDocument inserted = bucket.upsert(doc);
+		return inserted; 
 	}
 
-	public Video findOneById(String ulKey) {
-		// TODO Auto-generated method stub
-		return null;
+	public Video findOneById(String id) {
+		JsonDocument found = bucket.get(id);
+		if(found == null){
+			return null;
+		} else return docToVideo(found);
 	}
 	public static Video docToVideo(JsonDocument document) {
 		JsonObject obj = document.content();
 		String objString = obj.toString();
 		
-		Video newVid = new JSONDeserializer<Video>().deserialize( objString , Video.class );
+		Video newVid = null;
+		try {
+			newVid = mapper.readValue( objString , Video.class );
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		//User result = mapper.convertValue(objString, User.class);
 		return newVid; 
 	}
 	
-	public HashMap<String, Video> findVideosCoveringPoint(GeoJSONObject point) {
+	public HashMap<String, Video> findVideosCoveringPoint(GeoJsonObject point) {
 		SpatialViewQuery query = SpatialViewQuery.from("video_spatial", "video_points");
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
