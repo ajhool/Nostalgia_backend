@@ -29,8 +29,7 @@ public class Video implements Serializable {
 	
 	private String _id = UUID.randomUUID().toString();
     private String type = this.getClass().getSimpleName();
-    private String name;
-
+  
     private long dateCreated;
     boolean enabled = false;
 
@@ -63,14 +62,6 @@ public class Video implements Serializable {
     }
     public String get_id() {
         return _id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public long getDateCreated() {

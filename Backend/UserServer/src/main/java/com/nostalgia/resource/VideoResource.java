@@ -1,6 +1,6 @@
 package com.nostalgia.resource;
 
-
+import com.fasterxml.jackson.databind.ObjectMapper; 
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -119,6 +119,7 @@ public class VideoResource {
 	private final UserRepository userRepo;
 	private final LocationRepository locRepo;
 
+	private static final ObjectMapper om = new ObjectMapper();
 	private SynchClient syncClient;
 
 
@@ -132,13 +133,14 @@ public class VideoResource {
 	//part 1, metadata is uploaded, in return for a video upload key
 	@SuppressWarnings("unused")
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	//	@Produces(MediaType.APPLICATION_JSON)
+	//	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes("*/*")
 	@Path("/new")
 	@Timed
-	public String addVideoMeta(Video adding, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
+	public String addVideoMeta(Video adding, @Context HttpServletRequest req) throws Exception{
 
-
+		//Video adding = om.readValue(addingString, Video.class);
 		if(adding == null){
 			throw new BadRequestException();
 		}
@@ -207,8 +209,7 @@ public class VideoResource {
 	public Response uploadVideoData(final InputStream fileInputStream,
 			@Context HttpServletRequest a_request,
 			@QueryParam("vidId") String contentKey,
-			@QueryParam("checksum") String checksum, 
-			@QueryParam("flowFilename") Optional<String> filename) throws Exception{
+			@QueryParam("checksum") String checksum) throws Exception{
 
 		Video matching = vidRepo.findOneById(contentKey);
 
@@ -225,19 +226,14 @@ public class VideoResource {
 
 		String rawHeader = a_request.getHeader("Content-Disposition");
 		String fileName = null;
-		if(rawHeader == null){
-			fileName = filename.orNull(); 
 
-
-		} else {
-
-			try {
-				fileName = rawHeader.substring(rawHeader.lastIndexOf("=\"") + 2, rawHeader.length()-1);
-			} catch (Exception e){
-				logger.error("bad content disposition header");
-			}
-
+		try {
+			fileName = rawHeader.substring(rawHeader.lastIndexOf("=\"") + 2, rawHeader.length()-1);
+		} catch (Exception e){
+			logger.error("bad content disposition header");
 		}
+
+
 
 		if(fileName == null){
 			return Response.status(412).entity("Must provide name for uploaded file in header or requestparam").build();

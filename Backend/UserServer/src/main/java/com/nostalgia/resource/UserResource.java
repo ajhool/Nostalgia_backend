@@ -62,7 +62,19 @@ import facebook4j.conf.ConfigurationBuilder;
 @Path("/api/v0/user")
 public class UserResource {
 
+	public static final String WHO_PRIVATE = "PRIVATE";
+    public static final String WHO_FRIENDS = "FRIENDS";
+    public static final String WHO_EVERYONE = "EVERYONE";
 
+    public static final String WHEN_NOW = "NOW";
+    public static final String WHEN_HOUR = "HOUR";
+    public static final String WHEN_DAY = "ONE_DAY";
+    public static final String WHEN_WIFI = "WIFI";
+    private static final String SOUND_MUTE = "MUTE";
+    private static final String SOUND_ENABLED = "ENABLED";
+    public static final String WHERE_HERE = "HERE";
+    public static final String WHERE_EVERYWHERE = "EVERYWHERE";
+    
 	@Context HttpServletResponse resp; 
 
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
@@ -162,7 +174,7 @@ public class UserResource {
 
 		}
 
-
+		loggedIn.setLastSeen(System.currentTimeMillis());
 
 		response.setSessionTok(syncResp.getSession_id());
 
@@ -219,6 +231,7 @@ public class UserResource {
 
 	public static final String FB_APP_ID = "1080777671932760";
 	public static final String FB_APP_SECRET = "d2711fde8327b4a1e7db55dd649f6315";
+	
 
 
 	private User loginWithFacebook(User loggingIn) throws IllegalStateException, FacebookException {
@@ -369,9 +382,17 @@ public class UserResource {
 
 
 
-		//
-		//		loggedInUser.setAdmin_channels(channels);
-
+		//set default settings
+		Map<String, String> settings = new HashMap<String, String>();
+		settings.put("sharing_who", WHO_EVERYONE);
+		settings.put("sharing_when", WHEN_WIFI);
+		settings.put("sharing_where", WHERE_EVERYWHERE);
+		settings.put("video_sound", SOUND_MUTE);
+		
+		loggedInUser.setSettings(settings);
+		
+		loggedInUser.setDateJoined(System.currentTimeMillis());
+		loggedInUser.setLastSeen(System.currentTimeMillis());
 		loggedInUser.subscribeToUserChannel(userChannel);
 		SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedInUser);
 
