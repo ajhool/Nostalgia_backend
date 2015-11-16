@@ -19,24 +19,29 @@ import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
+import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
+import com.nostalgia.contentserver.repository.VideoRepository;
+import com.nostalgia.contentserver.utils.Marshal;
+import com.nostalgia.persistence.model.Video;
 
 public class MPDMaker implements Runnable{
 
 	public static final Logger logger = LoggerFactory.getLogger(MPDMaker.class);
 
-	private  Content needMPD;
+	private  Video needMPD;
 	private  Dasher waitingOn;
-	private ContentRepository contentRepo;
+
 	private boolean wait = true;
 	private boolean complete = false; 
+	private final File videoRoot;
 
 
-	public MPDMaker(Content needMPD, Dasher waitingOn,
-			ContentRepository contentRepo2, boolean b) {
+	public MPDMaker(Video needMPD, Dasher waitingOn, File videoRoot, boolean b) {
 		super();
 		this.needMPD = needMPD;
 		this.waitingOn = waitingOn;
-		this.contentRepo = contentRepo2;
+		this.videoRoot = videoRoot;
+		
 		this.wait = b;
 	}
 
@@ -57,13 +62,12 @@ public class MPDMaker implements Runnable{
 				
 				
 				logger.info("Dasher reports completed, creating accurate mpd file...");
-				//update content
-				Content needsMPD = contentRepo.findById(needMPD.getId());
+				
 
 				MPDtype mpd = null;
 				try {
-					mpd = this.getMPDFor(needsMPD);
-					needsMPD.setMPDInfo(mpd);
+					mpd = this.getMPDFor(needMPD);
+					needMPD.setMpd(mpd);
 				} catch (SAXException | IOException
 						| ParserConfigurationException
 						| DatatypeConfigurationException e) {
@@ -73,28 +77,20 @@ public class MPDMaker implements Runnable{
 				
 				Date now = new Date();
 				long duration = (long) (((double)mpd.getMediaPresentationDuration().getTimeInMillis(now)) / (double)1000.00);
-				needsMPD.setLengthInSec((int)duration);
 				logger.info("length in sec set to be: " + duration + " from XML duration: " + mpd.getMediaPresentationDuration());
 				
-				if(needsMPD != null && needsMPD.getPreviewMPD() == null){
-					//TODO remove this to the content upload? 
-					try {
-						needsMPD.regeneratePreviewMPD();
-					} catch (Exception e) {
-						logger.error("error generating preview MPD", e);
-					}
-				}
-				
-				contentRepo.save(needsMPD);
+			
 				setComplete(true);
 				
 	}
 
 
-	private MPDtype getMPDFor(Content toMake) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException{
+	private MPDtype getMPDFor(Video toMake) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException{
 		//MPDtype template = Marshal.parseMPD("template.mpd");
 		//MPDtype template = toMake.getMPDInfo();
-		MPDtype generated = Marshal.parseMPD("Uploads/" + toMake.getContentKey() + "/" + toMake.getContentKey() +"/Manifest.mpd");
+		
+		File manifest = new File(videoRoot, "Manifest.mpd");
+		MPDtype generated = Marshal.parseMPD(manifest.toURI());
 
 
 
@@ -116,6 +112,11 @@ public class MPDMaker implements Runnable{
 
 	private void setComplete(boolean complete) {
 		this.complete = complete;
+	}
+
+
+	public Video getUpdatedMetadata() {
+		return needMPD;
 	}
 
 }

@@ -3,6 +3,9 @@ package com.nostalgia.contentserver.utils;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -46,7 +49,7 @@ public class Marshal {
 
 	private static Logger logger = LoggerFactory.getLogger(Marshal.class);
 
-	public static void main(String[] args) throws JAXBException, SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException{
+	public static void main(String[] args) throws JAXBException, SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException, URISyntaxException{
 		//this is a fail, maybe we can print our own (compliant!) MPDs w/unmarshal?
 		//		JAXBContext jc = JAXBContext.newInstance(MPDtype.class);
 		//		
@@ -56,7 +59,7 @@ public class Marshal {
 		//	    MPDtype mpd = (MPDtype) jaxbUnmarshaller.unmarshal( new File("dash.mpd") );
 		//	    System.out.println("Success! baseurl: " + mpd.getBaseURL().get(0).getValue());
 
-		MPDtype output = parseMPD("live.mpd");
+		MPDtype output = parseMPD(new URI("live.mpd"));
 
 		File outfile = new File("portolRedbullMPD.mpd");
 		JAXBContext jaxbContext = JAXBContext.newInstance(MPDtype.class);
@@ -70,7 +73,7 @@ public class Marshal {
 
 	}
 
-	public static synchronized MPDtype parseMPD(String xmlToParse) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException {
+	public static synchronized MPDtype parseMPD(URI mpdRough) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException {
 
 		//Get the DOM Builder Factory
 		DocumentBuilderFactory factory = 
@@ -82,7 +85,7 @@ public class Marshal {
 		//Load and Parse the XML document
 		//document contains the complete XML as a Tree.
 		Document document = 
-				builder.parse(xmlToParse);
+				builder.parse(mpdRough.toString());
 
 		NodeList nodeList = document.getElementsByTagName("MPD");
 

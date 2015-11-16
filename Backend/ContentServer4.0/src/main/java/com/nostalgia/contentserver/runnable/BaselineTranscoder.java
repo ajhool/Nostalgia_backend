@@ -15,10 +15,6 @@ import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
 import com.nostalgia.contentserver.resource.AsyncProcessorResource;
-import com.portol.common.model.content.Content;
-import com.portol.common.model.dash.jaxb.AdaptationSetType;
-import com.portol.common.model.dash.jaxb.PeriodType;
-import com.portol.common.model.dash.jaxb.RepresentationType;
 
 public class BaselineTranscoder implements Runnable{
 

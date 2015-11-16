@@ -14,28 +14,24 @@ import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
-import com.portol.common.model.content.Content;
-import com.portol.common.model.dash.jaxb.AdaptationSetType;
-import com.portol.common.model.dash.jaxb.PeriodType;
-import com.portol.common.model.dash.jaxb.RepresentationType;
+
 
 public class PipelineScrubber implements Runnable{
 
 	public static final Logger logger = LoggerFactory.getLogger(PipelineScrubber.class);
 	private final File contentRoot; 
 
-	private final DBUploader uploader;
 	private final MPDMaker mpd;
 	
 	private boolean complete = false;
 	private boolean active = false;
 	
 
-	public PipelineScrubber(String uploadRootDir, MPDMaker mpdWaiter, DBUploader dbUL, boolean active){
+	public PipelineScrubber(File file, MPDMaker mpdWaiter, boolean active){
 		super();
 		this.active = active;
-		contentRoot = new File(uploadRootDir);
-		this.uploader = dbUL;
+		contentRoot = file;
+
 		this.mpd = mpdWaiter;
 
 	}
@@ -50,7 +46,7 @@ public class PipelineScrubber implements Runnable{
 		}
 		
 		
-		while(!uploader.isComplete() || !mpd.isComplete()){
+		while( !mpd.isComplete()){
 			try {
 				Thread.sleep(60000);
 			} catch (InterruptedException e) {
@@ -61,11 +57,6 @@ public class PipelineScrubber implements Runnable{
 	
 		}
 		
-		//if there was an error somewhere, don't hose the output
-		if(!uploader.isSuccessful()){
-			logger.error("uploader failed, skipping deletion");
-			return;
-		}
 		
 		
 	

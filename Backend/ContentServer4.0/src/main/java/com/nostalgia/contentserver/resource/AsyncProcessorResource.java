@@ -8,12 +8,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,18 +46,25 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.io.Resources;
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.nostalgia.contentserver.model.dash.jaxb.AdaptationSetType;
+import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
+import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
 import com.nostalgia.contentserver.repository.VideoRepository;
 import com.nostalgia.contentserver.runnable.BaselineTranscoder;
-import com.nostalgia.contentserver.runnable.DBUploader;
 import com.nostalgia.contentserver.runnable.Dasher;
 import com.nostalgia.contentserver.runnable.MPDMaker;
 import com.nostalgia.contentserver.runnable.PipelineScrubber;
+import com.nostalgia.contentserver.utils.Marshal;
+import com.nostalgia.persistence.model.Video;
 
 import io.dropwizard.lifecycle.Managed;
 
 
-public class AsyncProcessorResource implements Managed{
+public class AsyncProcessorResource extends AbstractScheduledService implements Managed {
 
 	public static final String FileDataRootDir = "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
 	final static Logger logger = LoggerFactory.getLogger(AsyncProcessorResource.class);
@@ -63,492 +75,36 @@ public class AsyncProcessorResource implements Managed{
 		super();
 		this.vidRepo = contentRepo;
 	}
+	
 
-	@POST
-	@Path("/basic")
-	@Timed
-	public Content storeContent(Content toAdd) throws Exception{
-		//who know what form this will take. Likely the encoding will be done here 
-		//so a video file will come in
-
-		//instead, we are going to ignore the file for now and assume allnew content will be uploaded by an application 
-		//using SFTP
-
-		//TODO
-		//boolean valid = validateMeta(toAdd);
-		//
-		//		if(!valid){
-		//			//blacklist?
-		//			return null;
-		//		}
-
-		Content existing = contentRepo.findByVideoKey(toAdd.getContentKey());
-		if(existing != null){
-			resp.sendError(403, "Content with key: " + toAdd.getContentKey() + "already exists!");
-			return null;
-		}
-
-
-		ContentSource newSrc = null;
-		//find a database taking additional data 
-		if(toAdd.getType() == Type.VOD){
-			logger.info("VOD content addition detected, storing in the following DB: " );
-			newSrc = new ContentSource();
-
-			logger.info("setting source to be: " + this.toUploadTo.host);
-			newSrc.setHost(this.toUploadTo.host);
-
-			logger.info("setting port to be: " + this.toUploadTo.port);
-			newSrc.setPort(this.toUploadTo.port);
-
-			logger.info("setting DB to open to be: " + this.toUploadTo.db);
-			newSrc.setDbName(this.toUploadTo.db);
-
-			newSrc.setCollName(toAdd.getContentKey());
-
-			logger.info("setting DB user to be: " + this.toUploadTo.user);
-			newSrc.setDbuserName(this.toUploadTo.user);
-
-			newSrc.setDbPassword(this.toUploadTo.password);
-
-
-		}
-
-		if(newSrc != null){
-			toAdd.setGlobalSrc(newSrc);
-		}
-
-		//obtain UID for this new content
-		ContentMetadata child = null;
-		if(toAdd.getMetaData() != null){
-			ContentMetadata splashReply = metaRepo.save(toAdd.getMetaData());
-
-			//dump the screencontents to save space, since we already have it stored in a repo
-			toAdd.setMetaData(null);
-			child = splashReply;
-
-			toAdd.setSplashDataId(splashReply.getMetadataId());
-		}
-
-		Content reply = contentRepo.save(toAdd);
-		String parent = reply.getId();
-		toAdd.setCreated(new Date(System.currentTimeMillis()));
-		toAdd.setFreeSeconds(300);
-		toAdd.setStatus(Content.Status.AVAILABLE);
-
-		//add a basic MPD file on
-		toAdd.setMPDInfo(this.getRoughMPD(toAdd));
-
-		Content  result = contentRepo.save(toAdd);
-
-		if(child != null){
-			child.setParentContentId(parent);
-			child.setParentContentKey(toAdd.getContentKey());
-			metaRepo.save(child);
-		}
-
-		Content sanitized = sanitizeContent(result);
-
-		return sanitized;
-	}
-
-
-	private Content sanitizeContent(Content result) {
-		result.setMPDInfo(null);
-		result.setPreviewMPD(null);
-		result.setGlobalSrc(null);
-
-		return result;
-	}
-
-	private MPDtype getRoughMPD(Content toRoughOut) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException{
-		MPDtype template = com.portol.common.utils.Marshal.parseMPD("template.mpd");
-		for(AdaptationSetType adapt : template.getPeriod().get(0).getAdaptationSet()){
-			for(RepresentationType rep : adapt.getRepresentation()){
-				String existing = rep.getId();
-
-				String keyString = "_name_";
-				String replaced = existing.replace(keyString,  toRoughOut.getContentKey());
-				rep.setId(replaced);
-			}
-		}
-
-
-		return template;
-	}
-
-
-	@Context HttpServletResponse resp; 
-
-
-	@POST
-	@Path("/moviefax")
-	@Timed
-	public List<MovieFact> setFax(ArrayList<MovieFact> toSet, @QueryParam("targetContentId") String contentId) throws IOException{
-		Content toAddFax = contentRepo.findById(contentId);
-		if(toAddFax == null){
-			resp.sendError(404, "invalid content id number specified");
-			return null;
-		}
-		Collections.sort(toSet);
-		toAddFax.setMovieFax(toSet);
-		contentRepo.save(toAddFax);
-		return toSet;
-	}
-
-	@DELETE
-	@Path("/metadata/{contentKey}")
-	@Timed
-	public ContentMetadata deleteMetadata(@PathParam("contentKey") String contentKey) throws Exception{
-
-		//find content
-		Content parent = contentRepo.findByVideoKey(contentKey);
-
-		String metadataId = parent.getSplashDataId();
-
-		if(metadataId == null){
-			return null;
-		}
-
-		ContentMetadata deleted = metaRepo.getSplashScreenById(metadataId);
-
-		parent.setSplashDataId(null);
-		parent.setMetaData(null);
-
-		metaRepo.remove(deleted);
-
-		contentRepo.save(parent);
-
-		return deleted;
-
-
-	}
-
-
-	@POST
-	@Path("/metadata")
-	@Timed
-	public ContentMetadata storeContentMetadata(ContentMetadata toAdd) throws Exception{
-
-		if(toAdd.getParentContentKey() == null || toAdd.getParentContentKey().length() < 3){
-			resp.sendError(404, "must specify video key to add metadata to");
-			return null;
-		}
-		
-		if(toAdd.getPrices() == null){
-			resp.sendError(404, "must provide pricing information");
-			return null;
-		}
-
-		//step 1 locate matching content
-		Content parent = contentRepo.findByVideoKey(toAdd.getParentContentKey());
-
-		if(parent == null){
-			resp.sendError(404, "no content matching this metadata found");
-			return null;
-		}
-
-		//step 2: check for exisiting metadata
-		ContentMetadata existingMeta = null;
-		if(parent.getSplashDataId() != null){
-			existingMeta = metaRepo.getSplashScreenById(parent.getSplashDataId());
-			resp.sendError(204, "content already has metadata. Please use delete api call before adding new metadata.");
-			return existingMeta; 
-		}
-
-		//step 3: add metadata
-
-		ContentMetadata splashReply = metaRepo.save(toAdd);
-
-		//dump the screencontents to save space, since we already have it stored in a repo
-		parent.setMetaData(null);
-		parent.setSplashDataId(splashReply.getMetadataId());
-
-
-		//add references to child
-		splashReply.setParentContentId(parent.getId());
-		splashReply.setParentContentKey(parent.getContentKey());
-		splashReply.setSecondsFree(parent.getFreeSeconds());
-		
-
-
-		Content reply = contentRepo.save(parent);
-
-
-		ContentMetadata result = metaRepo.save(splashReply);
-
-
-		return result;
-	}
-
-	@POST
-	@Path("/upload/multipart/{contentKey}")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response uploadFile(@FormDataParam("mainfile") InputStream fis,
-			@Context HttpServletRequest a_request,
-			//			@FormDataParam("file") Optional<FormDataContentDisposition> name,
-			@FormDataParam("mainfile") FormDataContentDisposition fileNameForm,
-			@QueryParam("checksum") Optional<String> checksum,
-			@PathParam("contentKey") String contentKey) throws Exception {
-
-		//check that we have matching content metadata so that we know what to do with the file
-		Content matching = contentRepo.findByVideoKey(contentKey);
-
-		if(matching == null){
-			return Response.status(404).entity("no metadata found for uploaded file ID").build();
-		}
-
-		//if we have a checksum
-		if(checksum.orNull() != null){
-
-
-			if(checksum.orNull().equalsIgnoreCase("")){
-				return Response.status(412).entity("Must provide MD5 for uploaded file").build();
-			}
-
-
-		}
-
-
-		String fileName = fileNameForm.getFileName();
-
-
-		if(fileName == null){
-			return Response.status(412).entity("Must provide name for uploaded file in form").build();
-		}
-
-		String filePath = FileDataWorkingDirectory + "/" + matching.getContentKey();
-		File contentPieceWorkingDir = new File(filePath);
-		FileUtils.forceMkdir(contentPieceWorkingDir);
-
-
-		String savedFilePath = filePath + "/" + fileName;
-		File original = new File(savedFilePath);
-
-
-		boolean isMatch = false;
-		String savedmd5 = null;
-		if(original.exists() && checksum.orNull() != null){
-			//check MD5
-			savedmd5 = this.md5Of(original);
-			//if they match, then skip the upload process
-			if(savedmd5.equalsIgnoreCase(checksum.orNull())){
-				isMatch = true;
-				fis.close();
-				logger.info("exact checksum match found, skipping upload");
-			}
-		} 
-
-
-		if(!isMatch){
-			//wipe out whatever was there
-			if(original.exists()){
-				FileUtils.forceDelete(original);
-			}
-
-			//re-upload it
-			long start = System.currentTimeMillis();
-			original = saveFile(fis, savedFilePath);
-			long end = System.currentTimeMillis();
-
-			Duration thisRun = Duration.ofMillis(end -start);
-
-			long speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
-
-			logger.info("File: " + original.getName() + " took " + thisRun.toString() + " to download at a speed of " + speed + "mbps");
-		}
-
-
-
-
-		if(original == null || !original.exists()){
-			logger.error("no file saved!");
-			return Response.status(500).build();
-		}
-
-		//otherwise, assume file exists and is legit
-
-		if(checksum.orNull() != null){
-			savedmd5 = this.md5Of(original);
-
-			if(!savedmd5.equalsIgnoreCase(checksum.orNull())){
-				//MD5 failure
-				logger.error("file upload failed MD5 verification");
-				FileUtils.forceDelete(original);
-				return Response.status(400).build();
-			}
-		}
-
-		//we have a good file if we made it here
+	public Video processFile(Video metaData, File original) throws Exception {
 
 		//next stage: run the video through a baseline transcoding stage in preparation for dashing
-		BaselineTranscoder transcoder = new BaselineTranscoder(original, filePath, fileName +"_baseline.mp4");
+		BaselineTranscoder transcoder = new BaselineTranscoder(original, original.getParent(), original.getName() +"_baseline.mp4");
 
 		Thread baselineRunner = new Thread(transcoder);
 
 		baselineRunner.start();
 
 
-		//start ze dashing process
-		File dashedOutputDir = new File(contentPieceWorkingDir, matching.getGlobalSrc().getCollName());
 
-		FileUtils.forceMkdir(dashedOutputDir);
-
-		Dasher dash = new Dasher(/*original, */matching, dashedOutputDir, transcoder, false);
+		Dasher dash = new Dasher(metaData, original.getParentFile(), transcoder, false);
 		new Thread(dash).start();
 
-		//add listener to upload to DB after dashing complete
-		DBUploader dbUL = new DBUploader(matching, dash, dashedOutputDir, true);
-		new Thread(dbUL).start();
-
-		MPDMaker mpdWaiter = new MPDMaker(matching, dash, contentRepo, true);
-		new Thread(mpdWaiter).start();
 
 
-		PipelineScrubber scrubber = new PipelineScrubber(filePath, mpdWaiter, dbUL, true);
+		MPDMaker mpdWaiter = new MPDMaker(metaData, dash, original.getParentFile(), true);
+		Thread mpdRunner = new Thread(mpdWaiter);
+		mpdRunner.start();
+
+		mpdRunner.join();
+		
+		metaData = mpdWaiter.getUpdatedMetadata();
+
+		PipelineScrubber scrubber = new PipelineScrubber(original.getParentFile(), mpdWaiter, false);
 		new Thread(scrubber).start();
 
-
-		return Response.status(200).build();
-	}
-
-
-	@Path("/upload/{contentKey}")
-	@POST
-	@Produces("application/json")
-	@Consumes("*/*")
-	public Response uploadFile(
-			final InputStream fileInputStream,
-			@Context HttpServletRequest a_request,
-			@PathParam("contentKey") String contentKey,
-			@QueryParam("checksum") String checksum, 
-			@QueryParam("flowFilename") Optional<String> filename) throws Exception {
-
-		//check that we have matching content metadata so that we know what to do with the file
-		Content matching = contentRepo.findByVideoKey(contentKey);
-
-		if(matching == null){
-			return Response.status(404).entity("no metadata found for uploaded file ID").build();
-		}
-
-		if(checksum == null || checksum.equalsIgnoreCase("")){
-			return Response.status(412).entity("Must provide MD5 for uploaded file").build();
-		}
-
-
-		String rawHeader = a_request.getHeader("Content-Disposition");
-		String fileName = null;
-		if(rawHeader == null){
-			fileName = filename.orNull(); 
-
-
-		} else {
-
-			try {
-				fileName = rawHeader.substring(rawHeader.lastIndexOf("=\"") + 2, rawHeader.length()-1);
-			} catch (Exception e){
-				logger.error("bad content disposition header");
-			}
-
-		}
-
-		if(fileName == null){
-			return Response.status(412).entity("Must provide name for uploaded file in header or requestparam").build();
-		}
-
-		String filePath = FileDataWorkingDirectory + "/" + matching.getContentKey();
-		File contentPieceWorkingDir = new File(filePath);
-		FileUtils.forceMkdir(contentPieceWorkingDir);
-
-
-		String savedFilePath = filePath + "/" + fileName;
-		File original = new File(savedFilePath);
-
-
-
-
-		boolean isMatch = false;
-		String savedmd5 = null;
-		if(original.exists()){
-			//check MD5
-			savedmd5 = this.md5Of(original);
-			//if they match, then skip the upload process
-			if(savedmd5.equalsIgnoreCase(checksum)){
-				isMatch = true;
-				fileInputStream.close();
-				logger.info("exact checksum match found, skipping upload");
-			}
-		} 
-
-		if(!isMatch){
-			//wipe out whatever was there
-			if(original.exists()){
-				FileUtils.forceDelete(original);
-			}
-
-			//re-upload it
-			long start = System.currentTimeMillis();
-			original = saveFile(fileInputStream, savedFilePath);
-			long end = System.currentTimeMillis();
-
-			Duration thisRun = Duration.ofMillis(end -start);
-
-			long speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
-
-			logger.info("File: " + original.getName() + " took " + thisRun.toString() + " to download at a speed of " + speed + "mbps");
-		}
-
-
-
-
-		if(original == null || !original.exists()){
-			logger.error("no file saved!");
-			return Response.status(500).build();
-		}
-
-		//otherwise, assume file exists and is legit
-
-		savedmd5 = this.md5Of(original);
-
-		if(!savedmd5.equalsIgnoreCase(checksum)){
-			//MD5 failure
-			logger.error("file upload failed MD5 verification");
-			FileUtils.forceDelete(original);
-			return Response.status(400).build();
-		}
-
-		//we have a good file if we made it here
-
-
-		//next stage: run the video through a baseline transcoding stage in preparation for dashing
-		BaselineTranscoder transcoder = new BaselineTranscoder(original, filePath, fileName +"_baseline.mp4");
-
-		Thread baselineRunner = new Thread(transcoder);
-
-		baselineRunner.start();
-
-
-		//start ze dashing process
-		File dashedOutputDir = new File(contentPieceWorkingDir, matching.getGlobalSrc().getCollName());
-
-		FileUtils.forceMkdir(dashedOutputDir);
-
-		Dasher dash = new Dasher(/*original, */matching, dashedOutputDir, transcoder, false);
-		new Thread(dash).start();
-
-		//add listener to upload to DB after dashing complete
-		DBUploader dbUL = new DBUploader(matching, dash, dashedOutputDir, true);
-		new Thread(dbUL).start();
-
-		MPDMaker mpdWaiter = new MPDMaker(matching, dash, contentRepo, true);
-		new Thread(mpdWaiter).start();
-
-
-		PipelineScrubber scrubber = new PipelineScrubber(filePath, mpdWaiter, dbUL, true);
-		new Thread(scrubber).start();
-
-		return Response.status(200).build();
+		return metaData; 
 
 	}
 
@@ -589,14 +145,72 @@ public class AsyncProcessorResource implements Managed{
 
 	@Override
 	public void start() throws Exception {
-		// TODO Auto-generated method stub
+		this.startAsync().awaitRunning();
 		
 	}
 
 	@Override
 	public void stop() throws Exception {
-		// TODO Auto-generated method stub
+		this.stopAsync().awaitTerminated();
 		
+	}
+
+	private MPDtype getRoughMPD(Video toRoughOut) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException, URISyntaxException{
+		
+		
+		URI mpdRough = getClass().getResource("/template.mpd").toURI();
+		
+		MPDtype template = Marshal.parseMPD(mpdRough);
+		for(AdaptationSetType adapt : template.getPeriod().get(0).getAdaptationSet()){
+			for(RepresentationType rep : adapt.getRepresentation()){
+				String existing = rep.getId();
+
+				String keyString = "_name_";
+				String replaced = existing.replace(keyString,  toRoughOut.get_id());
+				rep.setId(replaced);
+			}
+		}
+
+
+		return template;
+	}
+	
+	@Override
+	protected void runOneIteration() throws Exception {
+		HashSet<Video> unprocessed = vidRepo.getVideosWithStatus("METAANDDATA");
+		
+		if(unprocessed == null){
+			logger.info("no videos found to process, sleeping...");
+			return; 
+		}
+		
+		
+		
+		for(Video vid: unprocessed){
+			logger.info("processing video with id: " + vid.get_id());
+			
+			String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id() + ".mp4";
+			File contentPieceOrig = new File(filePath);
+			
+			if(!contentPieceOrig.exists()){
+				logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
+				continue;
+			}
+			
+			//otherwise, we know it exists
+			
+			
+			
+			
+			
+		}
+		
+	}
+
+	@Override
+	protected Scheduler scheduler() {
+		return AbstractScheduledService.Scheduler.newFixedRateSchedule(0, 25,
+				TimeUnit.SECONDS);
 	}
 
 }
