@@ -69,15 +69,15 @@ public class WebServerApp extends Application<WebServerConfig> {
 
 		String webRootPath = config.getWsConfig().webRoot; 
 		File webRoot = new File(webRootPath);
-		File studioRoot = new File(webRoot, "studio");
+		File studioRoot = new File(webRoot, "data");
 //		File playerRoot = new File(webRoot, "player");
 //		File faxRoot = new File(webRoot, "moviefax");
        // environment.jersey().register(AuthFactory.binder(new BasicAuthFactory<BasicUser>(new SimpleAuthenticator("portol", "portol"), "SECURITY REALM", BasicUser.class)));
         
-		IndexResource index = new IndexResource( webRoot, Charsets.UTF_8);
+		//IndexResource index = new IndexResource( webRoot, Charsets.UTF_8);
 //		StudioResource stdio = new StudioResource( studioRoot, Charsets.UTF_8);
 //		PlayerResource playerRes = new PlayerResource( playerRoot, Charsets.UTF_8);
-		environment.jersey().register(index);
+		//environment.jersey().register(index);
 //		environment.jersey().register(stdio);
 //		environment.jersey().register(playerRes);
 		
@@ -87,8 +87,8 @@ public class WebServerApp extends Application<WebServerConfig> {
 //		WebServlet playerServlet = new WebServlet("/webroot/player", "/player", "index.html", Charsets.UTF_8, authd);
 //		environment.servlets().addServlet("player", playerServlet).addMapping("/player/*");
 		
-		WebServlet studioServlet = new WebServlet("/webroot/studio", "/studio", Charsets.UTF_8);
-		environment.servlets().addServlet("studio", studioServlet).addMapping("/studio/*");
+		WebServlet dataServlet = new WebServlet("/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos", "/data", Charsets.UTF_8);
+		environment.servlets().addServlet("data", dataServlet).addMapping("/data/*");
 		
 	
 	}

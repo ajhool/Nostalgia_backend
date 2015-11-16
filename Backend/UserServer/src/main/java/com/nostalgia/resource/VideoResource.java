@@ -191,6 +191,7 @@ public class VideoResource {
 			}
 		}
 
+		adding.setStatus("METAONLY");
 		JsonDocument saved = vidRepo.save(adding);
 
 		return adding.get_id();
@@ -225,7 +226,7 @@ public class VideoResource {
 
 
 
-		File dataDir = new File(FileDataWorkingDirectory);
+		File dataDir = new File(FileDataWorkingDirectory + "/" + matching.get_id() );
 		dataDir.mkdirs(); 
 		
 
@@ -294,7 +295,7 @@ public class VideoResource {
 
 
 
-		matching.setEnabled(true);
+		matching.setStatus("METAANDDATA");
 
 		vidRepo.save(matching);
 		return Response.ok("Upload successful").build();

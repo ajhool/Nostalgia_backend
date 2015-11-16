@@ -17,6 +17,7 @@ import io.dropwizard.servlets.assets.ResourceURL;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,7 +37,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class WebServlet extends HttpServlet {
     private static final long serialVersionUID = 6393345594784987909L;
     private static final CharMatcher SLASHES = CharMatcher.is('/');
-
+    
+	private static final Object CONTENT_SIGNATURE = "deadbeef";
+	private static final Object CONTENT_KEY = "tok12";
+	
     private static class CachedAsset {
         private final byte[] resource;
         private final String eTag;
@@ -62,6 +66,7 @@ public class WebServlet extends HttpServlet {
     }
 
     private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.HTML_UTF_8;
+
 
     private final String resourcePath;
     private final String uriPath;
@@ -141,18 +146,34 @@ public class WebServlet extends HttpServlet {
     	
     	   resp.setContentType("text/html");
            
-           // Get Authorization header
-           String auth = req.getHeader("Authorization");
-           // Do we allow that user?
-           if (!allowUser(auth)) {
-        	   PrintWriter out = resp.getWriter();
-               // Not allowed, so report he's unauthorized
-               resp.setHeader("WWW-Authenticate", "BASIC realm=\"controlled-zone\"");
-               resp.sendError(resp.SC_UNAUTHORIZED);
-               // Could offer to add him to the allowed user list
-               return;
-           } 
+    	   Cookie[] cookies = req.getCookies();
+    	   
+    	   if(cookies == null){
+    		   resp.sendError(401, "Cookies required to access content");
+    		   return;
+    	   }
+    	  
+    	   String key = this.extractKey(cookies);
+    	   
+    	   if(key == null){
+    		   resp.sendError(401, "Invalid key specified");
+    		   return;
+    	   }
+    	  
+    	   String signature = this.extractSignature(cookies);
+    	   
+    	   if(signature == null){
+    		   resp.sendError(401, "Invalid sigature specified");
+    		   return;
+    	   }
+    	   
+    	   	
+    	   boolean valid = this.validate(key, signature);
            
+    	   if(!valid){
+    		   resp.sendError(401, "Unauthorized.");
+    		   return ;
+    	   }
            
         try {
             final StringBuilder builder = new StringBuilder(req.getServletPath());
@@ -247,7 +268,39 @@ public class WebServlet extends HttpServlet {
         }
     }
 
-    private CachedAsset loadAsset(String key) throws URISyntaxException, IOException {
+    private boolean validate(String key, String signature) {
+		if(!key.equals(CONTENT_KEY) || !signature.equals(CONTENT_SIGNATURE)){
+		return false;
+		} else return true;
+	}
+
+	private String extractSignature(Cookie[] cookies) {
+		if (cookies == null){
+			return null;
+		}
+		
+		for(Cookie cook : cookies){
+			if(cook.getName().equals("nossig")){
+				return cook.getValue();
+			}
+		}
+		return null;
+	}
+
+	private String extractKey(Cookie[] cookies) {
+		if (cookies == null){
+			return null;
+		}
+		
+		for(Cookie cook : cookies){
+			if(cook.getName().equals("nostok")){
+				return cook.getValue();
+			}
+		}
+		return null;
+	}
+
+	private CachedAsset loadAsset(String key) throws URISyntaxException, IOException {
         checkArgument(key.startsWith(uriPath));
         final String requestedResourcePath = SLASHES.trimFrom(key.substring(uriPath.length()));
         String currentDir = System.getProperty("user.dir");

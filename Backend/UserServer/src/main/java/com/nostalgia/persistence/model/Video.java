@@ -30,6 +30,8 @@ public class Video implements Serializable {
 	
 	private String _id = UUID.randomUUID().toString();
     private String type = this.getClass().getSimpleName();
+    //new, metaonly, metaanddata, processed, distributing
+    private String status = "NEW"; 
   
     private long dateCreated;
     boolean enabled = false;
@@ -139,5 +141,13 @@ public class Video implements Serializable {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 }
