@@ -1,25 +1,3 @@
-contentDB:
-  host: 67.219.147.170
-  port: 27000
-  db: content
-  user: ___contentDBuser
-  password: thisPWgivescontentACCEs
-
-#database containing content metadata
-metadataDB:
-  host: 67.219.147.170
-  port: 27001
-  db: metadata
-  user: metadataUserNtadmn383
-  password: metaPasswordAccess11
-  
-dataDB:
-  host: 67.219.147.170
-  port: 27005
-  db: contentdata
-  user: usethisACCTforcontentdata
-  password: tryingtodftthedictionryattak
-
 #used for connecting to master BTC address server
 jerseyClient:
   timeout: 1000ms
@@ -43,7 +21,7 @@ server:
 logging:
 
   # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
-  level: INFO
+  level: ALL
 
   # Logger-specific levels.
   loggers:

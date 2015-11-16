@@ -36,26 +36,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.mongojack.JacksonDBCollection;
-import org.mongojack.WriteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
-import com.portol.common.model.MovieFact;
-import com.portol.common.model.content.Content;
-import com.portol.common.model.content.Content.Type;
-import com.portol.common.model.content.ContentMetadata;
-import com.portol.common.model.content.ContentSource;
-import com.portol.common.model.dash.jaxb.AdaptationSetType;
-import com.portol.common.model.dash.jaxb.MPDtype;
-import com.portol.common.model.dash.jaxb.RepresentationType;
-import com.portol.common.model.payment.Payment;
-import com.portol.contentserver.config.MongoConfig;
 import com.portol.contentserver.manager.MongoManaged;
 import com.portol.contentserver.repository.ContentRepository;
 import com.portol.contentserver.repository.MetadataRepository;
@@ -64,33 +50,22 @@ import com.portol.contentserver.runnable.DBUploader;
 import com.portol.contentserver.runnable.Dasher;
 import com.portol.contentserver.runnable.MPDMaker;
 import com.portol.contentserver.runnable.PipelineScrubber;
-import com.portol.contentserver.service.MasterAddressGetter;
+
+import io.dropwizard.lifecycle.Managed;
 
 
-
-
-@Path("/api/v0/addcontent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class ContentResource {
+public class AsyncProcessorResource implements Managed{
 
-	public static final String apiKey_payment = "foo";
-	public static final String FileDataWorkingDirectory = "Uploads";
-	public static final int playerport = 8080;
-	public static final int paymentport = 9090;
-	final static Logger logger = LoggerFactory.getLogger(ContentResource.class);
+	public static final String FileDataRootDir = "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
+	final static Logger logger = LoggerFactory.getLogger(AsyncProcessorResource.class);
 
-	private final MongoConfig toUploadTo;
-	private final ContentRepository contentRepo;
-	private final MetadataRepository metaRepo;
+	private final VideoRepository vidRepo;
 
-	public ContentResource(ContentRepository contentRepo, MetadataRepository metaRepo,  MongoConfig toUploadTo) {
-
-		this.contentRepo = contentRepo;
-		this.metaRepo = metaRepo;
-		logger.info("in constructor for contentresource");
-		this.toUploadTo = toUploadTo;
-		logger.info("finished constructor for contentresource");
+	public AsyncProcessorResource(VideoRepository contentRepo) {
+		super();
+		this.vidRepo = contentRepo;
 	}
 
 	@POST
@@ -614,12 +589,18 @@ public class ContentResource {
 		}
 
 		return target;
-	}  
+	} 
 
-	private boolean validateMeta(Content metadataToValidate){
-		//TODO
-		//sanity checks
-		return true;
+	@Override
+	public void start() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stop() throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

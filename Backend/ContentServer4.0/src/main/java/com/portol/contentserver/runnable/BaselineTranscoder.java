@@ -18,7 +18,7 @@ import com.portol.contentserver.FFMPEGController;
 import com.portol.contentserver.ShellCallback;
 import com.portol.contentserver.StdoutCallback;
 import com.portol.contentserver.dash.ManualDashFileSet;
-import com.portol.contentserver.resource.ContentResource;
+import com.portol.contentserver.resource.AsyncProcessorResource;
 
 public class BaselineTranscoder implements Runnable{
 

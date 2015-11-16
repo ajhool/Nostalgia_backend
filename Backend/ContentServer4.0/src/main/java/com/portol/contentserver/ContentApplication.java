@@ -24,7 +24,7 @@ import com.portol.contentserver.repository.CategoryRepository;
 import com.portol.contentserver.repository.ContentRepository;
 import com.portol.contentserver.repository.MetadataRepository;
 import com.portol.contentserver.resource.CategoryResource;
-import com.portol.contentserver.resource.ContentResource;
+import com.portol.contentserver.resource.AsyncProcessorResource;
 import com.portol.contentserver.service.MasterAddressGetter;
 
 import io.dropwizard.Application;
@@ -85,7 +85,6 @@ public class ContentApplication extends Application<ContentServConfig> {
 		configureCors( environment);
 		
 		
-		environment.jersey().register(MultiPartFeature.class);
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.addMixInAnnotations(XMLGregorianCalendar.class, MixIn.class);
 		environment.jersey().register(new JacksonMessageBodyProvider(mapper, environment.getValidator()));
@@ -111,7 +110,7 @@ public class ContentApplication extends Application<ContentServConfig> {
 		ContentRepository contentRepo = new ContentRepository(contentMongoManaged);
 		
 		environment.jersey().register(
-				new ContentResource(contentRepo, metaRepo, config.getDataMongoConfiguration()));
+				new AsyncProcessorResource(contentRepo, metaRepo, config.getDataMongoConfiguration()));
 		
 		environment.jersey().register(new CategoryResource(metaRepo, catRepo));
 		
