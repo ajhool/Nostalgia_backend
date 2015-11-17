@@ -13,6 +13,7 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.view.DefaultView;
 import com.couchbase.client.java.view.DesignDocument;
@@ -32,44 +33,44 @@ import flexjson.JSONDeserializer;
 public class VideoRepository {
 
 	private static final Logger logger = LoggerFactory.getLogger(VideoRepository.class);
-	
+
 	// the DB we are using
 	private final Cluster cluster; 
 	private final Bucket bucket; 
 	private final CouchbaseConfig config;
 	private final BucketManager bucketManager;
 	private static final ObjectMapper mapper = new ObjectMapper();
-	
+
 	// Initialize design document
 	DesignDocument vidDoc = DesignDocument.create(
-		"video_standard",
-		Arrays.asList(
-			DefaultView.create("by_name",
-				"function (doc, meta) { if (doc.type == 'Video') { emit(doc.name, null); } }")//,
-//			DefaultView.create("by_channel",
-//					"function (doc, meta) { "
-//					+ "if (doc.type == 'Video') { "
-//					+ "for (i=0; i < doc.channels.length; i++) {"
-//					+ "emit(doc.channels[i], null); "
-//					+ "} "
-//					+ "} "
-//					+ "}")
-		)
-	);
-	
+			"video_standard",
+			Arrays.asList(
+					DefaultView.create("by_name",
+							"function (doc, meta) { if (doc.type == 'Video') { emit(doc.name, null); } }")//,
+					//			DefaultView.create("by_channel",
+					//					"function (doc, meta) { "
+					//					+ "if (doc.type == 'Video') { "
+					//					+ "for (i=0; i < doc.channels.length; i++) {"
+					//					+ "emit(doc.channels[i], null); "
+					//					+ "} "
+					//					+ "} "
+					//					+ "}")
+					)
+			);
+
 	// Initialize design document
-			DesignDocument spatialDoc = DesignDocument.create(
-				"video_spatial",
-				Arrays.asList(
+	DesignDocument spatialDoc = DesignDocument.create(
+			"video_spatial",
+			Arrays.asList(
 					SpatialView.create("video_points",
 							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.location.lon && doc.location.lat) { "
-										+ " emit({ \"type\": \"Point\", \"coordinates\": [doc.geo.lon, doc.geo.lat]}, null);"
-								    + "}"
-							+ "}")
-				)
+									+ "if (doc.type == 'Video' && doc.location) { "
+									+ " emit(doc.location, null);"
+									+ "}"
+									+ "}")
+					)
 			);
-			
+
 	public VideoRepository(CouchbaseConfig videoCouchConfig) {
 		config = videoCouchConfig;
 		cluster = CouchbaseCluster.create(config.host);
@@ -80,7 +81,7 @@ public class VideoRepository {
 			// Insert design document into the bucket
 			bucketManager.insertDesignDocument(vidDoc);
 		}
-		
+
 		existing = bucketManager.getDesignDocument("video_spatial");
 		if(existing == null){
 			// Insert design document into the bucket
@@ -116,7 +117,7 @@ public class VideoRepository {
 	public static Video docToVideo(JsonDocument document) {
 		JsonObject obj = document.content();
 		String objString = obj.toString();
-		
+
 		Video newVid = null;
 		try {
 			newVid = mapper.readValue( objString , Video.class );
@@ -127,24 +128,32 @@ public class VideoRepository {
 		//User result = mapper.convertValue(objString, User.class);
 		return newVid; 
 	}
-	
-	public HashMap<String, Video> findVideosCoveringPoint(GeoJsonObject point) {
-		SpatialViewQuery query = SpatialViewQuery.from("video_spatial", "video_points");
+
+	public HashMap<String, Video> findVideosWithin(GeoJsonObject hasbbox) {
+		double[] bbox = hasbbox.getBbox(); 
+
+		if(bbox == null || bbox.length < 4){
+			logger.error("only bounding box based queries supported at this time");
+			return null;
+		}
+		JsonArray START = JsonArray.from(bbox[0], bbox[1]);
+		JsonArray END = JsonArray.from(bbox[2], bbox[3]);
+		SpatialViewQuery query = SpatialViewQuery.from("video_spatial", "video_points").range(START, END);
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
 			logger.error("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.allRows().size() < 1){
 			return null;
 		}
-		
+
 		HashMap<String, Video> s = new HashMap<String, Video>();
 		for (SpatialViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    s.put(matching.id().substring(0, 8), docToVideo(matching));
+			JsonDocument matching = row.document();
+			s.put(matching.id().substring(0, 8), docToVideo(matching));
 		}
 		return s;
 	}

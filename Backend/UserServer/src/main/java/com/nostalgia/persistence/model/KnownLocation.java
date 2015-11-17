@@ -27,6 +27,9 @@ public class KnownLocation implements Serializable {
 	private String _id = UUID.randomUUID().toString();
 
 	private String name;
+	
+	private String creatorId; 
+
 
 	private GeoJsonObject location;
 
@@ -118,6 +121,18 @@ public class KnownLocation implements Serializable {
 	public int hashCode(){
 		return _id.hashCode();
 	}
+
+
+	public String getCreatorId() {
+		return creatorId;
+	}
+
+
+	public void setCreatorId(String creatorId) {
+		this.creatorId = creatorId;
+	}
+
+
 
 
 }

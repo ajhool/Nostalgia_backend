@@ -59,7 +59,7 @@ import facebook4j.Reading;
 import facebook4j.conf.Configuration;
 import facebook4j.conf.ConfigurationBuilder;
 
-@Path("/api/v0/user/location/admin")
+@Path("/api/v0/admin/location")
 public class LocationAdminResource {
 
 
@@ -99,11 +99,16 @@ public class LocationAdminResource {
 			throw new BadRequestException("coordinates of some type are required to add a location");
 		}
 		
+		if(toAdd.getCreatorId() == null || toAdd.getCreatorId().length() < 2){
+			throw new BadRequestException("ID of creator is required");
+		}
+		
 		if(toAdd.getProperties() == null){
 			toAdd.setProperties(new HashMap<String, String>());
 		}
 		
 		toAdd.getProperties().put("date_uploaded", (new Date(System.currentTimeMillis())).toString());
+		
 		
 		//check for existence of this location
 		//allow overlap of points
@@ -121,7 +126,7 @@ public class LocationAdminResource {
 		
 		
 		//if location doesn't exist, find videos that fall within it
-		HashMap<String, Video> matchingVids = vidRepo.findVideosCoveringPoint(toAdd.getLocation());
+		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toAdd.getLocation());
 		
 		if(toAdd.getMatchingVideos() == null){
 			toAdd.setMatchingVideos(new HashMap<String, String>());
