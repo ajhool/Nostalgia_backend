@@ -86,7 +86,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 
 		baselineRunner.start();
 
-
+		baselineRunner.join();
 
 		Dasher dash = new Dasher(metaData, original.getParentFile(), transcoder, false);
 		new Thread(dash).start();
@@ -107,41 +107,6 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		return metaData; 
 
 	}
-
-
-	private synchronized static String md5Of(File saved) throws IOException{
-		//verify with MD5
-
-
-		FileInputStream fis = new FileInputStream(saved);
-		String savedmd5 = DigestUtils.md5Hex(fis);
-		fis.close();
-
-		return savedmd5;
-
-	}
-
-
-	private File saveFile(InputStream uploadedInputStream,
-			String serverLocation) {
-		File target = new File(serverLocation);
-		try {
-			OutputStream outputStream = new FileOutputStream(new File(serverLocation));
-			int read = 0;
-			byte[] bytes = new byte[1024];
-
-			while ((read = uploadedInputStream.read(bytes)) != -1) {
-				outputStream.write(bytes, 0, read);
-			}
-			outputStream.flush();
-			outputStream.close();
-		} catch (IOException e) {
-			logger.error("error saving uploaded file to disk", e);
-			return null;
-		}
-
-		return target;
-	} 
 
 	@Override
 	public void start() throws Exception {
@@ -176,10 +141,10 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 	}
 	
 	@Override
-	protected void runOneIteration() throws Exception {
+	protected synchronized void runOneIteration() throws Exception {
 		HashSet<Video> unprocessed = vidRepo.getVideosWithStatus("METAANDDATA");
 		
-		if(unprocessed == null){
+		if(unprocessed == null || unprocessed.size() < 1){
 			logger.info("no videos found to process, sleeping...");
 			return; 
 		}
@@ -189,8 +154,12 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		for(Video vid: unprocessed){
 			logger.info("processing video with id: " + vid.get_id());
 			
-			String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id() + ".mp4";
+			String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id();
 			File contentPieceOrig = new File(filePath);
+			
+			if(vid.getMpd() == null){
+				vid.setMpd(this.getRoughMPD(vid));
+			}
 			
 			if(!contentPieceOrig.exists()){
 				logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
@@ -199,9 +168,10 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 			
 			//otherwise, we know it exists
 			
+			Video result = processFile(vid, contentPieceOrig);
 			
-			
-			
+			result.setStatus("PROCESSED");
+			vidRepo.save(result);
 			
 		}
 		

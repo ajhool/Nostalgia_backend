@@ -51,7 +51,7 @@ public class VideoRepository {
 				"function (doc, meta) { if (doc.type == 'Video') { emit(doc.name, null); } }"),
 			DefaultView.create("by_status",
 					"function (doc, meta) { "
-					+ "if (doc.type == 'Video') { "
+					+ "if (doc.type == 'Video' && doc.status) { "
 					+ "emit(doc.status, null); "
 					+ "} "
 					+ "}")
@@ -164,10 +164,15 @@ public class VideoRepository {
 		}
 		
 		HashSet<Video> vids = new HashSet<Video>();
+		try {
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
 		    
 		    vids.add(docToVideo(matching));
+		}
+		
+		} catch (Exception e){
+			logger.error("error parsing views", e);
 		}
 
 		return vids;

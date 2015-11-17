@@ -9,6 +9,11 @@ jerseyClient:
   gzipEnabledForRequests: false
   chunkedEncodingEnabled: false
 
+VideoCouch:
+  host: 162.243.234.243
+  bucketName: nostalgia
+  bucketPassword: nostalgia12
+
 server:
   type: simple
   applicationContextPath: /

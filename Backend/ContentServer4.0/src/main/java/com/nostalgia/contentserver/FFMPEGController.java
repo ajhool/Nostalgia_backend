@@ -104,8 +104,8 @@ public class FFMPEGController {
 			cmd.add(Argument.AUDIOCODEC);
 			cmd.add("libfdk_aac");
 
-			cmd.add(Argument.AUDIO_PROFILE);
-			cmd.add("aac_he");
+//			cmd.add(Argument.AUDIO_PROFILE);
+//			cmd.add("aac_he");
 
 			cmd.add(Argument.AUDIO_BITRATE);
 			cmd.add("64k");
@@ -346,8 +346,8 @@ public class FFMPEGController {
 		cmd.add(Argument.AUDIOCODEC);
 		cmd.add("libfdk_aac");
 
-		cmd.add(Argument.AUDIO_PROFILE);
-		cmd.add("aac_he");
+//		cmd.add(Argument.AUDIO_PROFILE);
+//		cmd.add("aac_he");
 		
 		cmd.add(Argument.KEYFRAME_INTERVAL);
 		cmd.add("90");

@@ -231,7 +231,7 @@ public class VideoResource {
 		
 
 
-		String savedFilePath = dataDir + "/" + matching.get_id() + ".mp4";
+		String savedFilePath = dataDir + "/" + matching.get_id();
 		File original = new File(savedFilePath);
 
 
