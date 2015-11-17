@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.nostalgia.webserver.auth.BasicUser;
 import com.nostalgia.webserver.auth.SimpleAuthenticator;
 import com.nostalgia.webserver.config.WebServerConfig;
-import com.nostalgia.webserver.resource.IndexResource;
-import com.nostalgia.webserver.resource.PlayerResource;
 import com.nostalgia.webserver.resource.WebServlet;
 
 import io.dropwizard.Application;
@@ -68,8 +66,7 @@ public class WebServerApp extends Application<WebServerConfig> {
 		configureCors(environment);
 
 		String webRootPath = config.getWsConfig().webRoot; 
-		File webRoot = new File(webRootPath);
-		File studioRoot = new File(webRoot, "data");
+
 //		File playerRoot = new File(webRoot, "player");
 //		File faxRoot = new File(webRoot, "moviefax");
        // environment.jersey().register(AuthFactory.binder(new BasicAuthFactory<BasicUser>(new SimpleAuthenticator("portol", "portol"), "SECURITY REALM", BasicUser.class)));
@@ -87,7 +84,7 @@ public class WebServerApp extends Application<WebServerConfig> {
 //		WebServlet playerServlet = new WebServlet("/webroot/player", "/player", "index.html", Charsets.UTF_8, authd);
 //		environment.servlets().addServlet("player", playerServlet).addMapping("/player/*");
 		
-		WebServlet dataServlet = new WebServlet("/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos", "/data", Charsets.UTF_8);
+		WebServlet dataServlet = new WebServlet(webRootPath, "/data", Charsets.UTF_8);
 		environment.servlets().addServlet("data", dataServlet).addMapping("/data/*");
 		
 	

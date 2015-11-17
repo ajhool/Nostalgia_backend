@@ -112,7 +112,7 @@ public class VideoResource {
 
 	private static final Logger logger = LoggerFactory.getLogger(VideoResource.class);
 
-	private static final String FileDataWorkingDirectory = System.getProperty("user.dir") + "/videos";
+	private static final String FileDataWorkingDirectory = "/webroot/data";
 
 	private final VideoRepository vidRepo;
 	private final UserRepository userRepo;

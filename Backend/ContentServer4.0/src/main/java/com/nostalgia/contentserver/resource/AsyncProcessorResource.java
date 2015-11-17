@@ -75,18 +75,21 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		super();
 		this.vidRepo = contentRepo;
 	}
-	
+
 
 	public Video processFile(Video metaData, File original) throws Exception {
 
 		//next stage: run the video through a baseline transcoding stage in preparation for dashing
-		BaselineTranscoder transcoder = new BaselineTranscoder(original, original.getParent(), original.getName() +"_baseline.mp4");
+		File baseline = new File(original.getName() +"_baseline.mp4");
+
+		BaselineTranscoder transcoder = new BaselineTranscoder(original, original.getParent(), baseline.toString());
 
 		Thread baselineRunner = new Thread(transcoder);
 
 		baselineRunner.start();
 
 		baselineRunner.join();
+
 
 		Dasher dash = new Dasher(metaData, original.getParentFile(), transcoder, false);
 		new Thread(dash).start();
@@ -98,7 +101,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		mpdRunner.start();
 
 		mpdRunner.join();
-		
+
 		metaData = mpdWaiter.getUpdatedMetadata();
 
 		PipelineScrubber scrubber = new PipelineScrubber(original.getParentFile(), mpdWaiter, false);
@@ -111,20 +114,20 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 	@Override
 	public void start() throws Exception {
 		this.startAsync().awaitRunning();
-		
+
 	}
 
 	@Override
 	public void stop() throws Exception {
 		this.stopAsync().awaitTerminated();
-		
+
 	}
 
 	private MPDtype getRoughMPD(Video toRoughOut) throws SAXException, IOException, ParserConfigurationException, DatatypeConfigurationException, URISyntaxException{
-		
-		
+
+
 		URI mpdRough = getClass().getResource("/template.mpd").toURI();
-		
+
 		MPDtype template = Marshal.parseMPD(mpdRough);
 		for(AdaptationSetType adapt : template.getPeriod().get(0).getAdaptationSet()){
 			for(RepresentationType rep : adapt.getRepresentation()){
@@ -139,42 +142,45 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 
 		return template;
 	}
-	
+
 	@Override
 	protected synchronized void runOneIteration() throws Exception {
 		HashSet<Video> unprocessed = vidRepo.getVideosWithStatus("METAANDDATA");
-		
+
 		if(unprocessed == null || unprocessed.size() < 1){
 			logger.info("no videos found to process, sleeping...");
 			return; 
 		}
-		
-		
-		
-		for(Video vid: unprocessed){
-			logger.info("processing video with id: " + vid.get_id());
-			
-			String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id();
-			File contentPieceOrig = new File(filePath);
-			
-			if(vid.getMpd() == null){
-				vid.setMpd(this.getRoughMPD(vid));
-			}
-			
-			if(!contentPieceOrig.exists()){
-				logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
-				continue;
-			}
-			
-			//otherwise, we know it exists
-			
-			Video result = processFile(vid, contentPieceOrig);
-			
-			result.setStatus("PROCESSED");
-			vidRepo.save(result);
-			
+
+
+
+		Video vid = unprocessed.iterator().next();
+		vid.setStatus("PROCESSED");
+
+		vidRepo.save(vid);
+		logger.info("processing video with id: " + vid.get_id());
+
+		String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id();
+		File contentPieceOrig = new File(filePath);
+
+		if(vid.getMpd() == null){
+			vid.setMpd(this.getRoughMPD(vid));
 		}
-		
+
+		if(!contentPieceOrig.exists()){
+			logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
+			return;
+		}
+
+		//otherwise, we know it exists
+
+		Video result = processFile(vid, contentPieceOrig);
+
+		result.setStatus("DISTRIBUTING");
+		vidRepo.save(result);
+
+
+
 	}
 
 	@Override

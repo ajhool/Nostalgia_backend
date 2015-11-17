@@ -1,5 +1,5 @@
 webserver:
-  webRoot: /webroot
+  webRoot: /webroot/data
 
 #used for connecting to various other web services
 jerseyClient:
@@ -17,10 +17,6 @@ server:
     type: http
     port: 9000
   adminContextPath: /admin
-  
-
-   
-
 
 # Logging settings.
 logging:

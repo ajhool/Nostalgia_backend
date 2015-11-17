@@ -42,8 +42,12 @@ public class User implements Serializable {
 
 	private String email;
 
+	private GeoJsonObject focusedLocation;
+	
+	
 	private GeoJsonObject lastKnownLoc;
-
+	private long lastLocationUpdate;
+	
 	private long dateJoined;
 	private long lastSeen;
 
@@ -344,6 +348,26 @@ public class User implements Serializable {
 
 	public void setHomeRegion(String homeRegion) {
 		this.homeRegion = homeRegion;
+	}
+
+
+	public long getLastLocationUpdate() {
+		return lastLocationUpdate;
+	}
+
+
+	public void setLastLocationUpdate(long lastLocationUpdate) {
+		this.lastLocationUpdate = lastLocationUpdate;
+	}
+
+
+	public GeoJsonObject getFocusedLocation() {
+		return focusedLocation;
+	}
+
+
+	public void setFocusedLocation(GeoJsonObject focusedLocation) {
+		this.focusedLocation = focusedLocation;
 	}
 
 }

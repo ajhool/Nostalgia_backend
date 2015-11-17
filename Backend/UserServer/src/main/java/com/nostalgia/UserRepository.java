@@ -1,5 +1,7 @@
 package com.nostalgia;
 import flexjson.JSONDeserializer;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -105,8 +107,15 @@ public class UserRepository {
 		JsonObject obj = document.content();
 		String objString = obj.toString();
 		
-		User newUser = new JSONDeserializer<User>().deserialize( objString , User.class );
+		//User newUser = new JSONDeserializer<User>().deserialize( objString , User.class );
 		//User result = mapper.convertValue(objString, User.class);
+		User newUser = null;
+		try {
+			newUser = mapper.readValue(objString, User.class);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return newUser; 
 	}
 

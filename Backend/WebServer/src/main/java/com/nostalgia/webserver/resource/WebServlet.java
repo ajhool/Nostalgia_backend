@@ -144,36 +144,36 @@ public class WebServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req,
                          HttpServletResponse resp) throws ServletException, IOException {
     	
-    	   resp.setContentType("text/html");
-           
-    	   Cookie[] cookies = req.getCookies();
-    	   
-    	   if(cookies == null){
-    		   resp.sendError(401, "Cookies required to access content");
-    		   return;
-    	   }
-    	  
-    	   String key = this.extractKey(cookies);
-    	   
-    	   if(key == null){
-    		   resp.sendError(401, "Invalid key specified");
-    		   return;
-    	   }
-    	  
-    	   String signature = this.extractSignature(cookies);
-    	   
-    	   if(signature == null){
-    		   resp.sendError(401, "Invalid sigature specified");
-    		   return;
-    	   }
-    	   
-    	   	
-    	   boolean valid = this.validate(key, signature);
-           
-    	   if(!valid){
-    		   resp.sendError(401, "Unauthorized.");
-    		   return ;
-    	   }
+    	 //  resp.setContentType("text/html");
+//           
+//    	   Cookie[] cookies = req.getCookies();
+//    	   
+//    	   if(cookies == null){
+//    		   resp.sendError(401, "Cookies required to access content");
+//    		   return;
+//    	   }
+//    	  
+//    	   String key = this.extractKey(cookies);
+//    	   
+//    	   if(key == null){
+//    		   resp.sendError(401, "Invalid key specified");
+//    		   return;
+//    	   }
+//    	  
+//    	   String signature = this.extractSignature(cookies);
+//    	   
+//    	   if(signature == null){
+//    		   resp.sendError(401, "Invalid sigature specified");
+//    		   return;
+//    	   }
+//    	   
+//    	   	
+//    	   boolean valid = this.validate(key, signature);
+//           
+//    	   if(!valid){
+//    		   resp.sendError(401, "Unauthorized.");
+//    		   return ;
+//    	   }
            
         try {
             final StringBuilder builder = new StringBuilder(req.getServletPath());
