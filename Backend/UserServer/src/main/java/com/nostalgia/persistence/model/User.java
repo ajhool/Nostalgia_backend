@@ -39,6 +39,14 @@ public class User implements Serializable {
 	//channel -> time 
 	private Map<String, String> video_channels; 
 
+	public Map<String, String> getVideo_channels() {
+		return video_channels;
+	}
+
+
+	public void setVideo_channels(Map<String, String> video_channels) {
+		this.video_channels = video_channels;
+	}
 	//channels that this document itself is in
 	private List<String> channels; 
 

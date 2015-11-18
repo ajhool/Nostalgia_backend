@@ -3,6 +3,7 @@ package com.nostalgia.resource;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -62,7 +63,9 @@ private final SynchClient sync;
 		HashMap<String, KnownLocation> nearbys = locRepo.findKnownLocationsCoveringPoint(hasNewLoc.getLastKnownLoc());
 
 		if(nearbys != null && nearbys.keySet().size() > 0){
-			hasNewLoc.updateLocationChannels(nearbys.keySet());
+			Set<String> clone = new HashSet<String>();
+			clone.addAll(nearbys.keySet());
+			hasNewLoc.updateLocationChannels(clone);
 			HashSet<String> vidChannels = new HashSet<String>();
 			for(KnownLocation loc: nearbys.values()){
 				for(String videoId : loc.getMatchingVideos().values()){
@@ -75,6 +78,7 @@ private final SynchClient sync;
 		}
 		
 		sync.setSyncChannels(hasNewLoc);
+		
 		userRepo.save(hasNewLoc);
 		return hasNewLoc; 
 	}

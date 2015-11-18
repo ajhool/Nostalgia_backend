@@ -47,7 +47,7 @@ public class VideoRepository {
 			"video_standard",
 			Arrays.asList(
 					DefaultView.create("by_id",
-							"function (doc, meta) { if (doc.type == 'Video') { emit(doc._id, null); } }")//,
+							"function (doc, meta) { if (doc.type == 'Video') { emit(doc._id, null); } }"),
 					//			DefaultView.create("by_channel",
 					//					"function (doc, meta) { "
 					//					+ "if (doc.type == 'Video') { "
@@ -56,6 +56,14 @@ public class VideoRepository {
 					//					+ "} "
 					//					+ "} "
 					//					+ "}")
+
+
+					DefaultView.create("by_status",
+							"function (doc, meta) { "
+									+ "if (doc.type == 'Video' && doc.status) { "
+									+ "emit(doc.status, null); "
+									+ "} "
+									+ "}")
 					)
 			);
 
@@ -149,9 +157,9 @@ public class VideoRepository {
 			logger.error("error from view query:" + error);
 			return null;
 		}
-		
+
 		List<SpatialViewRow> rows = result.allRows();
-		
+
 		HashMap<String, Video> s = new HashMap<String, Video>();
 		for (SpatialViewRow row : rows) {
 			JsonDocument matching = row.document();
