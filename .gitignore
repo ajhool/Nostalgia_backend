@@ -103,3 +103,5 @@ caches
 *.mp4
 *.mkv
 *.avi
+Backend/UserServer/videos
+*.log.*

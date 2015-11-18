@@ -35,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Hex;
+import org.geojson.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,22 +65,22 @@ public class LocationAdminResource {
 
 
 	@Context HttpServletResponse resp; 
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(LocationAdminResource.class);
 
 	private final UserRepository userRepo;
 	private final LocationRepository locRepo;
 
 	private VideoRepository vidRepo;
-	 
-	
-	
+
+
+
 	public LocationAdminResource( UserRepository userRepo, LocationRepository locRepo, VideoRepository vidRepo) {
 		this.userRepo = userRepo;
 		this.locRepo = locRepo;
 		this.vidRepo = vidRepo; 
 		//this.sManager = manager;
-		
+
 	}
 
 	@SuppressWarnings("unused")
@@ -92,67 +93,63 @@ public class LocationAdminResource {
 
 		if(toAdd == null){
 			throw new BadRequestException("no location specified to add");
-		
+
 		}
-		
+
 		if(toAdd.getLocation() == null){
 			throw new BadRequestException("coordinates of some type are required to add a location");
 		}
-		
+
 		if(toAdd.getCreatorId() == null || toAdd.getCreatorId().length() < 2){
 			throw new BadRequestException("ID of creator is required");
 		}
-		
+
 		if(toAdd.getProperties() == null){
 			toAdd.setProperties(new HashMap<String, String>());
 		}
-		
+
 		toAdd.getProperties().put("date_uploaded", (new Date(System.currentTimeMillis())).toString());
-		
-		
+
+
 		//check for existence of this location
 		//allow overlap of points
-		
-		HashMap<String, KnownLocation> result = locRepo.findKnownLocationsCoveringPoint(toAdd.getLocation());
-		
-		for(KnownLocation existing : result.values()){
-			if(toAdd.getName().equalsIgnoreCase(existing.getName()) || toAdd.get_id().equals(existing.get_id())){
-				//then we have a dupliate
-				resp.sendError(304, "location already exists, no changes made");
-				return null;
+
+		HashMap<String, KnownLocation> result = locRepo.findKnownLocationsCoveringArea(toAdd.getLocation());
+
+		if(result != null){
+			for(KnownLocation existing : result.values()){
+				if(toAdd.getName().equalsIgnoreCase(existing.getName()) || toAdd.get_id().equals(existing.get_id())){
+					//then we have a dupliate
+					resp.sendError(304, "location already exists, no changes made");
+					return null;
+				}
 			}
 		}
-		
-		
-		
+
+
 		//if location doesn't exist, find videos that fall within it
-		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toAdd.getLocation());
-		
+		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toAdd.getLocation().getGeometry());
+
 		if(toAdd.getMatchingVideos() == null){
 			toAdd.setMatchingVideos(new HashMap<String, String>());
 		}
-		
+
 		int currentMax = toAdd.getMatchingVideos().size() - 1;
-		
+
 		//add them in
 		for(Video vid : matchingVids.values()){
-			
-			
 			currentMax++;
 			toAdd.getMatchingVideos().put(currentMax + "", vid.get_id());
-			
 		}
-		
-		
-		
+
 		//save
 		JsonDocument saved = locRepo.save(toAdd);
-		
-		
+
+
 		return LocationRepository.docToLocation(saved);
 
 	}
-	
+
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -161,19 +158,19 @@ public class LocationAdminResource {
 	public KnownLocation updateLocation(KnownLocation toUpdate, @Context HttpServletRequest req) throws Exception{
 		if(toUpdate == null){
 			throw new BadRequestException("no location specified to update");
-		
+
 		}
-		
+
 		if(toUpdate.getLocation() == null){
 			throw new BadRequestException("coordinates of some type are required to update a location");
 		}
-		
+
 		if(toUpdate.getProperties() == null){
 			toUpdate.setProperties(new HashMap<String, String>());
 		}
-		
+
 		toUpdate.getProperties().put("date_updated", (new Date(System.currentTimeMillis())).toString());
-		
+
 		//if location doesn't already exist, throw error
 
 		KnownLocation existing = locRepo.findOneById(toUpdate.get_id());
@@ -181,15 +178,15 @@ public class LocationAdminResource {
 			resp.sendError(404, "must update an existing document");
 			return null;
 		}
-		
+
 		//otherwise, do simple upsert for now
 		JsonDocument saved = locRepo.save(toUpdate);
-		
-		
+
+
 		return LocationRepository.docToLocation(saved);
 	}
 
-	
+
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -198,9 +195,9 @@ public class LocationAdminResource {
 	public KnownLocation deleteLocation(KnownLocation toDelete, @Context HttpServletRequest req) throws Exception{
 		if(toDelete == null){
 			throw new BadRequestException("no location specified to delete");
-		
+
 		}
-		
+
 		//if location doesnt already exist, throw error
 		KnownLocation existing = locRepo.findOneById(toDelete.get_id());
 		if(existing == null){
@@ -208,10 +205,10 @@ public class LocationAdminResource {
 			return null;
 		}
 		//otherwise, do delete based on id
-		
+
 		JsonDocument removed = locRepo.remove(toDelete);
-		
+
 		return LocationRepository.docToLocation(removed);
 	}
-	
+
 }

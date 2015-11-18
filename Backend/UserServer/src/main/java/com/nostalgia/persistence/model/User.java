@@ -3,6 +3,7 @@ package com.nostalgia.persistence.model;
 import java.util.*;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -42,10 +43,10 @@ public class User implements Serializable {
 
 	private String email;
 
-	private GeoJsonObject focusedLocation;
+	private Point focusedLocation;
 	
 	
-	private GeoJsonObject lastKnownLoc;
+	private Point lastKnownLoc;
 	private long lastLocationUpdate;
 	
 	private long dateJoined;
@@ -93,9 +94,9 @@ public class User implements Serializable {
 	public HashSet<String> updateLocationChannels(Set<String> locationsToSubscribeTo){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
-		HashSet<String> existing = this.location_channels; 
-		if(existing == null){
-			existing = new HashSet<String>();
+		 
+		if(this.location_channels == null){
+			this.location_channels = new HashSet<String>();
 		}
 		
 		if(admin_channels == null){
@@ -103,14 +104,14 @@ public class User implements Serializable {
 		}
 
 
-		for(String exists: existing){
+		for(String exists: this.location_channels){
 
 			if(locationsToSubscribeTo.contains(exists)){
 				//then we were already here. remove it from the list
 				locationsToSubscribeTo.remove(exists);
 			} else {
 
-				existing.remove(exists);
+				this.location_channels.remove(exists);
 				admin_channels.remove(exists);
 			}
 
@@ -122,11 +123,11 @@ public class User implements Serializable {
 		//finally, add in all the nearby points we arent subscribed to yet
 
 		for(String loc: locationsToSubscribeTo){
-			existing.add(loc);
+			this.location_channels.add(loc);
 			admin_channels.add(loc);
 		}
 
-		return existing;
+		return this.location_channels;
 
 	}
 
@@ -265,11 +266,11 @@ public class User implements Serializable {
 		this.lastSeen = lastSeen;
 	}
 
-	public GeoJsonObject getLastKnownLoc() {
+	public Point getLastKnownLoc() {
 		return lastKnownLoc;
 	}
 
-	public void setLastKnownLoc(GeoJsonObject lastKnownLoc) {
+	public void setLastKnownLoc(Point lastKnownLoc) {
 		this.lastKnownLoc = lastKnownLoc;
 	}
 
@@ -361,12 +362,12 @@ public class User implements Serializable {
 	}
 
 
-	public GeoJsonObject getFocusedLocation() {
+	public Point getFocusedLocation() {
 		return focusedLocation;
 	}
 
 
-	public void setFocusedLocation(GeoJsonObject focusedLocation) {
+	public void setFocusedLocation(Point focusedLocation) {
 		this.focusedLocation = focusedLocation;
 	}
 

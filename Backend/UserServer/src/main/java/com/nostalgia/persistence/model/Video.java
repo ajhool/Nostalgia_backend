@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 
 /**
  * Created by alex on 11/4/15.
@@ -47,7 +48,7 @@ public class Video implements Serializable {
 
     private int skips;
 
-    private GeoJsonObject location;
+    private Point location;
 
     private Map<String, String> properties;
 
@@ -75,11 +76,11 @@ public class Video implements Serializable {
         this.dateCreated = dateCreated;
     }
 
-    public GeoJsonObject getLocation() {
+    public Point getLocation() {
         return location;
     }
 
-    public void setLocation(GeoJsonObject location) {
+    public void setLocation(Point location) {
         this.location = location;
     }
 

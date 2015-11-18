@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Hex;
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,13 +49,25 @@ public class UserLocationResource {
 
 	}
 
+	public User updateSubscriptions(User hasNewLoc){
+		//all the locations we know
+		HashMap<String, KnownLocation> nearbys = locRepo.findKnownLocationsCoveringPoint(hasNewLoc.getLastKnownLoc());
+
+		if(nearbys != null && nearbys.keySet().size() > 0){
+			hasNewLoc.updateLocationChannels(nearbys.keySet());
+		}
+
+
+		return hasNewLoc; 
+	}
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/update")
 	@Timed
-	public void userLocationUpdate(GeoJsonObject newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
+	public void userLocationUpdate(Point newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
 
 		if(newLoc == null){
 			throw new BadRequestException();
@@ -64,17 +77,9 @@ public class UserLocationResource {
 		if(matching == null) return;
 
 		matching.setLastKnownLoc(newLoc);
-
-
-
-		//all the locations we know
-		HashMap<String, KnownLocation> nearbys = locRepo.findKnownLocationsCoveringPoint(newLoc);
-		
-		if(nearbys != null && nearbys.keySet().size() > 0){
-			matching.updateLocationChannels(nearbys.keySet());
-		}
-		
 		matching.setLastLocationUpdate(System.currentTimeMillis());
+
+		matching = this.updateSubscriptions(matching);
 
 		userRepo.save(matching);
 

@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 
 /**
  * Created by alex on 11/4/15.
@@ -31,7 +33,7 @@ public class KnownLocation implements Serializable {
 	private String creatorId; 
 
 
-	private GeoJsonObject location;
+	private Feature location;
 
 	private Map<Long, String> sponsoredVideos;
 
@@ -63,11 +65,11 @@ public class KnownLocation implements Serializable {
 		this.name = name;
 	}
 
-	public GeoJsonObject getLocation() {
+	public Feature getLocation() {
 		return location;
 	}
 
-	public void setLocation(GeoJsonObject location) {
+	public void setLocation(Feature location) {
 		this.location = location;
 	}
 

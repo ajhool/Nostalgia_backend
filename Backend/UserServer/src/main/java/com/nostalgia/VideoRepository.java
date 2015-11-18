@@ -3,6 +3,7 @@ package com.nostalgia;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
@@ -45,8 +46,8 @@ public class VideoRepository {
 	DesignDocument vidDoc = DesignDocument.create(
 			"video_standard",
 			Arrays.asList(
-					DefaultView.create("by_name",
-							"function (doc, meta) { if (doc.type == 'Video') { emit(doc.name, null); } }")//,
+					DefaultView.create("by_id",
+							"function (doc, meta) { if (doc.type == 'Video') { emit(doc._id, null); } }")//,
 					//			DefaultView.create("by_channel",
 					//					"function (doc, meta) { "
 					//					+ "if (doc.type == 'Video') { "
@@ -132,26 +133,27 @@ public class VideoRepository {
 	public HashMap<String, Video> findVideosWithin(GeoJsonObject hasbbox) {
 		double[] bbox = hasbbox.getBbox(); 
 
+		if(bbox == null){
+			bbox = LocationRepository.buildbbox(hasbbox);
+		}
 		if(bbox == null || bbox.length < 4){
 			logger.error("only bounding box based queries supported at this time");
 			return null;
 		}
-		JsonArray START = JsonArray.from(bbox[0], bbox[1]);
-		JsonArray END = JsonArray.from(bbox[2], bbox[3]);
+		JsonArray START = JsonArray.from(bbox[1], bbox[0]);
+		JsonArray END = JsonArray.from(bbox[3], bbox[2]);
 		SpatialViewQuery query = SpatialViewQuery.from("video_spatial", "video_points").range(START, END);
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
 			logger.error("error from view query:" + error);
-		}
-
-
-		if (result == null || result.allRows().size() < 1){
 			return null;
 		}
-
+		
+		List<SpatialViewRow> rows = result.allRows();
+		
 		HashMap<String, Video> s = new HashMap<String, Video>();
-		for (SpatialViewRow row : result) {
+		for (SpatialViewRow row : rows) {
 			JsonDocument matching = row.document();
 			s.put(matching.id().substring(0, 8), docToVideo(matching));
 		}
