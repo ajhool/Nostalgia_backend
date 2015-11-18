@@ -3,6 +3,7 @@ package com.nostalgia.persistence.model;
 import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +30,7 @@ public class KnownLocation implements Serializable {
 	private String _id = UUID.randomUUID().toString();
 
 	private String name;
-	
+
 	private String creatorId; 
 
 
@@ -46,7 +47,13 @@ public class KnownLocation implements Serializable {
 
 	private Map<String, String> matchingVideos;
 
-	public KnownLocation(){}
+	public KnownLocation(){
+
+		if(channels == null){
+			channels = new ArrayList<String>();
+			channels.add(this.getChannelName());
+		}
+	}
 
 
 	public String get_id() {
@@ -118,7 +125,7 @@ public class KnownLocation implements Serializable {
 	public void setChannels(List<String> channels) {
 		this.channels = channels;
 	}
-	
+
 	@Override
 	public int hashCode(){
 		return _id.hashCode();

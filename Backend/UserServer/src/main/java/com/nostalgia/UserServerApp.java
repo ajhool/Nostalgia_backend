@@ -85,7 +85,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		SynchClient sCli = this.createSynchClient(config, environment);
 		
-		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo/*, sMan*/);
+		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
 		UserResource userResource = new UserResource(userRepo, sCli, locRes);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);

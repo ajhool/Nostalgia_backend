@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,6 +25,8 @@ public class Video implements Serializable {
 		return _id.substring(0, 8);
 	}
 	
+	//channels that this document itself is in
+	private List<String> channels; 
 	
     /**
 	 * 
@@ -61,6 +65,10 @@ public class Video implements Serializable {
     public Video(){
         if(properties == null){
             properties = new HashMap<String, String>();
+        }
+        if(channels == null){
+        	channels = new ArrayList<String>();
+        	channels.add(this.getChannelName());
         }
 
     }
@@ -150,5 +158,13 @@ public class Video implements Serializable {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public List<String> getChannels() {
+		return channels;
+	}
+
+	public void setChannels(List<String> channels) {
+		this.channels = channels;
 	}
 }

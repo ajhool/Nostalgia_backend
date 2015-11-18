@@ -14,6 +14,8 @@ public class SyncConfig {
 
 	public String addUserPath = "/sync_gateway/_user/";
 
+	public String getUserPath = "/sync_gateway/_user/";
+
 
 
 

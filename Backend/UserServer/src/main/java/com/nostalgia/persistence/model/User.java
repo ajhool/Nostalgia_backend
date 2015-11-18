@@ -35,6 +35,9 @@ public class User implements Serializable {
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
+	
+	//channel -> time 
+	private Map<String, String> video_channels; 
 
 	//channels that this document itself is in
 	private List<String> channels; 
@@ -89,7 +92,59 @@ public class User implements Serializable {
 	private String token;
 
 	private String syncToken;
+	
+	@JsonIgnore
+	public HashSet<String> purgeOlderThan(long unixTimeStamp){
+		if( video_channels == null) return null;
+		HashSet<String> removed = new HashSet<String>();
+		for(String id : video_channels.keySet()){
+			if(Long.parseLong(video_channels.get(id)) < unixTimeStamp){
+				//purge
+				this.video_channels.remove(id);
+				admin_channels.remove(id);
+				removed.add(id);
+			}
+		}
+		return removed;
+	}
 
+	@JsonIgnore
+	public HashSet<String> updateVideoChannels(Set<String> videosToSubscribeTo){
+		//clear old locations out from subscriptions
+		//all the locations we subscribe to
+		 
+		if(this.video_channels == null){
+			this.video_channels = new HashMap<String, String>();
+		}
+		
+		if(admin_channels == null){
+			admin_channels = new ArrayList<String>();
+		}
+
+
+		for(String exists: this.video_channels.keySet()){
+
+			if(videosToSubscribeTo.contains(exists)){
+				//then we were already here. remove it from the list
+				videosToSubscribeTo.remove(exists);
+			}
+//			} else {
+//
+
+//			}
+
+		}
+
+
+		for(String vid : videosToSubscribeTo){
+			this.video_channels.put(vid, System.currentTimeMillis() +"");
+			admin_channels.add(vid);
+		}
+
+		return this.location_channels;
+
+	}
+	
 	@JsonIgnore
 	public HashSet<String> updateLocationChannels(Set<String> locationsToSubscribeTo){
 		//clear old locations out from subscriptions
