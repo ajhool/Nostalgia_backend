@@ -137,9 +137,11 @@ public class LocationAdminResource {
 		int currentMax = toAdd.getMatchingVideos().size() - 1;
 
 		//add them in
-		for(Video vid : matchingVids.values()){
-			currentMax++;
-			toAdd.getMatchingVideos().put(currentMax + "", vid.get_id());
+		if(matchingVids != null){
+			for(Video vid : matchingVids.values()){
+				currentMax++;
+				toAdd.getMatchingVideos().put(currentMax + "", vid.get_id());
+			}
 		}
 
 		//save

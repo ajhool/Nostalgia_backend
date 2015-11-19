@@ -40,19 +40,27 @@ public class SynchClient {
 		UriBuilder uribuild = UriBuilder.fromUri("http://" + conf.host + ":" + conf.port + conf.addUserPath);
 
 
+		
 		//name to be last part of id
 		String name = loggedIn.get_id().substring(loggedIn.get_id().lastIndexOf("-"));
-		loggedIn.setName(name);
-
+		
+		User copy = null;
 
 		try {
-			Response resp = sComm.target(uribuild).request().post(Entity.json(loggedIn));
+			copy = mapper.readValue(mapper.writeValueAsString(loggedIn), User.class);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		copy.setName(name);
+		try {
+			Response resp = sComm.target(uribuild).request().post(Entity.json(copy));
 
 			logger.info("response: " + resp.getStatus());
 		} catch (Exception e){
 			logger.error("error registering new user", e);
 			return false;
-		}
+		} 
 
 
 		return true;
@@ -60,9 +68,9 @@ public class SynchClient {
 
 	public SyncSessionCreateResponse createSyncSessionFor(User loggedIn) {
 		UriBuilder uribuild = UriBuilder.fromUri("http://" + conf.host + ":" + conf.port + conf.newSessionPath);
-
+		String name = loggedIn.get_id().substring(loggedIn.get_id().lastIndexOf("-"));
 		SyncSessionCreateRequest req = new SyncSessionCreateRequest();
-		req.setName(loggedIn.getName());
+		req.setName(name);
 		SyncSessionCreateResponse resp = null;
 		try {
 			resp = sComm.target(uribuild).request().post(Entity.json(req), SyncSessionCreateResponse.class);
