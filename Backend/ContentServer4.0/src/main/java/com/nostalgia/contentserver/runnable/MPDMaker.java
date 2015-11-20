@@ -31,7 +31,7 @@ public class MPDMaker implements Runnable{
 	public static final Logger logger = LoggerFactory.getLogger(MPDMaker.class);
 
 	private  Video needMPD;
-	private  Dasher waitingOn;
+	private  HLSer waitingOn;
 
 	private boolean wait = true;
 	private boolean complete = false; 
@@ -39,7 +39,7 @@ public class MPDMaker implements Runnable{
 	private final String baseurl;
 
 
-	public MPDMaker(Video needMPD, Dasher waitingOn, File videoRoot, boolean b, String baseUrl) {
+	public MPDMaker(Video needMPD, HLSer waitingOn, File videoRoot, boolean b, String baseUrl) {
 		super();
 		this.needMPD = needMPD;
 		this.waitingOn = waitingOn;
@@ -77,7 +77,7 @@ public class MPDMaker implements Runnable{
 					baseurls.clear();
 					baseurls.add(myBase);
 					
-					needMPD.setMpd(baseurl + "Manifest.mpd");
+					needMPD.setMpd(baseurl + "320x180.m3u8");
 				} catch (SAXException | IOException
 						| ParserConfigurationException
 						| DatatypeConfigurationException e) {

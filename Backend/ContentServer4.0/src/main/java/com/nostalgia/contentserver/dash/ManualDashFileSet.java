@@ -7,7 +7,7 @@ import com.castlabs.dash.dashfragmenter.cmdlines.DashFileSet;
 
 public class ManualDashFileSet extends DashFileSet{
 
-	public static final boolean EXPLODE_DEFAULT = true;
+	public static final boolean EXPLODE_DEFAULT = false;
 	public static final boolean ENABLE_VERBOSE = true;
 	
 	//TODO constructor

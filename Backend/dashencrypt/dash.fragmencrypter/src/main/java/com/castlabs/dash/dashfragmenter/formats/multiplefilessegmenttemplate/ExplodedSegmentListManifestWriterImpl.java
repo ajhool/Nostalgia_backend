@@ -80,6 +80,7 @@ public class ExplodedSegmentListManifestWriterImpl extends AbstractManifestWrite
             segmentTemplate.setMedia(mediaPattern.replace("%lang%", tracks.get(0).getTrackMetaData().getLanguage()));
             segmentTemplate.setInitialization2(initPattern.replace("%lang%", tracks.get(0).getTrackMetaData().getLanguage()));
             segmentTemplate.setTimescale(firstTrack.getTrackMetaData().getTimescale());
+            segmentTemplate.setStartNumber(0);
             SegmentTimelineType segmentTimeline = segmentTemplate.addNewSegmentTimeline();
             List<File> segments = trackToSegements.get(firstTrack).subList(1, trackToSegements.get(firstTrack).size());
             File init = trackToSegements.get(firstTrack).get(0);

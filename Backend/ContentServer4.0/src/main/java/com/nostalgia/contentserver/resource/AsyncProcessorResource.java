@@ -56,7 +56,7 @@ import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
 import com.nostalgia.contentserver.repository.VideoRepository;
 import com.nostalgia.contentserver.runnable.BaselineTranscoder;
-import com.nostalgia.contentserver.runnable.Dasher;
+import com.nostalgia.contentserver.runnable.HLSer;
 import com.nostalgia.contentserver.runnable.MPDMaker;
 import com.nostalgia.contentserver.runnable.PipelineScrubber;
 import com.nostalgia.contentserver.utils.Marshal;
@@ -95,7 +95,9 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		baselineRunner.join();
 
 
-		Dasher dash = new Dasher(mpDtype, original.getParentFile(), transcoder, false);
+		ArrayList<String> reses = new ArrayList<String>();
+		reses.add("320x180");
+		HLSer dash = new HLSer(reses, original.getParentFile(), transcoder, false);
 		new Thread(dash).start();
 
 

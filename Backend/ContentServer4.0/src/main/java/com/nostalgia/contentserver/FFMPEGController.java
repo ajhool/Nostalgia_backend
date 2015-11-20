@@ -52,10 +52,11 @@ public class FFMPEGController {
 		public static final String FRAGMENT_DUR = "-frag_duration";
 		public static final String DISABLE_VIDEO = "-vn";
 		public static final String VIDEO_BITRATE = "-vb";
+		public static final String VIDEO_PROFILE = "-profile:v";
 		public static final String MOVFLAGS = "-movflags";
 		public static final String CONSTANT_RATE_FACTOR = "-crf";
 		public static final String SPEED_PRESET = "-preset";
-		
+
 		public static final String DISABLE_AUDIO = "-an";
 		public static final String ENABLE_OUTFILE_OVERWRITE = "-y";
 		public static final String SIZE = "-s";
@@ -69,14 +70,17 @@ public class FFMPEGController {
 
 		public static final String STARTTIME = "-ss";
 		public static final String DURATION = "-t";
-
+		public static final String LEVEL = "-level";
+		public static final String BUFFER_SIZE = "-bufsize";
+		public static final String STRICT = "-strict";
+		public static final String HLS_OPT_TIME = "-hls_time";
+		public static final String HLS_OPT_LIST_SIZE = "-hls_list_size";
+		
 
 	}
 
-	public ArrayList<String> generateFFMPEGCommand(RepresentationType toTranscode, File original, File outputParent){
+	public ArrayList<String> generateFFMPEGCommand(String targetResolution, File original, File outputParent){
 		ArrayList<String> cmd = new ArrayList<String>();
-
-
 
 		cmd.add(mffmpegBin);
 		//cmd.add(Argument.ENABLE_OUTFILE_OVERWRITE);
@@ -86,124 +90,54 @@ public class FFMPEGController {
 		//cmd.add("http://odna.octoshape.net/f3f5m2v4/cds/ch4_320p/chunklist.m3u8");
 		cmd.add(original.getName());
 
+		cmd.add(Argument.DISABLE_AUDIO);
+//		cmd.add(Argument.AUDIOCODEC);
+//		cmd.add("aac");
+//		
+//		cmd.add(Argument.STRICT);
+//		cmd.add("experimental");
+//
+//		cmd.add(Argument.CHANNELS_AUDIO);
+//		cmd.add("2");
+//
+//		cmd.add(Argument.AUDIO_BITRATE);
+//		cmd.add("64k");
+//
+//		cmd.add(Argument.FREQ_AUDIO);
+//		cmd.add("64k");
 
-		if(toTranscode.getAudioChannelConfiguration().size() > 0){
-			//need to create audio representation
+		cmd.add(Argument.VIDEOCODEC);
+		cmd.add("libx264");
 
-			cmd.add(Argument.DISABLE_VIDEO);
+		cmd.add(Argument.VIDEO_PROFILE);
+		cmd.add("baseline");
 
-			cmd.add(Argument.CHANNELS_AUDIO);
-			cmd.add("2");
+		cmd.add(Argument.LEVEL);
+		cmd.add("1.3");
 
-			cmd.add("-keyint_min");
-			cmd.add("24");
+		cmd.add(Argument.BUFFER_SIZE);
+		cmd.add("1M");
 
-			cmd.add(Argument.KEYFRAME_INTERVAL);
-			cmd.add("72");
+		cmd.add(Argument.CONSTANT_RATE_FACTOR);
+		cmd.add("18");
 
-			cmd.add(Argument.AUDIOCODEC);
-			cmd.add("libfdk_aac");
+		cmd.add(Argument.FRAMERATE);
+		cmd.add("25");
 
-//			cmd.add(Argument.AUDIO_PROFILE);
-//			cmd.add("aac_he");
-
-			cmd.add(Argument.AUDIO_BITRATE);
-			cmd.add("64k");
-
-
-		} else {
-
-
-			//create video representation
-			cmd.add(Argument.DISABLE_AUDIO);
-
-			cmd.add(Argument.VIDEO_BITRATE);
-			cmd.add(Long.toString(toTranscode.getBandwidth()));
-
-
-			cmd.add("-keyint_min");
-			cmd.add("24");
-
-			cmd.add(Argument.KEYFRAME_INTERVAL);
-			cmd.add("72");
-
-			cmd.add(Argument.VIDEOCODEC);
-			cmd.add("libx264");
-		}
-
-		//cmd.add(Argument.MOVFLAGS);
-		//cmd.add("frag_keyframe+empty_moov");
+		cmd.add(Argument.KEYFRAME_INTERVAL);
+		cmd.add("75");
 
 
-		//cmd.add("-preset");
-		//cmd.add("superfast");
-		//add audio output file
-		cmd.add( outputParent.getAbsolutePath() + "/" + toTranscode.getId() + ".mp4");
-
-
-
-		//		cmd.add(mffmpegBin);
-		//		cmd.add(Argument.ENABLE_OUTFILE_OVERWRITE);
-		//
-		//		//add streaming inout
-		//		cmd.add(Argument.FILE_INPUT);
-		//		cmd.add("http://odna.octoshape.net/f3f5m2v4/cds/ch4_320p/chunklist.m3u8");
-		//
-		//		//add audio output
-		//		cmd.add(Argument.KEYFRAME_INTERVAL);
-		//		cmd.add("52");
-		//
-		//		cmd.add(Argument.AUDIOCODEC);
-		//		cmd.add("libfdk_aac");
-		//
-		//		cmd.add(Argument.AUDIO_BITRATE);
-		//		cmd.add("64k");
-		//
-		//		cmd.add(Argument.AUDIO_PROFILE);
-		//		cmd.add("aac_he");
-		//
-		//		cmd.add(Argument.FRAGMENT_SIZE);
-		//		cmd.add("4096000");
-		//
-		//		cmd.add(Argument.FRAGMENT_DUR);
-		//		cmd.add("100000");
-		//
-		//		cmd.add(Argument.DISABLE_VIDEO);
-		//
-
-		//
-		//		cmd.add(Argument.VIDEO_BITRATE);
-		//		cmd.add("448k");
-		//
-		//		cmd.add(Argument.FORMAT);
-		//		cmd.add("mp4");
-		//
-		//		cmd.add(Argument.MOVFLAGS);
-		//		cmd.add("frag_keyframe+empty_moov");
-		//
-		//		//add audio output file
-		//		cmd.add("test_audio.mp4");
-		//
-		//		//part II: video output
-		//		cmd.add(Argument.VIDEOCODEC);
-		//		cmd.add("libx264");
-		//
-		//		cmd.add(Argument.VIDEO_BITRATE);
-		//		cmd.add("448k");
-		//
-		//		cmd.add(Argument.DISABLE_AUDIO);
-		//
-		//		cmd.add(Argument.KEYFRAME_INTERVAL);
-		//		cmd.add("52");
-		//
-		//		cmd.add(Argument.FORMAT);
-		//		cmd.add("mp4");
-		//
-		//		cmd.add(Argument.MOVFLAGS);
-		//		cmd.add("frag_keyframe+empty_moov");
-		//
-		//		//add audio output file
-		//		cmd.add("test_video.mp4");
+		cmd.add(Argument.FORMAT);
+		cmd.add("hls");
+		
+		cmd.add(Argument.HLS_OPT_LIST_SIZE);
+		cmd.add("0");
+		
+		cmd.add(Argument.SIZE);
+		cmd.add(targetResolution);
+		
+		cmd.add( outputParent.getAbsolutePath() + "/" + targetResolution + ".m3u8");
 
 		return cmd;
 
@@ -329,9 +263,9 @@ public class FFMPEGController {
 
 	public ArrayList<String> generateFFMPEGBaselineCommand(File sourceFile,
 			File output) {
-		
+
 		ArrayList<String> cmd = new ArrayList<String>();
-		
+
 		cmd.add(mffmpegBin);
 		//cmd.add(Argument.ENABLE_OUTFILE_OVERWRITE);
 
@@ -339,26 +273,26 @@ public class FFMPEGController {
 		cmd.add(Argument.FILE_INPUT);
 		//cmd.add("http://odna.octoshape.net/f3f5m2v4/cds/ch4_320p/chunklist.m3u8");
 		cmd.add(sourceFile.getName());
-		
+
 		cmd.add(Argument.VIDEOCODEC);
 		cmd.add("libx264");
-		
+
 		cmd.add(Argument.AUDIOCODEC);
 		cmd.add("libfdk_aac");
 
-//		cmd.add(Argument.AUDIO_PROFILE);
-//		cmd.add("aac_he");
-		
+		//		cmd.add(Argument.AUDIO_PROFILE);
+		//		cmd.add("aac_he");
+
 		cmd.add(Argument.KEYFRAME_INTERVAL);
 		cmd.add("90");
-		
+
 		cmd.add(Argument.CONSTANT_RATE_FACTOR);
 		cmd.add("17");
-		
-		
+
+
 		cmd.add(Argument.AUDIO_BITRATE);
 		cmd.add("96k");
-		
+
 		//add output 
 		cmd.add(output.getName());
 		return cmd;
