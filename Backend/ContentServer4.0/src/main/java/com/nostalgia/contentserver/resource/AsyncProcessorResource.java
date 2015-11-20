@@ -50,6 +50,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.nostalgia.contentserver.config.DataConfig;
 import com.nostalgia.contentserver.model.dash.jaxb.AdaptationSetType;
 import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
@@ -66,14 +67,17 @@ import io.dropwizard.lifecycle.Managed;
 
 public class AsyncProcessorResource extends AbstractScheduledService implements Managed {
 
-	public static final String FileDataRootDir = "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
+	public final String FileDataRootDir; //= "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
 	final static Logger logger = LoggerFactory.getLogger(AsyncProcessorResource.class);
+	private String baseUrl; 
 
 	private final VideoRepository vidRepo;
 
-	public AsyncProcessorResource(VideoRepository contentRepo) {
+	public AsyncProcessorResource(VideoRepository contentRepo, DataConfig dataConfig) {
 		super();
 		this.vidRepo = contentRepo;
+		FileDataRootDir = dataConfig.datadir;
+		baseUrl = dataConfig.baseurl;
 	}
 
 
@@ -96,7 +100,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 
 
 
-		MPDMaker mpdWaiter = new MPDMaker(metaData, dash, original.getParentFile(), true);
+		MPDMaker mpdWaiter = new MPDMaker(metaData, dash, original.getParentFile(), true, baseUrl + metaData.get_id() + "/");
 		Thread mpdRunner = new Thread(mpdWaiter);
 		mpdRunner.start();
 

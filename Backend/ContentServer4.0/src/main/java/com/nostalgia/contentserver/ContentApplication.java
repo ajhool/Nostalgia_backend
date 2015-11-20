@@ -84,7 +84,7 @@ public class ContentApplication extends Application<ContentServConfig> {
 		
 		VideoRepository vidRepo = new VideoRepository(config.getVideoCouch());
 
-		AsyncProcessorResource processor = new AsyncProcessorResource(vidRepo);
+		AsyncProcessorResource processor = new AsyncProcessorResource(vidRepo, config.getDataConfig());
 		
 		environment.lifecycle().manage(processor);
 	}

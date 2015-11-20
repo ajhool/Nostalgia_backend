@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -19,6 +20,7 @@ import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
+import com.nostalgia.contentserver.model.dash.jaxb.BaseURLType;
 import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 import com.nostalgia.contentserver.repository.VideoRepository;
 import com.nostalgia.contentserver.utils.Marshal;
@@ -34,14 +36,15 @@ public class MPDMaker implements Runnable{
 	private boolean wait = true;
 	private boolean complete = false; 
 	private final File videoRoot;
+	private final String baseurl;
 
 
-	public MPDMaker(Video needMPD, Dasher waitingOn, File videoRoot, boolean b) {
+	public MPDMaker(Video needMPD, Dasher waitingOn, File videoRoot, boolean b, String baseUrl) {
 		super();
 		this.needMPD = needMPD;
 		this.waitingOn = waitingOn;
 		this.videoRoot = videoRoot;
-		
+		this.baseurl = baseUrl;
 		this.wait = b;
 	}
 
@@ -67,6 +70,13 @@ public class MPDMaker implements Runnable{
 				MPDtype mpd = null;
 				try {
 					mpd = this.getMPDFor(needMPD);
+					
+					List<BaseURLType> baseurls = mpd.getPeriod().get(0).getBaseURL();
+					BaseURLType myBase = new BaseURLType();
+					myBase.setValue(baseurl);
+					baseurls.clear();
+					baseurls.add(myBase);
+					
 					needMPD.setMpd(mpd);
 				} catch (SAXException | IOException
 						| ParserConfigurationException

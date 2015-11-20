@@ -2,6 +2,7 @@ package com.nostalgia.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -54,6 +55,8 @@ public class Video implements Serializable {
 
     private Point location;
 
+    private MPDtype mpd; 
+    
     private Map<String, String> properties;
 
     private String ownerId;
@@ -166,5 +169,13 @@ public class Video implements Serializable {
 
 	public void setChannels(List<String> channels) {
 		this.channels = channels;
+	}
+
+	public MPDtype getMpd() {
+		return mpd;
+	}
+
+	public void setMpd(MPDtype mpd) {
+		this.mpd = mpd;
 	}
 }

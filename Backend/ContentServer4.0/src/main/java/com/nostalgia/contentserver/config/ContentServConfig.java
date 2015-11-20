@@ -22,8 +22,17 @@ public class ContentServConfig extends Configuration{
 	@NotNull
 	@JsonProperty("jerseyClient")
 	private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
+	
+	@Valid
+	@NotNull
+	@JsonProperty("DataConfig")
+	private DataConfig dataConfig = new DataConfig();
 
 	
+	public DataConfig getDataConfig() {
+		return dataConfig;
+	}
+
 	public JerseyClientConfiguration getJerseyClientConfiguration() {
 		return jerseyClient;
 	}

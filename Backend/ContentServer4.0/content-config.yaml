@@ -22,6 +22,9 @@ server:
     type: http
     port: 9797
 
+DataConfig:
+  datadir: /webroot/data
+
 # Logging settings.
 logging:
 

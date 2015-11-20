@@ -5,12 +5,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 
 /**
  * Created by alex on 11/4/15.
@@ -23,6 +26,8 @@ public class Video implements Serializable {
 		return _id.substring(0, 8);
 	}
 	
+	//channels that this document itself is in
+	private List<String> channels; 
 	
     /**
 	 * 
@@ -33,7 +38,8 @@ public class Video implements Serializable {
     private String type = this.getClass().getSimpleName();
     //new, metaonly, metaanddata, processed, distributing
     private String status = "NEW"; 
-  
+
+	private MPDtype mpd; 
     private long dateCreated;
     boolean enabled = false;
 
@@ -48,7 +54,7 @@ public class Video implements Serializable {
 
     private int skips;
 
-    private GeoJsonObject location;
+    private Point location;
 
     private Map<String, String> properties;
 
@@ -58,11 +64,13 @@ public class Video implements Serializable {
 
     private String thumbNail;
 
-	private MPDtype mpd;
-
     public Video(){
         if(properties == null){
             properties = new HashMap<String, String>();
+        }
+        if(channels == null){
+        	channels = new ArrayList<String>();
+        	channels.add(this.getChannelName());
         }
 
     }
@@ -78,11 +86,11 @@ public class Video implements Serializable {
         this.dateCreated = dateCreated;
     }
 
-    public GeoJsonObject getLocation() {
+    public Point getLocation() {
         return location;
     }
 
-    public void setLocation(GeoJsonObject location) {
+    public void setLocation(Point location) {
         this.location = location;
     }
 
@@ -154,10 +162,19 @@ public class Video implements Serializable {
 		this.status = status;
 	}
 
-	public MPDtype getMpd() {
-		return mpd; 
+	public List<String> getChannels() {
+		return channels;
 	}
-	public void setMpd(MPDtype toSet) {
-		this.mpd = toSet; 
+
+	public void setChannels(List<String> channels) {
+		this.channels = channels;
+	}
+
+	public MPDtype getMpd() {
+		return mpd;
+	}
+
+	public void setMpd(MPDtype mpd) {
+		this.mpd = mpd;
 	}
 }
