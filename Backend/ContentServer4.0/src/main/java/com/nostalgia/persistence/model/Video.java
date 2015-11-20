@@ -39,7 +39,7 @@ public class Video implements Serializable {
     //new, metaonly, metaanddata, processed, distributing
     private String status = "NEW"; 
 
-	private MPDtype mpd; 
+	private String mpd; 
     private long dateCreated;
     boolean enabled = false;
 
@@ -170,11 +170,11 @@ public class Video implements Serializable {
 		this.channels = channels;
 	}
 
-	public MPDtype getMpd() {
+	public String getMpd() {
 		return mpd;
 	}
 
-	public void setMpd(MPDtype mpd) {
+	public void setMpd(String mpd) {
 		this.mpd = mpd;
 	}
 }

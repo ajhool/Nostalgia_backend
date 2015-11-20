@@ -77,7 +77,7 @@ public class MPDMaker implements Runnable{
 					baseurls.clear();
 					baseurls.add(myBase);
 					
-					needMPD.setMpd(mpd);
+					needMPD.setMpd(baseurl + "Manifest.mpd");
 				} catch (SAXException | IOException
 						| ParserConfigurationException
 						| DatatypeConfigurationException e) {

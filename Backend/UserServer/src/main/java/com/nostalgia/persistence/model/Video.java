@@ -55,7 +55,7 @@ public class Video implements Serializable {
 
     private Point location;
 
-    private MPDtype mpd; 
+    private String mpd; 
     
     private Map<String, String> properties;
 
@@ -171,11 +171,11 @@ public class Video implements Serializable {
 		this.channels = channels;
 	}
 
-	public MPDtype getMpd() {
+	public String getMpd() {
 		return mpd;
 	}
 
-	public void setMpd(MPDtype mpd) {
+	public void setMpd(String mpd) {
 		this.mpd = mpd;
 	}
 }

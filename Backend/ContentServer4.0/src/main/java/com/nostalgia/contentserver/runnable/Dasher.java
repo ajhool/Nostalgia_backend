@@ -15,6 +15,7 @@ import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
 import com.nostalgia.contentserver.model.dash.jaxb.AdaptationSetType;
+import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 import com.nostalgia.contentserver.model.dash.jaxb.PeriodType;
 import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
 import com.nostalgia.persistence.model.Video;
@@ -23,7 +24,7 @@ public class Dasher implements Runnable{
 
 	public static final Logger logger = LoggerFactory.getLogger(Dasher.class);
 	private File sourceFile;
-	private final Video contentInfo;
+	private final MPDtype rough;
 
 	private final BaselineTranscoder priorStage;
 	private final File output;
@@ -31,9 +32,9 @@ public class Dasher implements Runnable{
 	private boolean skipPrevious;
 	private ArrayList<RepresentationType> targets = new ArrayList<RepresentationType>();
 
-	public Dasher(/*File source,*/  Video data, File output, BaselineTranscoder transcoder, boolean skip){
+	public Dasher(MPDtype rough, File output, BaselineTranscoder transcoder, boolean skip){
 		super();
-		this.contentInfo = data;
+		this.rough = rough;
 		this.output = output;
 		this.priorStage = transcoder;
 		/*this.sourceFile = source;*/
@@ -58,7 +59,7 @@ public class Dasher implements Runnable{
 		}
 		
 		//each representation type needs a separate output
-		for(PeriodType period: contentInfo.getMpd().getPeriod()){
+		for(PeriodType period: rough.getPeriod()){
 			for(AdaptationSetType adapt: period.getAdaptationSet()){
 				for(RepresentationType rep : adapt.getRepresentation()){
 					logger.info("adding target: " + rep.getId());

@@ -81,7 +81,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 	}
 
 
-	public Video processFile(Video metaData, File original) throws Exception {
+	public Video processFile(MPDtype mpDtype, Video metaData, File original) throws Exception {
 
 		//next stage: run the video through a baseline transcoding stage in preparation for dashing
 		File baseline = new File(original.getName() +"_baseline.mp4");
@@ -95,7 +95,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		baselineRunner.join();
 
 
-		Dasher dash = new Dasher(metaData, original.getParentFile(), transcoder, false);
+		Dasher dash = new Dasher(mpDtype, original.getParentFile(), transcoder, false);
 		new Thread(dash).start();
 
 
@@ -167,10 +167,6 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id();
 		File contentPieceOrig = new File(filePath);
 
-		if(vid.getMpd() == null){
-			vid.setMpd(this.getRoughMPD(vid));
-		}
-
 		if(!contentPieceOrig.exists()){
 			logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
 			return;
@@ -178,7 +174,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 
 		//otherwise, we know it exists
 
-		Video result = processFile(vid, contentPieceOrig);
+		Video result = processFile(getRoughMPD(vid), vid, contentPieceOrig);
 
 		result.setStatus("DISTRIBUTING");
 		vidRepo.save(result);

@@ -169,6 +169,7 @@ public class LocationRepository {
 		HashMap<String, KnownLocation> s = new HashMap<String, KnownLocation>();
 		for (SpatialViewRow row : rows) {
 		    JsonDocument matching = row.document();
+		    if(matching == null) continue;
 		    s.put(matching.id().substring(0, 8), docToLocation(matching));
 		}
 		return s;
