@@ -81,7 +81,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 	}
 
 
-	public Video processFile(MPDtype mpDtype, Video metaData, File original) throws Exception {
+	public Video processFile(Video metaData, File original) throws Exception {
 
 		//next stage: run the video through a baseline transcoding stage in preparation for dashing
 		File baseline = new File(original.getName() +"_baseline.mp4");
@@ -101,17 +101,17 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		new Thread(dash).start();
 
 
+//
+//		MPDMaker mpdWaiter = new MPDMaker(metaData, dash, original.getParentFile(), true, baseUrl + metaData.get_id() + "/");
+//		Thread mpdRunner = new Thread(mpdWaiter);
+//		mpdRunner.start();
+//
+//		mpdRunner.join();
 
-		MPDMaker mpdWaiter = new MPDMaker(metaData, dash, original.getParentFile(), true, baseUrl + metaData.get_id() + "/");
-		Thread mpdRunner = new Thread(mpdWaiter);
-		mpdRunner.start();
+//		metaData = mpdWaiter.getUpdatedMetadata();
 
-		mpdRunner.join();
-
-		metaData = mpdWaiter.getUpdatedMetadata();
-
-		PipelineScrubber scrubber = new PipelineScrubber(original.getParentFile(), mpdWaiter, false);
-		new Thread(scrubber).start();
+//		PipelineScrubber scrubber = new PipelineScrubber(original.getParentFile(), mpdWaiter, false);
+//		new Thread(scrubber).start();
 
 		return metaData; 
 
@@ -176,8 +176,8 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 
 		//otherwise, we know it exists
 
-		Video result = processFile(getRoughMPD(vid), vid, contentPieceOrig);
-
+		Video result = processFile(vid, contentPieceOrig);
+		result.setMpd(baseUrl + result.get_id() + "/" + "320x180.m3u8");
 		result.setStatus("DISTRIBUTING");
 		vidRepo.save(result);
 

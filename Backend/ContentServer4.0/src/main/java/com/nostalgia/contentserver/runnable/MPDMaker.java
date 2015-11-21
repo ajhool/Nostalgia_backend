@@ -77,7 +77,7 @@ public class MPDMaker implements Runnable{
 					baseurls.clear();
 					baseurls.add(myBase);
 					
-					needMPD.setMpd(baseurl + "320x180.m3u8");
+					
 				} catch (SAXException | IOException
 						| ParserConfigurationException
 						| DatatypeConfigurationException e) {

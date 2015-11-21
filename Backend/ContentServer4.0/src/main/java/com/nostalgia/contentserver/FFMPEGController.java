@@ -90,21 +90,21 @@ public class FFMPEGController {
 		//cmd.add("http://odna.octoshape.net/f3f5m2v4/cds/ch4_320p/chunklist.m3u8");
 		cmd.add(original.getName());
 
-		cmd.add(Argument.DISABLE_AUDIO);
-//		cmd.add(Argument.AUDIOCODEC);
-//		cmd.add("aac");
-//		
+		//cmd.add(Argument.DISABLE_AUDIO);
+		cmd.add(Argument.AUDIOCODEC);
+		cmd.add("libfdk_aac");
+		
 //		cmd.add(Argument.STRICT);
 //		cmd.add("experimental");
-//
-//		cmd.add(Argument.CHANNELS_AUDIO);
-//		cmd.add("2");
-//
-//		cmd.add(Argument.AUDIO_BITRATE);
-//		cmd.add("64k");
-//
-//		cmd.add(Argument.FREQ_AUDIO);
-//		cmd.add("64k");
+
+		cmd.add(Argument.CHANNELS_AUDIO);
+		cmd.add("2");
+
+		cmd.add(Argument.AUDIO_BITRATE);
+		cmd.add("64k");
+
+		cmd.add(Argument.FREQ_AUDIO);
+		cmd.add("44100");
 
 		cmd.add(Argument.VIDEOCODEC);
 		cmd.add("libx264");

@@ -92,26 +92,23 @@ public class HLSer implements Runnable{
 
 		//now, we have  a sequence of encoded files
 		
-		ManualDashFileSet dash = new ManualDashFileSet(output, encodedFiles);
-		dash.setVerbose(true);
-		try {
-			dash.run();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExitCodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		ManualDashFileSet dash = new ManualDashFileSet(output, encodedFiles);
+//		dash.setVerbose(true);
+//		try {
+//			dash.run();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (ExitCodeException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		complete = true;
 		logger.info("dashing complete. Representations dashed:" );
 		for(String rep : targets){
 			logger.info(rep);
 		}
 
-		 
-		
-		logger.info("ready for upload to DB");
 		return;
 	}
 
