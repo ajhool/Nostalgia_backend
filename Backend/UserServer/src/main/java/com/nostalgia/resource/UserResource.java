@@ -91,6 +91,17 @@ public class UserResource {
 		this.userLocRes = userLoc; 
 	}
 
+	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate){
+		if(needsTokens.getStreamTokens() == null){
+			needsTokens.setStreamTokens(new HashMap<String, String>());
+		}
+
+		//call to aws here if needed for new tokens
+		needsTokens.getStreamTokens().put("CloudFront-Expires", Long.toString(tokenExpiryDate));
+		needsTokens.getStreamTokens().put("CloudFront-Signature", "hardc0ded");
+		needsTokens.getStreamTokens().put("CloudFront-Key-Pair-Id", "hardc0ded");
+		return;
+	}
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -183,7 +194,7 @@ public class UserResource {
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
 			loggedIn = userLocRes.updateSubscriptions(loggedIn);
 		}
-		
+
 		userRepo.save(loggedIn);
 		return response;
 
@@ -440,7 +451,7 @@ public class UserResource {
 
 
 		}
-		
+
 		if(registering.getLastKnownLoc() != null){
 			loggedInUser.setLastKnownLoc(registering.getLastKnownLoc());
 			loggedInUser = userLocRes.updateSubscriptions(loggedInUser);

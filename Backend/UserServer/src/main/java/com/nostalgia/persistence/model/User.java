@@ -36,6 +36,8 @@ public class User implements Serializable {
 	private List<String> admin_channels;
 	private List<String> admin_roles;
 	
+	private Map<String, String> streamTokens; 
+	
 	//channel -> time 
 	private Map<String, String> video_channels; 
 
@@ -432,6 +434,16 @@ public class User implements Serializable {
 
 	public void setFocusedLocation(Point focusedLocation) {
 		this.focusedLocation = focusedLocation;
+	}
+
+
+	public Map<String, String> getStreamTokens() {
+		return streamTokens;
+	}
+
+
+	public void setStreamTokens(Map<String, String> streamTokens) {
+		this.streamTokens = streamTokens;
 	}
 
 }
