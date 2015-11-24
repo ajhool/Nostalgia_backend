@@ -22,6 +22,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,9 +40,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class WebServlet extends HttpServlet {
     private static final long serialVersionUID = 6393345594784987909L;
     private static final CharMatcher SLASHES = CharMatcher.is('/');
-    
-	private static final Object CONTENT_SIGNATURE = "deadbeef";
-	private static final Object CONTENT_KEY = "tok12";
+    private static final Logger logger = LoggerFactory.getLogger(WebServlet.class);
+	private static final Object CONTENT_SIGNATURE = "hardc0ded";
+	private static final Object CONTENT_KEY = "hardc0ded";
 	
     private static class CachedAsset {
         private final byte[] resource;
@@ -146,34 +149,36 @@ public class WebServlet extends HttpServlet {
     	
     	 //  resp.setContentType("text/html");
 //           
-//    	   Cookie[] cookies = req.getCookies();
-//    	   
-//    	   if(cookies == null){
-//    		   resp.sendError(401, "Cookies required to access content");
-//    		   return;
-//    	   }
-//    	  
-//    	   String key = this.extractKey(cookies);
-//    	   
-//    	   if(key == null){
-//    		   resp.sendError(401, "Invalid key specified");
-//    		   return;
-//    	   }
-//    	  
-//    	   String signature = this.extractSignature(cookies);
-//    	   
-//    	   if(signature == null){
-//    		   resp.sendError(401, "Invalid sigature specified");
-//    		   return;
-//    	   }
-//    	   
-//    	   	
-//    	   boolean valid = this.validate(key, signature);
-//           
-//    	   if(!valid){
-//    		   resp.sendError(401, "Unauthorized.");
-//    		   return ;
-//    	   }
+    	   Cookie[] cookies = req.getCookies();
+    	   
+    	   if(cookies == null){
+    		   resp.sendError(401, "Cookies required to access content");
+    		   return;
+    	   }
+    	  
+    	   String key = this.extractKey(cookies);
+    	   
+    	   if(key == null){
+    		   resp.sendError(401, "Invalid key specified");
+    		   return;
+    	   }
+    	  
+    	   String signature = this.extractSignature(cookies);
+    	   
+    	   if(signature == null){
+    		   resp.sendError(401, "Invalid sigature specified");
+    		   return;
+    	   }
+    	   
+long expiry = this.extractExpiration(cookies);
+    	
+    	   	
+    	   boolean valid = this.validate(key, signature, expiry);
+           
+    	   if(!valid){
+    		   resp.sendError(401, "Unauthorized.");
+    		   return;
+    	   }
            
         try {
             final StringBuilder builder = new StringBuilder(req.getServletPath());
@@ -268,10 +273,37 @@ public class WebServlet extends HttpServlet {
         }
     }
 
-    private boolean validate(String key, String signature) {
+    private long extractExpiration(Cookie[] cookies) {
+		// TODO Auto-generated method stub
+    	
+    	if (cookies == null){
+			return -1;
+		}
+		
+		for(Cookie cook : cookies){
+			if(cook.getName().equals("CloudFront-Expires")){
+				try{
+				return Long.parseLong(cook.getValue());
+				} catch (Exception e){
+					logger.error("error parsing expiry date",e);
+					return -1;
+				}
+			}
+		}
+		return 0;
+	}
+
+	private boolean validate(String key, String signature, long expiry) {
+		
 		if(!key.equals(CONTENT_KEY) || !signature.equals(CONTENT_SIGNATURE)){
 		return false;
-		} else return true;
+		} 
+		
+		if(expiry < System.currentTimeMillis()){
+			return false;
+		}
+		
+		return true;
 	}
 
 	private String extractSignature(Cookie[] cookies) {
@@ -280,7 +312,7 @@ public class WebServlet extends HttpServlet {
 		}
 		
 		for(Cookie cook : cookies){
-			if(cook.getName().equals("nossig")){
+			if(cook.getName().equals("CloudFront-Signature")){
 				return cook.getValue();
 			}
 		}
@@ -293,7 +325,7 @@ public class WebServlet extends HttpServlet {
 		}
 		
 		for(Cookie cook : cookies){
-			if(cook.getName().equals("nostok")){
+			if(cook.getName().equals("CloudFront-Key-Pair-Id")){
 				return cook.getValue();
 			}
 		}

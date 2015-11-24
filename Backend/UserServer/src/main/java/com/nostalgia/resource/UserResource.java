@@ -65,7 +65,7 @@ public class UserResource {
 	public static final String WHO_PRIVATE = "PRIVATE";
 	public static final String WHO_FRIENDS = "FRIENDS";
 	public static final String WHO_EVERYONE = "EVERYONE";
-
+	public static final long MONTH_IN_MILLIS = 2592000000L;
 	public static final String WHEN_NOW = "NOW";
 	public static final String WHEN_HOUR = "HOUR";
 	public static final String WHEN_DAY = "ONE_DAY";
@@ -189,6 +189,20 @@ public class UserResource {
 		loggedIn.setLastSeen(System.currentTimeMillis());
 
 		response.setSessionTok(syncResp.getSession_id());
+		
+	
+		
+		//refresh tokens if necessary
+		if(loggedIn.getStreamTokens() != null){
+			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
+			if(expiry < System.currentTimeMillis()){
+				//need new set of tokens
+				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+			}
+			
+		} else {
+			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+		}
 
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
@@ -405,7 +419,7 @@ public class UserResource {
 		settings.put("sharing_when", WHEN_WIFI);
 		settings.put("sharing_where", WHERE_EVERYWHERE);
 		settings.put("video_sound", SOUND_MUTE);
-
+		this.setNewStreamingTokens(loggedInUser, System.currentTimeMillis() + MONTH_IN_MILLIS);
 		loggedInUser.setSettings(settings);
 
 		loggedInUser.setDateJoined(System.currentTimeMillis());
