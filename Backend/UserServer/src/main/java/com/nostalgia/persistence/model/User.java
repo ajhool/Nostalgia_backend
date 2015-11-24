@@ -95,7 +95,7 @@ public class User implements Serializable {
 	private Map<String, String> settings;
 
 	private Map<String, String> accounts;
-
+	private Map<Long, String> userLocations;
 	private String icon;
 
 	private List<String> authorizedDevices;
@@ -444,6 +444,16 @@ public class User implements Serializable {
 
 	public void setStreamTokens(Map<String, String> streamTokens) {
 		this.streamTokens = streamTokens;
+	}
+
+
+	public Map<Long, String> getUserLocations() {
+		return userLocations;
+	}
+
+
+	public void setUserLocations(Map<Long, String> userLocations) {
+		this.userLocations = userLocations;
 	}
 
 }
