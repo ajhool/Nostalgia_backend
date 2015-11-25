@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.LocationAdminResource;
+import com.nostalgia.resource.LocationQueryResource;
 import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
 import com.nostalgia.resource.UserResource;
@@ -89,7 +90,9 @@ public class UserServerApp extends Application<UserAppConfig>{
 		UserResource userResource = new UserResource(userRepo, sCli, locRes);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
+		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		
+		environment.jersey().register(queryRes);
 		environment.jersey().register(locCRUD);
 		environment.jersey().register(vidRes);
 		environment.jersey().register(locRes);

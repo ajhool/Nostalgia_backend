@@ -141,7 +141,26 @@ public class KnownLocation implements Serializable {
 		this.creatorId = creatorId;
 	}
 
+	@Override
+	@JsonIgnore
+	public String toString(){
+		StringBuffer buf = new StringBuffer();
+		buf.append("Name: " + name + "\n");
+		buf.append("ID: " + _id + "\n");
+		buf.append("Location: " + location + "\n");
 
+		buf.append("Videos: \n");
+		if(this.matchingVideos != null && !matchingVideos.isEmpty()) {
+			for (String key : matchingVideos.keySet()){
+				buf.append("Video #" + key + ": " + matchingVideos.get(key) + "\n");
+			}
+
+		} else {
+			buf.append("no videos");
+		}
+
+		return buf.toString();
+	}
 
 
 }
