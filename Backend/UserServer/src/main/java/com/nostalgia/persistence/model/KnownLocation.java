@@ -47,11 +47,17 @@ public class KnownLocation implements Serializable {
 
 	private Map<String, String> matchingVideos;
 
+	private List<String> thumbnails; 
+
 	public KnownLocation(){
 
 		if(channels == null){
 			channels = new ArrayList<String>();
 			channels.add(this.getChannelName());
+		}
+
+		if(thumbnails == null){
+			thumbnails = new ArrayList<String>();
 		}
 	}
 
@@ -160,6 +166,16 @@ public class KnownLocation implements Serializable {
 		}
 
 		return buf.toString();
+	}
+
+
+	public List<String> getThumbnails() {
+		return thumbnails;
+	}
+
+
+	public void setThumbnails(List<String> thumbnails) {
+		this.thumbnails = thumbnails;
 	}
 
 
