@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
+import com.nostalgia.resource.LocationSubscriptionResource;
 import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
 import com.nostalgia.resource.UserResource;
@@ -58,16 +59,16 @@ public class UserServerApp extends Application<UserAppConfig>{
 
 	private UserRepository getUserRepo(UserAppConfig config, Environment environment){
 		UserRepository repo = new UserRepository(config.getUserServerConfig());
-		
+
 		return repo;
 	}
-	
+
 	private LocationRepository getLocationRepo(UserAppConfig config, Environment environment){
 		LocationRepository repo = new LocationRepository(config.getLocationServerConfig());
-		
+
 		return repo;
 	}
-	
+
 	public SynchClient createSynchClient(UserAppConfig config, Environment environment){
 		logger.info("creating synch server client...");
 		final Client jClient = new JerseyClientBuilder(environment).using(
@@ -76,22 +77,24 @@ public class UserServerApp extends Application<UserAppConfig>{
 
 		return comms;
 	}
-	
+
 	@Override
 	public void run(UserAppConfig config, Environment environment) throws Exception {
 		configureCors(environment);
-		
+
 		UserRepository userRepo = this.getUserRepo(config, environment);
 		LocationRepository locRepo = this.getLocationRepo(config, environment);
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		SynchClient sCli = this.createSynchClient(config, environment);
-		
+
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
 		UserResource userResource = new UserResource(userRepo, sCli, locRes);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
-		
+		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
+
+		environment.jersey().register(locSubRes); 
 		environment.jersey().register(queryRes);
 		environment.jersey().register(locCRUD);
 		environment.jersey().register(vidRes);

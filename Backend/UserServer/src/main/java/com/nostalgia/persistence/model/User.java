@@ -456,4 +456,32 @@ public class User implements Serializable {
 		this.userLocations = userLocations;
 	}
 
+
+	@JsonIgnore
+	public Collection<String> subscribeToLocation(String loc_id) {
+		//check for duplicate
+		if(this.userLocations == null){
+			userLocations = new HashMap<Long, String>();
+		}
+		
+		Collection<String> existing = userLocations.values();
+		if(existing.contains(loc_id)){
+			//no changes needed
+			return existing; 
+		}
+		
+		//add in location + time it was added
+		userLocations.put(System.currentTimeMillis(), loc_id);
+		
+		int end = loc_id.indexOf('-');
+		String channelName = loc_id.substring(0, end);
+		//add in channel ID to allow for subscriptions
+		admin_channels.add(channelName);
+		
+		return userLocations.values();
+		
+
+		
+	}
+
 }

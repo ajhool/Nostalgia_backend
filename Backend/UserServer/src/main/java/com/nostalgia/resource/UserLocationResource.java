@@ -57,7 +57,7 @@ private final SynchClient sync;
 		//this.sManager = manager;
 
 	}
-	@JsonIgnore
+
 	public User updateSubscriptions(User hasNewLoc){
 		//all the locations we know
 		HashMap<String, KnownLocation> nearbys = locRepo.findKnownLocationsCoveringPoint(hasNewLoc.getLastKnownLoc());
