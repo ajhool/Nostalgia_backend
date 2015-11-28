@@ -99,7 +99,7 @@ public class LocationSubscriptionResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/add")
 	@Timed
-	public User newLocation(@QueryParam("userId") String userId,  @QueryParam("locationId") String locationId,@Context HttpServletRequest req) throws Exception{
+	public KnownLocation newLocation(@QueryParam("userId") String userId,  @QueryParam("locationId") String locationId,@Context HttpServletRequest req) throws Exception{
 
 		if(locationId== null){
 			throw new BadRequestException("no location specified to add");
@@ -123,7 +123,7 @@ public class LocationSubscriptionResource {
 		}
 		
 		User subscribed = subscribeToLocation(adding, loc);
-		return adding;
+		return loc;
 
 	}
 
