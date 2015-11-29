@@ -35,9 +35,9 @@ public class User implements Serializable {
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
-	
+
 	private Map<String, String> streamTokens; 
-	
+
 	//channel -> time 
 	private Map<String, String> video_channels; 
 
@@ -57,15 +57,19 @@ public class User implements Serializable {
 	private String email;
 
 	private Point focusedLocation;
-	
-	
+
+
 	private Point lastKnownLoc;
 	private long lastLocationUpdate;
-	
+
 	private long dateJoined;
 	private long lastSeen;
 
-	private Map<Long, String> userVideos;
+	private Map<String, List<String>> publicVideos;
+
+	private Map<String, List<String>> privateVideos;
+
+	private Map<String, List<String>> friendVideos;
 
 	private HashSet<String> location_channels; 
 
@@ -102,7 +106,7 @@ public class User implements Serializable {
 	private String token;
 
 	private String syncToken;
-	
+
 	@JsonIgnore
 	public HashSet<String> purgeOlderThan(long unixTimeStamp){
 		if( video_channels == null) return null;
@@ -119,14 +123,14 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
-	public HashSet<String> updateVideoChannels(Set<String> videosToSubscribeTo){
+	public Map<String, String> updateVideoChannels(Set<String> videosToSubscribeTo){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
-		 
+
 		if(this.video_channels == null){
 			this.video_channels = new HashMap<String, String>();
 		}
-		
+
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
@@ -138,10 +142,10 @@ public class User implements Serializable {
 				//then we were already here. remove it from the list
 				videosToSubscribeTo.remove(exists);
 			}
-//			} else {
-//
+			//			} else {
+			//
 
-//			}
+			//			}
 
 		}
 
@@ -151,19 +155,19 @@ public class User implements Serializable {
 			admin_channels.add(vid);
 		}
 
-		return this.location_channels;
+		return this.video_channels;
 
 	}
-	
+
 	@JsonIgnore
-	public HashSet<String> updateLocationChannels(Set<String> locationsToSubscribeTo){
+	public HashSet<String> updateLocationChannels(HashMap<String, KnownLocation> nearbys){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
-		 
+
 		if(this.location_channels == null){
 			this.location_channels = new HashSet<String>();
 		}
-		
+
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
@@ -171,12 +175,12 @@ public class User implements Serializable {
 
 		for(String exists: this.location_channels){
 
-			if(locationsToSubscribeTo.contains(exists)){
-				//then we were already here. remove it from the list
-				locationsToSubscribeTo.remove(exists);
+			if(nearbys.values().contains(exists)){
+				//then we were already here. 
+				continue;
 			} else {
 
-				this.location_channels.remove(exists);
+				this.location_channels.remove(nearbys.get(exists).get_id());
 				admin_channels.remove(exists);
 			}
 
@@ -187,9 +191,11 @@ public class User implements Serializable {
 
 		//finally, add in all the nearby points we arent subscribed to yet
 
-		for(String loc: locationsToSubscribeTo){
-			this.location_channels.add(loc);
-			admin_channels.add(loc);
+		for(KnownLocation loc: nearbys.values()){
+			if(!this.location_channels.contains(loc.get_id())){
+				this.location_channels.add(loc.get_id());
+				admin_channels.add(loc.getChannelName());
+			}
 		}
 
 		return this.location_channels;
@@ -200,7 +206,7 @@ public class User implements Serializable {
 	public HashSet<String> subscribeToUserChannel(String channelName){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
-	
+
 		if(this.user_channels == null){
 			this.user_channels = new HashSet<String>();
 		}
@@ -208,7 +214,7 @@ public class User implements Serializable {
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
-		
+
 		if(this.user_channels.contains(channelName)){
 			return this.user_channels;
 		} else {
@@ -233,7 +239,7 @@ public class User implements Serializable {
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
-		
+
 		if(existing.contains(channelName)){
 			existing.remove(channelName);
 			admin_channels.remove(channelName);
@@ -289,14 +295,6 @@ public class User implements Serializable {
 
 	public void setDateJoined(long dateJoined) {
 		this.dateJoined = dateJoined;
-	}
-
-	public Map<Long, String> getUserVideos() {
-		return userVideos;
-	}
-
-	public void setUserVideos(Map<Long, String> userVideos) {
-		this.userVideos = userVideos;
 	}
 
 	public Map<String, String> getFriends() {
@@ -463,25 +461,58 @@ public class User implements Serializable {
 		if(this.userLocations == null){
 			userLocations = new HashMap<Long, String>();
 		}
-		
+
 		Collection<String> existing = userLocations.values();
 		if(existing.contains(loc_id)){
 			//no changes needed
 			return existing; 
 		}
-		
+
 		//add in location + time it was added
 		userLocations.put(System.currentTimeMillis(), loc_id);
-		
+
 		int end = loc_id.indexOf('-');
 		String channelName = loc_id.substring(0, end);
 		//add in channel ID to allow for subscriptions
 		admin_channels.add(channelName);
-		
-		return userLocations.values();
-		
 
-		
+		return userLocations.values();
+
+
+
 	}
+
+
+	public Map<String, List<String>> getPrivateVideos() {
+		return privateVideos;
+	}
+
+
+	public void setPrivateVideos(Map<String, List<String>> privateVideos) {
+		this.privateVideos = privateVideos;
+	}
+
+
+	public Map<String, List<String>> getFriendVideos() {
+		return friendVideos;
+	}
+
+
+	public void setFriendVideos(Map<String, List<String>> friendVideos) {
+		this.friendVideos = friendVideos;
+	}
+
+
+	public Map<String, List<String>> getPublicVideos() {
+		return publicVideos;
+	}
+
+
+	public void setPublicVideos(Map<String, List<String>> publicVideos) {
+		this.publicVideos = publicVideos;
+	}
+
+
+
 
 }

@@ -20,29 +20,43 @@ import org.geojson.Point;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Video implements Serializable {
-	
+
+	public static final String WHO_PRIVATE = "PRIVATE";
+	public static final String WHO_FRIENDS = "FRIENDS";
+	public static final String WHO_EVERYONE = "EVERYONE";
+	public static final String WHEN_NOW = "NOW";
+	public static final String WHEN_HOUR = "HOUR";
+	public static final String WHEN_DAY = "ONE_DAY";
+	public static final String WHEN_WIFI = "WIFI";
+
+	public static final String WHERE_HERE = "HERE";
+	public static final String WHERE_EVERYWHERE = "EVERYWHERE";
+	public static final String SOUND_MUTE = "MUTE";
+	public static final String SOUND_ENABLED = "ENABLED";
+
+
 	@JsonIgnore
 	public String getChannelName(){
 		return _id.substring(0, 8);
 	}
-	
+
 	//channels that this document itself is in
 	private List<String> channels; 
-	
-    /**
+
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1435169949509311014L;
-	
-	private String _id = UUID.randomUUID().toString();
-    private String type = this.getClass().getSimpleName();
-    //new, metaonly, metaanddata, processed, distributing
-    private String status = "NEW"; 
-  
-    private long dateCreated;
-    boolean enabled = false;
 
-    public boolean isEnabled() {
+	private String _id = UUID.randomUUID().toString();
+	private String type = this.getClass().getSimpleName();
+	//new, metaonly, metaanddata, processed, distributing
+	private String status = "NEW"; 
+
+	private long dateCreated;
+	boolean enabled = false;
+
+	public boolean isEnabled() {
 		return enabled;
 	}
 
@@ -51,101 +65,101 @@ public class Video implements Serializable {
 	}
 	private int loads;
 
-    private int skips;
+	private int skips;
 
-    private Point location;
+	private Point location;
 
-    private String mpd; 
-    
-    private Map<String, String> properties;
+	private String mpd; 
 
-    private String ownerId;
+	private Map<String, String> properties;
 
-    private HashSet<String> taggedUserIds;
+	private String ownerId;
 
-    private String thumbNail;
+	private HashSet<String> taggedUserIds;
 
-    public Video(){
-        if(properties == null){
-            properties = new HashMap<String, String>();
-        }
-        if(channels == null){
-        	channels = new ArrayList<String>();
-        	channels.add(this.getChannelName());
-        }
+	private String thumbNail;
 
-    }
-    public String get_id() {
-        return _id;
-    }
+	public Video(){
+		if(properties == null){
+			properties = new HashMap<String, String>();
+		}
+		if(channels == null){
+			channels = new ArrayList<String>();
+			channels.add(this.getChannelName());
+		}
 
-    public long getDateCreated() {
-        return dateCreated;
-    }
+	}
+	public String get_id() {
+		return _id;
+	}
 
-    public void setDateCreated(long dateCreated) {
-        this.dateCreated = dateCreated;
-    }
+	public long getDateCreated() {
+		return dateCreated;
+	}
 
-    public Point getLocation() {
-        return location;
-    }
+	public void setDateCreated(long dateCreated) {
+		this.dateCreated = dateCreated;
+	}
 
-    public void setLocation(Point location) {
-        this.location = location;
-    }
+	public Point getLocation() {
+		return location;
+	}
 
-    public Map<String, String> getProperties() {
-        return properties;
-    }
+	public void setLocation(Point location) {
+		this.location = location;
+	}
 
-    public void setProperties(Map<String, String> properties) {
-        this.properties = properties;
-    }
+	public Map<String, String> getProperties() {
+		return properties;
+	}
 
-    public String getThumbNail() {
-        return thumbNail;
-    }
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
 
-    public void setThumbNail(String icon) {
-        this.thumbNail = icon;
-    }
+	public String getThumbNail() {
+		return thumbNail;
+	}
 
-    public void set_id(String _id) {
-        this._id = _id;
-    }
+	public void setThumbNail(String icon) {
+		this.thumbNail = icon;
+	}
 
-    public HashSet<String> getTaggedUserIds() {
-        return taggedUserIds;
-    }
+	public void set_id(String _id) {
+		this._id = _id;
+	}
 
-    public void setTaggedUserIds(HashSet<String> taggedUserIds) {
-        this.taggedUserIds = taggedUserIds;
-    }
+	public HashSet<String> getTaggedUserIds() {
+		return taggedUserIds;
+	}
 
-    public String getOwnerId() {
-        return ownerId;
-    }
+	public void setTaggedUserIds(HashSet<String> taggedUserIds) {
+		this.taggedUserIds = taggedUserIds;
+	}
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
-    }
+	public String getOwnerId() {
+		return ownerId;
+	}
 
-    public int getLoads() {
-        return loads;
-    }
+	public void setOwnerId(String ownerId) {
+		this.ownerId = ownerId;
+	}
 
-    public void setLoads(int loads) {
-        this.loads = loads;
-    }
+	public int getLoads() {
+		return loads;
+	}
 
-    public int getSkips() {
-        return skips;
-    }
+	public void setLoads(int loads) {
+		this.loads = loads;
+	}
 
-    public void setSkips(int skips) {
-        this.skips = skips;
-    }
+	public int getSkips() {
+		return skips;
+	}
+
+	public void setSkips(int skips) {
+		this.skips = skips;
+	}
 
 	public String getType() {
 		return type;

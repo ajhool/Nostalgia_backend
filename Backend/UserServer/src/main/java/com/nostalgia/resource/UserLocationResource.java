@@ -65,7 +65,7 @@ private final SynchClient sync;
 		if(nearbys != null && nearbys.keySet().size() > 0){
 			Set<String> clone = new HashSet<String>();
 			clone.addAll(nearbys.keySet());
-			hasNewLoc.updateLocationChannels(clone);
+			hasNewLoc.updateLocationChannels(nearbys);
 			HashSet<String> vidChannels = new HashSet<String>();
 			for(KnownLocation loc: nearbys.values()){
 				for(String videoId : loc.getMatchingVideos().values()){

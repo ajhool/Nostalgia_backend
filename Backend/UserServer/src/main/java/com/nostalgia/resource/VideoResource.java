@@ -156,14 +156,139 @@ public class VideoResource {
 		}
 
 		//set pointer to video on the user, subscribe them to it as well
-		Map<Long, String> userVids = uploader.getUserVideos();
-
-		if(userVids == null){
-			userVids = new HashMap<Long, String>();
+		if(adding.getProperties() == null || adding.getProperties().get("sharing_who") == null){
+			throw new BadRequestException("invalid sharing settings");
 		}
 
-		userVids.put(System.currentTimeMillis(), adding.get_id());
-		uploader.setUserVideos(userVids);
+		String sharing = adding.getProperties().get("sharing_who");
+		//find any locations that this video maps to, and add it 
+		HashMap<String, KnownLocation> matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
+
+		switch(sharing){
+
+		case(Video.WHO_EVERYONE): {
+			Map<String, List<String>> userVids = uploader.getPublicVideos();
+
+			if(userVids == null){
+				userVids = new HashMap<String, List<String>>();
+			}
+
+			//for public videos, maintain a reference in the location 
+			if(matchingLocs != null && matchingLocs.size() > 0){
+				for(KnownLocation loc : matchingLocs.values()){
+					if(loc.getMatchingVideos() == null){
+						loc.setMatchingVideos(new HashMap<String, String>());
+					}
+
+					int currentMax = loc.getMatchingVideos().size() - 1;
+
+					currentMax++;
+					loc.getMatchingVideos().put(currentMax + "", adding.get_id());
+					JsonDocument saved = locRepo.save(loc);
+
+				}
+			} else {
+				//set special null location for video
+				matchingLocs = new HashMap<String, KnownLocation>();
+				KnownLocation nullLoc = new KnownLocation();
+				nullLoc.set_id("null");
+				matchingLocs.put("null", nullLoc);
+			}
+
+			for(KnownLocation loc : matchingLocs.values()){
+				List<String> existing = userVids.get(loc.get_id());
+				//if null, we have no videos here previously
+				if(existing == null){
+					existing = new ArrayList<String>();
+				}
+
+				if(existing.contains(adding.get_id())){
+					//then this video is already mapped to the location
+					continue;
+				} else {
+					existing.add(adding.get_id());
+				}
+				userVids.put(loc.get_id(), existing);
+			}
+
+			uploader.setPublicVideos(userVids);
+
+
+
+
+
+		}
+		case(Video.WHO_FRIENDS): {
+			if(matchingLocs == null || matchingLocs.size() < 1){
+				//set special null location for video
+				matchingLocs = new HashMap<String, KnownLocation>();
+				KnownLocation nullLoc = new KnownLocation();
+				nullLoc.set_id("null");
+				matchingLocs.put("null", nullLoc);
+			}
+
+			Map<String, List<String>> userVids = uploader.getFriendVideos();
+
+			if(userVids == null){
+				userVids = new HashMap<String, List<String>>();
+			}
+
+			for(KnownLocation loc : matchingLocs.values()){
+				List<String> existing = userVids.get(loc.get_id());
+				//if null, we have no videos here previously
+				if(existing == null){
+					existing = new ArrayList<String>();
+				}
+
+				if(existing.contains(adding.get_id())){
+					//then this video is already mapped to the location
+					continue;
+				} else {
+					existing.add(adding.get_id());
+				}
+				userVids.put(loc.get_id(), existing);
+			}
+
+			uploader.setFriendVideos(userVids);
+
+		}
+		break;
+		default:
+		case(Video.WHO_PRIVATE):
+			if(matchingLocs == null || matchingLocs.size() < 1){
+				//set special null location for video
+				matchingLocs = new HashMap<String, KnownLocation>();
+				KnownLocation nullLoc = new KnownLocation();
+				nullLoc.set_id("null");
+				matchingLocs.put("null", nullLoc);
+			}
+
+			Map<String, List<String>> userVids = uploader.getPrivateVideos();
+
+			if(userVids == null){
+				userVids = new HashMap<String, List<String>>();
+			}
+
+			for(KnownLocation loc : matchingLocs.values()){
+				List<String> existing = userVids.get(loc.get_id());
+				//if null, we have no videos here previously
+				if(existing == null){
+					existing = new ArrayList<String>();
+				}
+
+				if(existing.contains(adding.get_id())){
+					//then this video is already mapped to the location
+					continue;
+				} else {
+					existing.add(adding.get_id());
+				}
+				userVids.put(loc.get_id(), existing);
+			}
+
+			uploader.setPrivateVideos(userVids);
+			break;
+
+		}
 
 		//subscribe the user to their video
 		uploader.subscribeToUserChannel(adding.getChannelName());
@@ -171,31 +296,9 @@ public class VideoResource {
 		userRepo.save(uploader);
 
 		adding.setDateCreated(System.currentTimeMillis());
-
-		//find any locations that this video maps to, and add it 
-		HashMap<String, KnownLocation> matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
-
-
-		if(matchingLocs != null){
-			for(KnownLocation loc : matchingLocs.values()){
-				if(loc.getMatchingVideos() == null){
-					loc.setMatchingVideos(new HashMap<String, String>());
-				}
-
-				int currentMax = loc.getMatchingVideos().size() - 1;
-
-				currentMax++;
-				loc.getMatchingVideos().put(currentMax + "", adding.get_id());
-				JsonDocument saved = locRepo.save(loc);
-
-			}
-		}
-
 		adding.setStatus("METAONLY");
 		JsonDocument saved = vidRepo.save(adding);
-
 		return adding.get_id();
-
 	}
 
 
@@ -228,7 +331,7 @@ public class VideoResource {
 
 		File dataDir = new File(FileDataWorkingDirectory + "/" + matching.get_id() );
 		dataDir.mkdirs(); 
-		
+
 
 
 		String savedFilePath = dataDir + "/" + matching.get_id();
