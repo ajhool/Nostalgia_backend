@@ -243,6 +243,10 @@ public class LocationRepository {
 	}
 
 	public synchronized JsonDocument save(KnownLocation loc) {
+		//fix channel name
+		loc.getChannels().clear();
+		loc.getChannels().add(loc.getChannelName());
+		
 		
 		String json = null;
 		

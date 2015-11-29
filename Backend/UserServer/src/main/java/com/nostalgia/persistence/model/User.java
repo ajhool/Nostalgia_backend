@@ -271,7 +271,12 @@ public class User implements Serializable {
 	}
 
 
-	public User(){}
+	public User(){
+		if(this.userLocations == null){
+			userLocations = new HashMap<Long, String>();
+		}
+
+	}
 
 	public String get_id() {
 		return _id;

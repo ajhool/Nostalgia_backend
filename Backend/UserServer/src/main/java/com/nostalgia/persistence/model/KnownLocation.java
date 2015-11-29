@@ -68,6 +68,9 @@ public class KnownLocation implements Serializable {
 
 	public void set_id(String _id) {
 		this._id = _id;
+		this.channels.clear();
+        channels.add(this.getChannelName());
+		
 	}
 
 	public String getName() {
