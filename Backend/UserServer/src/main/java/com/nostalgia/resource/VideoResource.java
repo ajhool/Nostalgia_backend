@@ -163,6 +163,28 @@ public class VideoResource {
 		String sharing = adding.getProperties().get("sharing_who");
 		//find any locations that this video maps to, and add it 
 		HashMap<String, KnownLocation> matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
+		
+		
+		//add in user specified locations 
+		if(adding.getLocations() != null){
+			for(String locId : adding.getLocations()){
+				String channel = locId.substring(0, 8);
+				if(!matchingLocs.containsKey(channel)){
+					
+					KnownLocation userSpecified = locRepo.findOneById(locId);
+					matchingLocs.put(channel, userSpecified);
+				}
+			}
+		} else {
+			adding.setLocations(new ArrayList<String>());
+		}
+		
+		adding.getLocations().clear();
+		
+		for(KnownLocation locToAdd : matchingLocs.values()){
+			adding.getLocations().add(locToAdd.get_id());
+		}
+		
 
 		switch(sharing){
 
@@ -191,8 +213,8 @@ public class VideoResource {
 				//set special null location for video
 				matchingLocs = new HashMap<String, KnownLocation>();
 				KnownLocation nullLoc = new KnownLocation();
-				nullLoc.set_id("null");
-				matchingLocs.put("null", nullLoc);
+				nullLoc.set_id("null_location");
+				matchingLocs.put("null_location", nullLoc);
 			}
 
 			for(KnownLocation loc : matchingLocs.values()){
@@ -218,13 +240,14 @@ public class VideoResource {
 
 
 		}
+		break;
 		case(Video.WHO_FRIENDS): {
 			if(matchingLocs == null || matchingLocs.size() < 1){
 				//set special null location for video
 				matchingLocs = new HashMap<String, KnownLocation>();
 				KnownLocation nullLoc = new KnownLocation();
-				nullLoc.set_id("null");
-				matchingLocs.put("null", nullLoc);
+				nullLoc.set_id("null_location");
+				matchingLocs.put("null_location", nullLoc);
 			}
 
 			Map<String, List<String>> userVids = uploader.getFriendVideos();
@@ -259,8 +282,8 @@ public class VideoResource {
 				//set special null location for video
 				matchingLocs = new HashMap<String, KnownLocation>();
 				KnownLocation nullLoc = new KnownLocation();
-				nullLoc.set_id("null");
-				matchingLocs.put("null", nullLoc);
+				nullLoc.set_id("null_location");
+				matchingLocs.put("null_location", nullLoc);
 			}
 
 			Map<String, List<String>> userVids = uploader.getPrivateVideos();
@@ -364,9 +387,12 @@ public class VideoResource {
 			long end = System.currentTimeMillis();
 
 			Duration thisRun = Duration.ofMillis(end -start);
-
-			long speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
-
+			long speed = - 1;
+			try {
+			speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
+			} catch (Exception e){
+				logger.error("errror computing save time", e);
+			}
 			logger.info("File: " + original.getName() + " took " + thisRun.toString() + " to download at a speed of " + speed + "mbps");
 		}
 

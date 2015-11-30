@@ -272,8 +272,8 @@ public class LocationRepository {
 		return doc;
 	}
 	public HashMap<String, KnownLocation> findKnownLocationsCoveringPoint(Point newLoc) {
-		JsonArray START = JsonArray.from(newLoc.getCoordinates().getLatitude(), newLoc.getCoordinates().getLongitude());
-		JsonArray END = JsonArray.from(newLoc.getCoordinates().getLatitude(), newLoc.getCoordinates().getLongitude());
+		JsonArray START = JsonArray.from(newLoc.getCoordinates().getLongitude(), newLoc.getCoordinates().getLatitude());
+		JsonArray END = JsonArray.from(newLoc.getCoordinates().getLongitude(), newLoc.getCoordinates().getLatitude());
 		SpatialViewQuery query = SpatialViewQuery.from("location_spatial", "known_points").range(START, END);
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){

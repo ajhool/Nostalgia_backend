@@ -15,6 +15,11 @@
 			<version>0.8.0</version>
 		</dependency>
 		<dependency>
+			<groupId>com.nostalgia</groupId>
+			<artifactId>common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>de.grundid.opendatalab</groupId>
 			<artifactId>geojson-jackson</artifactId>
 			<version>1.5.1</version>

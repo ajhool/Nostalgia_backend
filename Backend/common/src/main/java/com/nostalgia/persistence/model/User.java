@@ -175,13 +175,14 @@ public class User implements Serializable {
 
 		for(String exists: this.location_channels){
 
-			if(nearbys.values().contains(exists)){
+			String channel = exists.substring(0, 8);
+			if(nearbys.keySet().contains(channel)){
 				//then we were already here. 
 				continue;
 			} else {
 
-				this.location_channels.remove(nearbys.get(exists).get_id());
-				admin_channels.remove(exists);
+				this.location_channels.remove(exists);
+				admin_channels.remove(channel);
 			}
 
 		}

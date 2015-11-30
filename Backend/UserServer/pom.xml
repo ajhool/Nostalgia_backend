@@ -17,11 +17,6 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>com.cocoahero.android</groupId> -->
-		<!-- <artifactId>geojson</artifactId> -->
-		<!-- <version>1.0.1</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>de.grundid.opendatalab</groupId>
 			<artifactId>geojson-jackson</artifactId>
@@ -36,6 +31,11 @@
 			<groupId>net.sf.flexjson</groupId>
 			<artifactId>flexjson</artifactId>
 			<version>3.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.nostalgia</groupId>
+			<artifactId>common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cache2k</groupId>
