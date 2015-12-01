@@ -46,6 +46,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.UserRepository;
+import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
@@ -83,12 +84,14 @@ public class UserResource {
 
 	private SynchClient syncClient;
 	private UserLocationResource userLocRes;
+	private final IconService icSvc; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc) {
+	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
+		this.icSvc = icSvc;
 	}
 
 	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate){
@@ -411,8 +414,16 @@ public class UserResource {
 			throw new Exception("unable to parse user");
 		}
 
+//Set image
+		String image = null;
+		try {
+			image = icSvc.getBase64Icon(loggedInUser.getName());
+		} catch (Exception e){
+			logger.error("error getting icon", e);
+		}
 
-
+		loggedInUser.setIcon(image);
+		
 		//set default settings
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put("sharing_who", WHO_EVERYONE);
