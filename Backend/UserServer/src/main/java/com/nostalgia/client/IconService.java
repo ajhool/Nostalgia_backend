@@ -11,6 +11,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.nostalgia.IconServiceConfig;
@@ -23,6 +24,7 @@ public class IconService {
 
 	private final IconServiceConfig conf;
 	private final Client icComm; 
+	private static final ObjectMapper mapper = new ObjectMapper();
 	
 	
 	public IconService(IconServiceConfig conf, Client icClient){
@@ -42,8 +44,9 @@ public class IconService {
 		UriBuilder uribuild = UriBuilder.fromUri(conf.iconHost + ":" + conf.port + conf.newIconPath);
 		
 		IconReply resp = null;
+		String json = mapper.writeValueAsString(req);
 		try{
-			resp = icComm.target(uribuild).request().post(Entity.json(req), IconReply.class);
+			resp = icComm.target(uribuild).request().post(Entity.json(json), IconReply.class);
 	} catch (Exception e){
 		logger.error("error retrieving icon from icon microservice. Using default Icon instead", e);
 		 resp = new IconReply();

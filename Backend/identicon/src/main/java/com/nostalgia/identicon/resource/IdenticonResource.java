@@ -36,16 +36,8 @@ import com.nostalgia.identicon.IdenticonUtil;
 import com.nostalgia.identicon.NineBlockIdenticonRenderer2;
 import com.nostalgia.identicon.cache.IdenticonCache;
 import com.nostalgia.identicon.config.IconGeneratorConfig;
-import com.portol.common.model.content.Content;
-import com.portol.common.model.content.Content.Type;
-import com.portol.common.model.dash.jaxb.AdaptationSetType;
-import com.portol.common.model.dash.jaxb.BaseURLType;
-import com.portol.common.model.dash.jaxb.MPDtype;
-import com.portol.common.model.dash.jaxb.ObjectFactory;
-import com.portol.common.model.icon.IconReply;
-import com.portol.common.model.icon.IconRequest;
-import com.portol.common.model.instance.EdgeInstance;
-import com.portol.common.model.player.Player;
+import com.nostalgia.persistence.model.icon.IconReply;
+import com.nostalgia.persistence.model.icon.IconRequest;
 
 @Path("/api/v0/icongen")
 public class IdenticonResource {

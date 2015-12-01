@@ -73,7 +73,7 @@ public class VideoRepository {
 			Arrays.asList(
 					SpatialView.create("video_points",
 							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.location) { "
+									+ "if (doc.type == 'Video' && doc.location.coordinates) { "
 									+ " emit(doc.location, null);"
 									+ "}"
 									+ "}")
