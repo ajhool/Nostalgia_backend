@@ -20,6 +20,7 @@ import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
@@ -37,7 +38,6 @@ import com.nostalgia.identicon.NineBlockIdenticonRenderer2;
 import com.nostalgia.identicon.cache.IdenticonCache;
 import com.nostalgia.identicon.config.IconGeneratorConfig;
 import com.nostalgia.persistence.model.icon.IconReply;
-import com.nostalgia.persistence.model.icon.IconRequest;
 
 @Path("/api/v0/icongen")
 public class IdenticonResource {
@@ -53,22 +53,20 @@ public class IdenticonResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/newicon")
 	@Timed
-	public IconReply printMainMPD(IconRequest iconReq, @Context HttpServletRequest req) throws Exception{
+	public IconReply printMainMPD(String seed, @QueryParam("key") String key, @Context HttpServletRequest req) throws Exception{
 
 		IconReply reply = new IconReply();
-		if(iconReq == null){
-			throw new BadRequestException();
-		}
+		
 
 		//TODO move to service
-		if(false /*!mpdReq.getApiKey().equalsIgnoreCase("foo")*/){
+		if(key == null/*!mpdReq.getApiKey().equalsIgnoreCase("foo")*/){
 			throw new ForbiddenException();
 		}
 
-		byte[] encodedImg = makeIdenticon(iconReq.getSeedData());
+		byte[] encodedImg = makeIdenticon(seed);
 
 		reply.setEncodedImage(encodedImg);
 		return reply;

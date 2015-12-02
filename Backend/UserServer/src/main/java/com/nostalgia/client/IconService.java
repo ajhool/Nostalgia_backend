@@ -16,7 +16,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.nostalgia.IconServiceConfig;
 import com.nostalgia.persistence.model.icon.IconReply;
-import com.nostalgia.persistence.model.icon.IconRequest;
 
 
 
@@ -37,16 +36,14 @@ public class IconService {
 	
 	
 	public String getBase64Icon(String key) throws IOException{
-		IconRequest req = new IconRequest();
-		req.setSeedData(key);
-		req.setApiKey("bar");
+
 		
-		UriBuilder uribuild = UriBuilder.fromUri(conf.iconHost + ":" + conf.port + conf.newIconPath);
+		UriBuilder uribuild = UriBuilder.fromUri(conf.iconHost + ":" + conf.port + conf.newIconPath + "?key=bar");
 		
 		IconReply resp = null;
-		String json = mapper.writeValueAsString(req);
+		
 		try{
-			resp = icComm.target(uribuild).request().post(Entity.json(json), IconReply.class);
+			resp = icComm.target(uribuild).request().post(Entity.text(key), IconReply.class);
 	} catch (Exception e){
 		logger.error("error retrieving icon from icon microservice. Using default Icon instead", e);
 		 resp = new IconReply();
