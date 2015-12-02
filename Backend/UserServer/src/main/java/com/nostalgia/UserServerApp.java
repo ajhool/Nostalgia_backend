@@ -10,6 +10,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
@@ -69,6 +70,16 @@ public class UserServerApp extends Application<UserAppConfig>{
 		return repo;
 	}
 
+	public IconService getIconService(UserAppConfig config, Environment environment){
+		logger.info("creating icon server client...");
+		final Client jClient = new JerseyClientBuilder(environment).using(
+				config.getJerseyClientConfiguration()).build("Icon Client");
+
+		IconService icSvc = new IconService(config.getIconServiceConfig(), jClient);
+
+		return icSvc;
+	}
+	
 	public SynchClient createSynchClient(UserAppConfig config, Environment environment){
 		logger.info("creating synch server client...");
 		final Client jClient = new JerseyClientBuilder(environment).using(
@@ -86,9 +97,11 @@ public class UserServerApp extends Application<UserAppConfig>{
 		LocationRepository locRepo = this.getLocationRepo(config, environment);
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		SynchClient sCli = this.createSynchClient(config, environment);
-
+		IconService icSvc = this.getIconService(config, environment);
+		
+		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
-		UserResource userResource = new UserResource(userRepo, sCli, locRes);
+		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);

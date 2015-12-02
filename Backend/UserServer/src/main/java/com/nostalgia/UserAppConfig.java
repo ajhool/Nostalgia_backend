@@ -20,6 +20,16 @@ public class UserAppConfig extends Configuration{
 	
 	@Valid
 	@NotNull
+	@JsonProperty("iconSvcConn")
+	private IconServiceConfig icConfig = new IconServiceConfig();
+	
+	
+	public IconServiceConfig getIconServiceConfig(){
+		return icConfig;
+	}
+	
+	@Valid
+	@NotNull
 	@JsonProperty("SyncServer")
 	private SyncConfig syncConfig = new SyncConfig();
 

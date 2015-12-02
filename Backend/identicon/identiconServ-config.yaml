@@ -4,43 +4,21 @@ server:
   applicationContextPath: /
   applicationConnectors:
     - type: http
-      port: 10004
+      bindHost: 127.0.0.1 # only bind to loopback
+      port: 10001
+      
 
   adminContextPath: /admin
   adminConnectors:
     - type: http
       bindHost: 127.0.0.1 # only bind to loopback
-      port: 10005
-
-UserCouch:
-  host: 162.243.234.243
-  bucketName: nostalgia
-  bucketPassword: nostalgia12
-  
-LocationCouch:
-  host: 162.243.234.243
-  bucketName: nostalgia
-  bucketPassword: nostalgia12
-  
-iconSvcConn:
-  iconHost: http://127.0.0.1
-  port: 10001
-  newIconPath: /api/v0/icongen/newicon
-  
-VideoCouch:
-  host: 162.243.234.243
-  bucketName: nostalgia
-  bucketPassword: nostalgia12
-  
-SyncServer:
-  host: 162.243.234.243
-  port: 4985
+      port: 4749
 
 # Logging settings.
 logging:
 
   # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
-  level: DEBUG
+  level: ALL
 
   # Logger-specific levels.
   loggers:

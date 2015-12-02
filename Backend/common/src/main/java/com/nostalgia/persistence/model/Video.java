@@ -2,7 +2,6 @@ package com.nostalgia.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -41,12 +40,12 @@ public class Video implements Serializable {
 	}
 
 	//channels that this document itself is in
-	private List<String> channels; 
+	protected List<String> channels; 
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1435169949509311014L;
+	protected static final long serialVersionUID = 1435169949509311014L;
 
 	private String _id = UUID.randomUUID().toString();
 	private String type = this.getClass().getSimpleName();
@@ -70,6 +69,8 @@ public class Video implements Serializable {
 	private Point location;
 
 	private String mpd; 
+	
+	private List<String> locations; 
 
 	private Map<String, String> properties;
 
@@ -191,5 +192,13 @@ public class Video implements Serializable {
 
 	public void setMpd(String mpd) {
 		this.mpd = mpd;
+	}
+
+	public List<String> getLocations() {
+		return locations;
+	}
+
+	public void setLocations(List<String> locations) {
+		this.locations = locations;
 	}
 }
