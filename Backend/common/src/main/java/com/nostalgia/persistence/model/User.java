@@ -71,14 +71,14 @@ public class User implements Serializable {
 
 	private Map<String, List<String>> friendVideos;
 
-	private HashSet<String> location_channels; 
+	private Set<String> location_channels; 
 
-	public HashSet<String> getLocation_channels() {
+	public Set<String> getLocation_channels() {
 		return location_channels;
 	}
 
 
-	public void setLocation_channels(HashSet<String> location_channels) {
+	public void setLocation_channels(Set<String> location_channels) {
 		this.location_channels = location_channels;
 	}
 
@@ -108,7 +108,7 @@ public class User implements Serializable {
 	private String syncToken;
 
 	@JsonIgnore
-	public HashSet<String> purgeOlderThan(long unixTimeStamp){
+	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
 		if( video_channels == null) return null;
 		HashSet<String> removed = new HashSet<String>();
 		for(String id : video_channels.keySet()){
@@ -123,7 +123,7 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
-	public Map<String, String> updateVideoChannels(Set<String> videosToSubscribeTo){
+	public synchronized Map<String, String> updateVideoChannels(Set<String> videosToSubscribeTo){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
 
@@ -160,7 +160,7 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
-	public HashSet<String> updateLocationChannels(HashMap<String, KnownLocation> nearbys){
+	public synchronized Set<String> updateLocationChannels(HashMap<String, KnownLocation> nearbys){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
 
@@ -173,15 +173,16 @@ public class User implements Serializable {
 		}
 
 
-		for(String exists: this.location_channels){
+		for(Iterator<String> it = location_channels.iterator(); it.hasNext();){
 
+			String exists = it.next();
 			String channel = exists.substring(0, 8);
 			if(nearbys.keySet().contains(channel)){
 				//then we were already here. 
 				continue;
 			} else {
 
-				this.location_channels.remove(exists);
+				it.remove();
 				admin_channels.remove(channel);
 			}
 
@@ -204,7 +205,7 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
-	public HashSet<String> subscribeToUserChannel(String channelName){
+	public synchronized HashSet<String> subscribeToUserChannel(String channelName){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
 
@@ -229,7 +230,7 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
-	public HashSet<String> unsubscribeFromUserChannel(String channelName){
+	public synchronized HashSet<String> unsubscribeFromUserChannel(String channelName){
 		//clear old locations out from subscriptions
 		//all the locations we subscribe to
 		HashSet<String> existing = this.user_channels;
@@ -462,7 +463,7 @@ public class User implements Serializable {
 
 
 	@JsonIgnore
-	public Collection<String> subscribeToLocation(String loc_id) {
+	public synchronized Collection<String> subscribeToLocation(String loc_id) {
 		//check for duplicate
 		if(this.userLocations == null){
 			userLocations = new HashMap<Long, String>();
