@@ -136,11 +136,19 @@ public class VideoResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/new")
 	@Timed
-	public String addVideoMeta(Video adding, @Context HttpServletRequest req) throws Exception{
+	public String addVideoMeta(Video adding, @QueryParam("auto") String auto, @Context HttpServletRequest req) throws Exception{
 
 		//Video adding = om.readValue(addingString, Video.class);
 		if(adding == null){
 			throw new BadRequestException();
+		}
+
+		boolean autoAdd = true;
+
+		try {
+			autoAdd = Boolean.parseBoolean(auto);
+		} catch (Exception e){
+			logger.error("error getting auto add boolean, defaulting to auto enabled...", e);
 		}
 
 		if(adding.getLocation() == null){
@@ -162,15 +170,18 @@ public class VideoResource {
 
 		String sharing = adding.getProperties().get("sharing_who");
 		//find any locations that this video maps to, and add it 
-		HashMap<String, KnownLocation> matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
-		
-		
+
+		HashMap<String, KnownLocation> matchingLocs = new HashMap<String, KnownLocation>();
+		if(autoAdd){
+			matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
+		}
+
 		//add in user specified locations 
 		if(adding.getLocations() != null){
 			for(String locId : adding.getLocations()){
 				String channel = locId.substring(0, 8);
 				if(!matchingLocs.containsKey(channel)){
-					
+
 					KnownLocation userSpecified = locRepo.findOneById(locId);
 					matchingLocs.put(channel, userSpecified);
 				}
@@ -178,13 +189,13 @@ public class VideoResource {
 		} else {
 			adding.setLocations(new ArrayList<String>());
 		}
-		
+
 		adding.getLocations().clear();
-		
+
 		for(KnownLocation locToAdd : matchingLocs.values()){
 			adding.getLocations().add(locToAdd.get_id());
 		}
-		
+
 
 		switch(sharing){
 
@@ -286,30 +297,30 @@ public class VideoResource {
 				matchingLocs.put("null_location", nullLoc);
 			}
 
-			Map<String, List<String>> userVids = uploader.getPrivateVideos();
+		Map<String, List<String>> userVids = uploader.getPrivateVideos();
 
-			if(userVids == null){
-				userVids = new HashMap<String, List<String>>();
+		if(userVids == null){
+			userVids = new HashMap<String, List<String>>();
+		}
+
+		for(KnownLocation loc : matchingLocs.values()){
+			List<String> existing = userVids.get(loc.get_id());
+			//if null, we have no videos here previously
+			if(existing == null){
+				existing = new ArrayList<String>();
 			}
 
-			for(KnownLocation loc : matchingLocs.values()){
-				List<String> existing = userVids.get(loc.get_id());
-				//if null, we have no videos here previously
-				if(existing == null){
-					existing = new ArrayList<String>();
-				}
-
-				if(existing.contains(adding.get_id())){
-					//then this video is already mapped to the location
-					continue;
-				} else {
-					existing.add(adding.get_id());
-				}
-				userVids.put(loc.get_id(), existing);
+			if(existing.contains(adding.get_id())){
+				//then this video is already mapped to the location
+				continue;
+			} else {
+				existing.add(adding.get_id());
 			}
+			userVids.put(loc.get_id(), existing);
+		}
 
-			uploader.setPrivateVideos(userVids);
-			break;
+		uploader.setPrivateVideos(userVids);
+		break;
 
 		}
 
@@ -389,7 +400,7 @@ public class VideoResource {
 			Duration thisRun = Duration.ofMillis(end -start);
 			long speed = - 1;
 			try {
-			speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
+				speed = (original.length() * 8) / (((end - start) / 1000) * (long)Math.pow(2, 20));
 			} catch (Exception e){
 				logger.error("errror computing save time", e);
 			}

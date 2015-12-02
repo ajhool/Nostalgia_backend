@@ -35,6 +35,8 @@ public class User implements Serializable {
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
+	
+	private HashMap<String, String> locationHistory; 
 
 	private Map<String, String> streamTokens; 
 
@@ -199,7 +201,13 @@ public class User implements Serializable {
 				admin_channels.add(loc.getChannelName());
 			}
 		}
-
+		
+		//update history
+		for(KnownLocation loc : nearbys.values()){
+			locationHistory.put(loc.get_id(), Long.toString(System.currentTimeMillis()));
+		}
+		
+		
 		return this.location_channels;
 
 	}
@@ -276,6 +284,10 @@ public class User implements Serializable {
 	public User(){
 		if(this.userLocations == null){
 			userLocations = new HashMap<Long, String>();
+		}
+		
+		if(this.locationHistory== null){
+			locationHistory = new HashMap<String, String>();
 		}
 
 	}
@@ -517,6 +529,16 @@ public class User implements Serializable {
 
 	public void setPublicVideos(Map<String, List<String>> publicVideos) {
 		this.publicVideos = publicVideos;
+	}
+
+
+	public HashMap<String, String> getLocationHistory() {
+		return locationHistory;
+	}
+
+
+	private void setLocationHistory(HashMap<String, String> history) {
+		this.locationHistory = history;
 	}
 
 
