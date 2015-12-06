@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.google.api.client.auth.openidconnect.IdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -100,5 +101,33 @@ public class LocationQueryResource {
 		return found;
 
 	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/discrete/bbox")
+	@Timed
+	public List<KnownLocation> withinBbox(@QueryParam("bbox") String bbox, @Context HttpServletRequest req) throws Exception{
+		JsonArray bboxArray = null;
+		try {
+		 bboxArray = JsonArray.fromJson(bbox);
+
+		} catch (Exception e){
+			logger.error("error getting bbox out of query param", e);
+			throw new BadRequestException("no location specified to add");
+
+		}
+
+		List<KnownLocation> found = locRepo.findDiscreteLocationsInBbox(bboxArray);
+		
+
+		if(found == null){
+			found = new ArrayList<KnownLocation>();
+		}
+
+		return found;
+
+	}
+	
 
 }

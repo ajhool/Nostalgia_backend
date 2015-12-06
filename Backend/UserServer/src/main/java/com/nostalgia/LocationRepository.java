@@ -17,12 +17,6 @@ import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.view.DefaultView;
-import com.couchbase.client.java.view.SpatialView;
-import com.couchbase.client.java.view.DesignDocument;
-import com.couchbase.client.java.view.ViewQuery;
-import com.couchbase.client.java.view.ViewResult;
-import com.couchbase.client.java.view.ViewRow;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.KnownLocation;
@@ -76,6 +70,17 @@ public class LocationRepository {
 								"function (doc, meta) { "
 										+ "if (doc.type == 'KnownLocation' && doc.location) { "
 											+ " emit(doc.location.geometry, null);"
+									    + "}"
+								+ "}"),
+						SpatialView.create("discrete_location_points",
+								"function (doc, meta) { "
+										+ "if (doc.type == 'KnownLocation' && doc.location && doc.location.geometry && doc.location.geometry.type == 'GeometryCollection') { "
+										+ "     var arrayLength = doc.location.geometry.geometries.length;" 
+										+ "     for(var i = 0; i < arrayLength; i++) {"
+										+ "         if(doc.location.geometry.geometries[i].type == 'Point') {"
+									    + "             emit(doc.location.geometry.geometries[i], i);"
+										+ "         }"
+									    + "     }"
 									    + "}"
 								+ "}")
 					)
@@ -289,6 +294,33 @@ public class LocationRepository {
 		for (SpatialViewRow row : rows) {
 		    JsonDocument matching = row.document();
 		    s.put(matching.id().substring(0, 8), docToLocation(matching));
+		}
+		return s;
+	}
+
+	public List<KnownLocation> findDiscreteLocationsInBbox(JsonArray bboxArray) {
+		
+		if(bboxArray == null || bboxArray.size() < 4){
+			logger.error("only bounding box based queries supported at this time");
+			return null;
+		}
+		
+		JsonArray START = JsonArray.from(bboxArray.get(1), bboxArray.get(0));
+		JsonArray END = JsonArray.from(bboxArray.getArray(3), bboxArray.get(2));
+		SpatialViewQuery query = SpatialViewQuery.from("location_spatial", "discrete_location_points").range(START, END);
+		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+			return null;
+		}
+
+		List<SpatialViewRow> rows = result.allRows();
+
+		List<KnownLocation> s = new ArrayList<KnownLocation>();
+		for (SpatialViewRow row : rows) {
+			JsonDocument matching = row.document();
+			s.add(docToLocation(matching));
 		}
 		return s;
 	}
