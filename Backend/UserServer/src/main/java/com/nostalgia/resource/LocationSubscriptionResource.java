@@ -74,7 +74,7 @@ public class LocationSubscriptionResource {
 	private final LocationRepository locRepo;
 	private final SynchClient sync;
 
-	public User subscribeToLocation(User wantsSubscription, KnownLocation toSubscribeTo){
+	public User subscribeToLocation(User wantsSubscription, KnownLocation toSubscribeTo) throws Exception{
 
 		wantsSubscription.subscribeToLocation(toSubscribeTo.get_id());
 

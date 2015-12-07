@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +139,7 @@ public class VideoRepository {
 		return newVid; 
 	}
 
-	public HashMap<String, Video> findVideosWithin(GeoJsonObject hasbbox) {
+	public HashMap<String, Video> findVideosWithin(Polygon hasbbox) {
 		double[] bbox = hasbbox.getBbox(); 
 
 		if(bbox == null){

@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
+import org.geojson.GeometryCollection;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
 import org.geojson.Polygon;
@@ -107,7 +108,7 @@ public class LocationRepository {
 
 		}
 		
-		public static double[] buildbbox(GeoJsonObject poly){
+		public static double[] buildbbox(Polygon poly){
 			double minLong = 180;
 			double maxLong = -180;
 			double minLat = 180;
@@ -149,8 +150,23 @@ public class LocationRepository {
 			return new double[]{minLong, minLat, maxLong, maxLat};
 		}
 	public HashMap<String, KnownLocation> findKnownLocationsCoveringArea(Feature newLoc) {
+		GeoJsonObject rawGeo = newLoc.getGeometry();
+		Polygon toBuildbbox = null;
 		
-		GeoJsonObject toBuildbbox = newLoc.getGeometry();
+		if(rawGeo instanceof GeometryCollection){
+			GeometryCollection geoColl = (GeometryCollection) rawGeo;
+			for(GeoJsonObject member : geoColl.getGeometries()){
+				if(member instanceof Polygon){
+					toBuildbbox = (Polygon) member;
+					break;
+				}
+			}
+			
+		} else {
+			toBuildbbox = (Polygon) rawGeo;
+		}
+		
+		
 		if(toBuildbbox == null){
 			logger.error("null geometry object supplied, unable to perform query");
 			return null;
@@ -305,8 +321,8 @@ public class LocationRepository {
 			return null;
 		}
 		
-		JsonArray START = JsonArray.from(bboxArray.get(1), bboxArray.get(0));
-		JsonArray END = JsonArray.from(bboxArray.getArray(3), bboxArray.get(2));
+		JsonArray START = JsonArray.from(bboxArray.get(0), bboxArray.get(1));
+		JsonArray END = JsonArray.from(bboxArray.get(2), bboxArray.get(3));
 		SpatialViewQuery query = SpatialViewQuery.from("location_spatial", "discrete_location_points").range(START, END);
 		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){

@@ -80,7 +80,7 @@ public class UserRepository {
 
 	}
 
-	public synchronized JsonDocument save(User user) {
+	public synchronized JsonDocument save(User user) throws Exception {
 
 
 		String json = null;
@@ -95,7 +95,9 @@ public class UserRepository {
 
 		JsonDocument  doc = JsonDocument.create(user.get_id(), jsonObj);
 		
-
+		if(jsonObj.get("_id") == null){
+			throw new Exception("error - _id field required ");
+		}
 
 		JsonDocument inserted = bucket.upsert(doc);
 		return inserted;

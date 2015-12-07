@@ -85,12 +85,8 @@ public class VideoAdder {
 					System.out.println("Error - command not recognized: " + selection);
 					Thread.sleep(150);
 					continue;
-
 				}
-
-
 			}
-
 
 			Video toAdd = scannedVideos.get(asNum);
 

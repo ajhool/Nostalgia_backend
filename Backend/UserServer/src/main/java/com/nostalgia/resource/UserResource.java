@@ -488,7 +488,7 @@ public class UserResource {
 
 	}
 
-	private JsonDocument registerNewUserApp(User registering){
+	private JsonDocument registerNewUserApp(User registering) throws Exception{
 		return userRepo.save(registering);
 	}
 
@@ -535,7 +535,7 @@ public class UserResource {
 		return regd; 
 	}
 
-	private JsonDocument registerNewUserFacebook(User user) throws RegistrationException, FacebookException {
+	private JsonDocument registerNewUserFacebook(User user) throws Exception {
 
 		ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 		configurationBuilder.setDebugEnabled(true);

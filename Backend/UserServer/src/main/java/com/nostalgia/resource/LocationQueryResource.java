@@ -54,12 +54,6 @@ import com.nostalgia.VideoRepository;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.persistence.model.*;
 
-import facebook4j.Facebook;
-import facebook4j.FacebookException;
-import facebook4j.FacebookFactory;
-import facebook4j.Reading;
-import facebook4j.conf.Configuration;
-import facebook4j.conf.ConfigurationBuilder;
 
 @Path("/api/v0/location")
 public class LocationQueryResource {

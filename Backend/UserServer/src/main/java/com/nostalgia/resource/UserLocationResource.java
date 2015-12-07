@@ -58,7 +58,7 @@ private final SynchClient sync;
 
 	}
 
-	public User updateSubscriptions(User hasNewLoc){
+	public User updateSubscriptions(User hasNewLoc) throws Exception{
 		//all the locations we know
 		HashMap<String, KnownLocation> nearbys = locRepo.findKnownLocationsCoveringPoint(hasNewLoc.getLastKnownLoc());
 

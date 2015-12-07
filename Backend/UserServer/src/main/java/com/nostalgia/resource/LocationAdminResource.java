@@ -36,7 +36,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Hex;
+import org.geojson.GeoJsonObject;
+import org.geojson.GeometryCollection;
 import org.geojson.Point;
+import org.geojson.Polygon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,8 +132,23 @@ public class LocationAdminResource {
 		}
 
 
+		GeoJsonObject rawGeo = toAdd.getLocation().getGeometry(); 
+		Polygon toBuildbbox = null;
 		//if location doesn't exist, find videos that fall within it
-		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toAdd.getLocation().getGeometry());
+		if(rawGeo instanceof GeometryCollection){
+			GeometryCollection geoColl = (GeometryCollection) rawGeo;
+			for(GeoJsonObject member : geoColl.getGeometries()){
+				if(member instanceof Polygon){
+					toBuildbbox = (Polygon) member;
+					break;
+				}
+			}
+			
+		} else {
+			toBuildbbox = (Polygon) rawGeo;
+		}
+		
+		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toBuildbbox);
 
 		if(toAdd.getMatchingVideos() == null){
 			toAdd.setMatchingVideos(new HashMap<String, String>());
