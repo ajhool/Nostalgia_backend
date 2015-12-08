@@ -1,6 +1,7 @@
 package com.nostalgia;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +24,15 @@ import com.couchbase.client.java.view.SpatialView;
 import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.SpatialViewRow;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.KnownLocation;
+import com.nostalgia.persistence.model.User;
 import com.nostalgia.persistence.model.Video;
 
 import flexjson.JSONDeserializer;
@@ -43,59 +48,57 @@ public class VideoRepository {
 	private final BucketManager bucketManager;
 	private static final ObjectMapper mapper = new ObjectMapper();
 
-	// Initialize design document
-	DesignDocument vidDoc = DesignDocument.create(
-			"video_standard",
-			Arrays.asList(
-					DefaultView.create("by_id",
-							"function (doc, meta) { if (doc.type == 'Video') { emit(doc._id, null); } }"),
-					//			DefaultView.create("by_channel",
-					//					"function (doc, meta) { "
-					//					+ "if (doc.type == 'Video') { "
-					//					+ "for (i=0; i < doc.channels.length; i++) {"
-					//					+ "emit(doc.channels[i], null); "
-					//					+ "} "
-					//					+ "} "
-					//					+ "}")
+//	// Initialize design document
+//	DesignDocument vidDoc = DesignDocument.create(
+//			"video_attrs_process",
+//			Arrays.asList(
+////					DefaultView.create("by_id",
+////							"function (doc, meta) { if (doc.type == 'Video') { emit(doc._id, null); } }"),
+//					//			DefaultView.create("by_channel",
+//					//					"function (doc, meta) { "
+//					//					+ "if (doc.type == 'Video') { "
+//					//					+ "for (i=0; i < doc.channels.length; i++) {"
+//					//					+ "emit(doc.channels[i], null); "
+//					//					+ "} "
+//					//					+ "} "
+//					//					+ "}")
+//
+//
+//					DefaultView.create("by_status",
+//							"function (doc, meta) { "
+//									+ "if (doc.type == 'Video' && doc.status) { "
+//									+ "emit(doc.status, null); "
+//									+ "} "
+//									+ "}")
+//					)
+//			);
+//
+//	// Initialize design document
+//	DesignDocument spatialDoc = DesignDocument.create(
+//			"video_spatial",
+//			Arrays.asList(
+//					SpatialView.create("video_points",
+//							"function (doc, meta) { "
+//									+ "if (doc.type == 'Video' && doc.location.coordinates) { "
+//									+ " emit(doc.location, null);"
+//									+ "}"
+//									+ "}")
+//					)
+//			);
 
-
-					DefaultView.create("by_status",
-							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.status) { "
-									+ "emit(doc.status, null); "
-									+ "} "
-									+ "}")
-					)
-			);
-
-	// Initialize design document
-	DesignDocument spatialDoc = DesignDocument.create(
-			"video_spatial",
-			Arrays.asList(
-					SpatialView.create("video_points",
-							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.location.coordinates) { "
-									+ " emit(doc.location, null);"
-									+ "}"
-									+ "}")
-					)
-			);
-
-	public VideoRepository(VideoCouchConfig videoCouchConfig) {
+	public VideoRepository(VideoCouchConfig videoCouchConfig) throws Exception {
 		config = videoCouchConfig;
 		cluster = CouchbaseCluster.create(config.host);
 		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
 		bucketManager = bucket.bucketManager();
 		DesignDocument existing = bucketManager.getDesignDocument("video_standard");
 		if(existing == null){
-			// Insert design document into the bucket
-			bucketManager.insertDesignDocument(vidDoc);
+			throw new Exception("No video_standard view found!");
 		}
 
 		existing = bucketManager.getDesignDocument("video_spatial");
 		if(existing == null){
-			// Insert design document into the bucket
-			bucketManager.insertDesignDocument(spatialDoc);
+			throw new Exception("No video_spatial view found!");
 		}
 
 	}
@@ -138,7 +141,40 @@ public class VideoRepository {
 		//User result = mapper.convertValue(objString, User.class);
 		return newVid; 
 	}
+	
+	public ArrayList<JsonDocument> getAllPendingVideos(){
+		ViewQuery query = ViewQuery.from("video_standard", "by_status").inclusiveEnd(true).key("PENDING");//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+		}
+	
 
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		ArrayList<JsonDocument> vids = new ArrayList<JsonDocument>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    vids.add(matching);
+		}
+
+		if(vids.size() > 1){
+			logger.error("TOO MANY USERS MATCHING NAME");
+		}
+		return vids;
+	}
+
+	public JsonDocument deleteVideo(String videoToDelete){
+		try {
+          return bucket.remove(videoToDelete);
+		} catch (Exception e){
+			return null; 
+		}
+	}
 	public HashMap<String, Video> findVideosWithin(Polygon hasbbox) {
 		double[] bbox = hasbbox.getBbox(); 
 
