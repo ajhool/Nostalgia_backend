@@ -38,9 +38,9 @@ public class VideoAdder {
 		if(!videoJsonDir.exists()){
 			videoJsonDir.mkdirs();
 		}
-
+		System.out.println("Welcome to the video adder. Scanning for .json files in: " + videoJsonDir.getAbsolutePath() + "...");
 		while (running){
-			System.out.println("Welcome to the video adder. Scanning for .json files in: " + videoJsonDir.getAbsolutePath() + "...");
+
 
 			ArrayList<Video> scannedVideos = scanForVideoFilesIn(videoJsonDir);
 			System.out.println("Videos found: ");
@@ -61,6 +61,9 @@ public class VideoAdder {
 				System.out.println("      at location: " + cur.getLocation());
 			}
 
+			if(scannedVideos.size() == 0){
+				System.out.println("None.");
+			}
 			System.out.println("\n");
 			System.out.print("add which video #? (q to quit, e for example gen): ");
 			String selection = null;
@@ -71,16 +74,16 @@ public class VideoAdder {
 				asNum = Integer.parseInt(selection);
 			} catch (Exception e){
 				switch(selection){
-				
+
 				case("q"):
 					System.out.println("Goodbye");
-				System.exit(0);
+				    System.exit(0);
 				break;
-				
+
 				case("e"):
 					generateExampleJsonForVideo(videoJsonDir);
 				continue;
-	
+
 				default:
 					System.out.println("Error - command not recognized: " + selection);
 					Thread.sleep(150);
@@ -138,6 +141,7 @@ public class VideoAdder {
 
 	private static void generateExampleJsonForVideo(File videoJsonDir) throws IOException {
 		File outputFile = new File(videoJsonDir, "exampleVideo.json");
+		videoJsonDir.mkdirs();
 		if(outputFile.exists()){
 			System.out.println("example already exists @ " + outputFile.getAbsolutePath());
 			System.out.println("no changes made");
@@ -145,7 +149,7 @@ public class VideoAdder {
 		} else {
 			outputFile.createNewFile();
 		}
-		
+
 		Video example = new Video();
 		example.set_id("example_id");
 		example.setLoads(14);
@@ -156,18 +160,18 @@ public class VideoAdder {
 		example.setOwnerId("<insert owner id here>");
 		example.setProperties(new HashMap<String, String>());
 		example.getProperties().put("comment", "example comment");
-	
+
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		
+
 		FileWriter writer = new FileWriter(outputFile);
 
 		String videoAsString = mapper.writeValueAsString(example);
-		
+
 		writer.write(videoAsString);
 		writer.flush();
 		writer.close();
-		
+
 		return; 
 	}
 
@@ -176,12 +180,12 @@ public class VideoAdder {
 		ArrayList<Video> vids = new ArrayList<Video>();
 		HashMap<String, Long> ids = new HashMap<String, Long>();
 		ids.put("example_id", 0L);
-		
+
 		String[] extensions = new String[]{"json"};
 		Iterator<File> iter = FileUtils.iterateFiles(videoJsonDir, extensions, true);
-		
+
 		ObjectMapper mapper = new ObjectMapper();
-		
+
 		boolean changed = false; 
 		while(iter.hasNext()){
 			File toProcess= iter.next();
@@ -190,28 +194,28 @@ public class VideoAdder {
 			}
 			Video fileContents = null;
 			try {
-				  fileContents = mapper.readValue(toProcess, Video.class);
+				fileContents = mapper.readValue(toProcess, Video.class);
 			} catch (Exception e) {
 				System.err.println("error reading in file: " + toProcess.getName());
 				e.printStackTrace();
 				continue;
 			}
-			
+
 			//set date created if necessary 
 			if(fileContents.getDateCreated() < 1000000){
 				System.out.println("No date found. creating one...");
 				changed = true;
 				fileContents.setDateCreated(System.currentTimeMillis());
-				
+
 			}
-			
+
 			//check id
 			String id = fileContents.get_id();
-			
+
 			if(ids.keySet().contains(id)){
 				System.out.println("duplicate id found. re-writing to use unique id");
 				changed = true;
-				
+
 				if(ids.get(id) < fileContents.getDateCreated()){
 					//then keep the exisiting file's id and re-write this id
 					fileContents.set_id(UUID.randomUUID().toString());
@@ -224,9 +228,9 @@ public class VideoAdder {
 					mapper.writeValue(new File(videoJsonDir, temp.get_id() + ".json"), temp);
 					toRename.delete();
 				}
-				
+
 			}
-			
+
 			vids.add(fileContents);
 		}
 		return vids; 

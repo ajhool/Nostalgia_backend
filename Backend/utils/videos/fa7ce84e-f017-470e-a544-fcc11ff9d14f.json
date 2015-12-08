@@ -1,0 +1,22 @@
+{
+  "channels" : [ "fa7ce84e" ],
+  "_id" : "fa7ce84e-f017-470e-a544-fcc11ff9d14f",
+  "type" : "Video",
+  "status" : "NEW",
+  "dateCreated" : 0,
+  "enabled" : false,
+  "loads" : 20,
+  "skips" : 10,
+  "location" : {
+    "type" : "Point",
+    "coordinates" : [ 35.9999999, -79.0096901 ]
+  },
+  "mpd" : "<filled serverside>",
+  "locations" : null,
+  "properties" : {
+    "comment" : "Alex video added via command line"
+  },
+  "ownerId" : "<insert owner id here>",
+  "taggedUserIds" : null,
+  "thumbNail" : null
+}

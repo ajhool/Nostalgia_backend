@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" minBufferTime="PT2S" mediaPresentationDuration="PT4S" xmlns="urn:mpeg:dash:schema:mpd:2011">
+  <ProgramInformation moreInformationURL="www.castLabs.com"/>
+  <Period id="0" start="PT0S" duration="PT4S">
+    <AdaptationSet segmentAlignment="true" subsegmentAlignment="true" subsegmentStartsWithSAP="1" startWithSAP="1" bitstreamSwitching="true" lang="en" mimeType="audio/mp4">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" id="main"/>
+      <SegmentTemplate media="$RepresentationID$/$RepresentationID$-$Number$.mp4" initialization="$RepresentationID$/$RepresentationID$-init.mp4" timescale="8000">
+        <SegmentTimeline>
+          <S d="32768" t="0"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation codecs="mp4a.40.2" audioSamplingRate="8000" bandwidth="64000" id="d92d7eff-36a1-4303-abdb-a041a575b239audio100Kbps">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet segmentAlignment="true" subsegmentAlignment="true" subsegmentStartsWithSAP="1" startWithSAP="1" bitstreamSwitching="true" lang="en" mimeType="video/mp4" maxFrameRate="29946/1001" maxWidth="768" maxHeight="1024" par="3:4">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" id="main"/>
+      <SegmentTemplate media="$RepresentationID$/$RepresentationID$-$Number$.mp4" initialization="$RepresentationID$/$RepresentationID$-init.mp4" timescale="11488">
+        <SegmentTimeline>
+          <S d="43776" t="2941"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation codecs="avc1.64001f" width="768" height="1024" frameRate="29946/1001" sar="1:1" bandwidth="3258000" id="d92d7eff-36a1-4303-abdb-a041a575b2392.5Mbps"/>
+      <Representation codecs="avc1.64001f" width="768" height="1024" frameRate="29946/1001" sar="1:1" bandwidth="4059000" id="d92d7eff-36a1-4303-abdb-a041a575b2393.0Mbps"/>
+      <Representation codecs="avc1.64001f" width="768" height="1024" frameRate="29946/1001" sar="1:1" bandwidth="5581000" id="d92d7eff-36a1-4303-abdb-a041a575b2394.0Mbps"/>
+      <Representation codecs="avc1.64001f" width="768" height="1024" frameRate="29946/1001" sar="1:1" bandwidth="7106700" id="d92d7eff-36a1-4303-abdb-a041a575b2395.0Mbps"/>
+      <Representation codecs="avc1.64001f" width="768" height="1024" frameRate="29946/1001" sar="1:1" bandwidth="8633200" id="d92d7eff-36a1-4303-abdb-a041a575b2395.9Mbps"/>
+    </AdaptationSet>
+  </Period>
+</MPD>
