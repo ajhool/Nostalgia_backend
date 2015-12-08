@@ -121,7 +121,7 @@ public class VideoAdder {
 
 			System.out.println("File found @" + data.getAbsolutePath());
 
-			File saved = new File(videoDataDir, toAdd.get_id());
+			File saved = new File(videoDataDir, toAdd.get_id() + ".mp4");
 			if(!data.getAbsolutePath().contains(videoDataDir.getName())){
 				//copy
 				System.out.println("Copying file...");
@@ -160,7 +160,10 @@ public class VideoAdder {
 		example.setOwnerId("<insert owner id here>");
 		example.setProperties(new HashMap<String, String>());
 		example.getProperties().put("comment", "example comment");
-
+		example.getProperties().put("sharing_who", "EVERYONE");
+		example.getProperties().put("sharing_when", "WIFI");
+		example.getProperties().put("sharing_where", "EVERYWHERE");
+		example.getProperties().put("video_sound", "MUTE");
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
