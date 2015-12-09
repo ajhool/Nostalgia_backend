@@ -103,7 +103,7 @@ public class UserRepository {
 		return inserted;
 	}
 
-	public static User docToUser(JsonDocument document) {
+	public User docToUser(JsonDocument document) {
 		if(document == null) return null;
 		
 		JsonObject obj = document.content();
@@ -117,6 +117,14 @@ public class UserRepository {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		if(!newUser.get_id().equals(document.id())){
+			logger.error("ERROR - USER ID FIELD DROPPED");
+			logger.info("repairing...");
+			document.content().put("_id", document.id());
+			JsonDocument inserted = bucket.upsert(document);
+			newUser.set_id(document.id());
 		}
 		return newUser; 
 	}

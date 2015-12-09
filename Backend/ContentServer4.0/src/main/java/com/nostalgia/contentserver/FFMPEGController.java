@@ -298,6 +298,29 @@ public class FFMPEGController {
 		return cmd;
 	}
 
+	public ArrayList<String> generateFFMPEGThumbnailCommand(String vidName, File sourceFile, File thumbnailParent) {
+		//ffmpeg -ss 3 -i sample.mp4 -vf "select=gt(scene\,0.4)" -frames:v 5 -vsync vfr  out%02d.jpg
+		
+		ArrayList<String> cmd = new ArrayList<String>();
+
+		cmd.add(mffmpegBin);
+	
+		cmd.add(Argument.ENABLE_OUTFILE_OVERWRITE);
+
+		//add streaming input
+		cmd.add(Argument.FILE_INPUT);
+		
+
+		cmd.add(sourceFile.getName());
+
+		cmd.add("-vf");
+		cmd.add("fps=1/3");
+
+		//add output 
+		cmd.add(thumbnailParent.getName() + "/" + vidName + "_thumbnail_%02d.jpg");
+		return cmd;
+	}
+
 
 	//	public static void main(String[] args) throws IOException, InterruptedException{
 	//

@@ -78,7 +78,7 @@ public class Video implements Serializable {
 
 	private HashSet<String> taggedUserIds;
 
-	private String thumbNail;
+	private List<String> thumbNails;
 
 	public Video(){
 		if(properties == null){
@@ -118,12 +118,12 @@ public class Video implements Serializable {
 		this.properties = properties;
 	}
 
-	public String getThumbNail() {
-		return thumbNail;
+	public List<String> getThumbNails() {
+		return thumbNails;
 	}
 
-	public void setThumbNail(String icon) {
-		this.thumbNail = icon;
+	public void setThumbNails(List<String> thumbs) {
+		this.thumbNails = thumbs;
 	}
 
 	public void set_id(String _id) {

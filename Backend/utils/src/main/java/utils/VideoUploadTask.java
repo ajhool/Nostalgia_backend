@@ -228,7 +228,6 @@ public class VideoUploadTask extends Thread {
         String md5 = null;
         try {
             fis = new FileInputStream(in);
-            Adding video: fa7ce84e-f017-470e-a544-fcc11ff9d14f
             long size = fis.getChannel().size();
          md5 = new String(Hex.encodeHex(DigestUtils.md5(fis)));
         fis.close();

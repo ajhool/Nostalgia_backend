@@ -45,7 +45,7 @@ public class VideoRepository {
 	
 	// Initialize design document
 	DesignDocument vidDoc = DesignDocument.create(
-		"video_standard",
+		"video_processor_standard",
 		Arrays.asList(
 			DefaultView.create("by_name",
 				"function (doc, meta) { if (doc.type == 'Video') { emit(doc.name, null); } }"),
@@ -54,39 +54,30 @@ public class VideoRepository {
 					+ "if (doc.type == 'Video' && doc.status) { "
 					+ "emit(doc.status, null); "
 					+ "} "
-					+ "}")
-		)
+					+ "}"),
+		
+		DefaultView.create("null_thumbnails",
+				"function (doc, meta) { "
+				+ "if (doc.type == 'Video' && typeof doc.thumbNails !== 'undefined') { "
+			    + "    if(doc.thumbNails == null){"
+				+ "       emit(doc.status, null); "
+				+ "     } "
+				+ "}"
+			   + "}")
+	)
 	);
 	
-	// Initialize design document
-			DesignDocument spatialDoc = DesignDocument.create(
-				"video_spatial",
-				Arrays.asList(
-					SpatialView.create("video_points",
-							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.location.lon && doc.location.lat) { "
-										+ " emit({ \"type\": \"Point\", \"coordinates\": [doc.geo.lon, doc.geo.lat]}, null);"
-								    + "}"
-							+ "}")
-				)
-			);
-			
 	public VideoRepository(CouchbaseConfig videoCouchConfig) {
 		config = videoCouchConfig;
 		cluster = CouchbaseCluster.create(config.host);
 		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
 		bucketManager = bucket.bucketManager();
-		DesignDocument existing = bucketManager.getDesignDocument("video_standard");
+		DesignDocument existing = bucketManager.getDesignDocument("video_processor_standard");
 		if(existing == null){
 			// Insert design document into the bucket
 			bucketManager.insertDesignDocument(vidDoc);
 		}
-		
-		existing = bucketManager.getDesignDocument("video_spatial");
-		if(existing == null){
-			// Insert design document into the bucket
-			bucketManager.insertDesignDocument(spatialDoc);
-		}
+	
 
 	}
 
@@ -128,30 +119,39 @@ public class VideoRepository {
 		//User result = mapper.convertValue(objString, User.class);
 		return newVid; 
 	}
+
 	
-	public HashMap<String, Video> findVideosCoveringPoint(GeoJsonObject point) {
-		SpatialViewQuery query = SpatialViewQuery.from("video_spatial", "video_points");
-		SpatialViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+	public HashSet<Video> getVideosWithStatus(String status){
+		ViewQuery query = ViewQuery.from("video_processor_standard", "by_status").inclusiveEnd(true).key(status);//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
 			logger.error("error from view query:" + error);
 		}
 	
 
-		if (result == null || result.allRows().size() < 1){
+		if (result == null || result.totalRows() < 1){
 			return null;
 		}
 		
-		HashMap<String, Video> s = new HashMap<String, Video>();
-		for (SpatialViewRow row : result) {
+		HashSet<Video> vids = new HashSet<Video>();
+		try {
+		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
-		    s.put(matching.id().substring(0, 8), docToVideo(matching));
+		    
+		    vids.add(docToVideo(matching));
 		}
-		return s;
+		
+		} catch (Exception e){
+			logger.error("error parsing views", e);
+		}
+
+		return vids;
 	}
-	
-	public HashSet<Video> getVideosWithStatus(String status){
-		ViewQuery query = ViewQuery.from("video_standard", "by_status").inclusiveEnd(true).key(status);//.stale(Stale.FALSE);
+
+
+	public HashSet<Video> getVideosWithNullThumbs() {
+		ViewQuery query = ViewQuery.from("video_processor_standard", "null_thumbnails").limit(20);//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();

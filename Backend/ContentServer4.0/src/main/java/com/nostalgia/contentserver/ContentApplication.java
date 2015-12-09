@@ -17,8 +17,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.contentserver.config.ContentServConfig;
 import com.nostalgia.contentserver.repository.VideoRepository;
-import com.nostalgia.contentserver.resource.AsyncProcessorResource;
-
+import com.nostalgia.contentserver.resource.AsyncHLSerResource;
+import com.nostalgia.contentserver.resource.AsyncThumbnailResource;
 
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -84,9 +84,10 @@ public class ContentApplication extends Application<ContentServConfig> {
 		
 		VideoRepository vidRepo = new VideoRepository(config.getVideoCouch());
 
-		AsyncProcessorResource processor = new AsyncProcessorResource(vidRepo, config.getDataConfig());
-		
+		AsyncHLSerResource processor = new AsyncHLSerResource(vidRepo, config.getDataConfig());
+		AsyncThumbnailResource thumbs = new AsyncThumbnailResource(vidRepo, config.getDataConfig());
 		environment.lifecycle().manage(processor);
+		environment.lifecycle().manage(thumbs);
 	}
 
 

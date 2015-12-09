@@ -408,7 +408,7 @@ public class UserResource {
 		}
 
 		//open session for user's mobile db
-		User loggedInUser = UserRepository.docToUser(loggedIn);
+		User loggedInUser = userRepo.docToUser(loggedIn);
 
 		if(loggedInUser == null){
 			throw new Exception("unable to parse user");

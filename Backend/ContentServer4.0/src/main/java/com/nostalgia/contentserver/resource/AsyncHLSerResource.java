@@ -65,15 +65,15 @@ import com.nostalgia.persistence.model.Video;
 import io.dropwizard.lifecycle.Managed;
 
 
-public class AsyncProcessorResource extends AbstractScheduledService implements Managed {
+public class AsyncHLSerResource extends AbstractScheduledService implements Managed {
 
 	public final String FileDataRootDir; //= "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
-	final static Logger logger = LoggerFactory.getLogger(AsyncProcessorResource.class);
+	final static Logger logger = LoggerFactory.getLogger(AsyncHLSerResource.class);
 	private String baseUrl; 
 
 	private final VideoRepository vidRepo;
 
-	public AsyncProcessorResource(VideoRepository contentRepo, DataConfig dataConfig) {
+	public AsyncHLSerResource(VideoRepository contentRepo, DataConfig dataConfig) {
 		super();
 		this.vidRepo = contentRepo;
 		FileDataRootDir = dataConfig.datadir;
@@ -179,6 +179,7 @@ public class AsyncProcessorResource extends AbstractScheduledService implements 
 		Video result = processFile(vid, contentPieceOrig);
 		result.setMpd(baseUrl + result.get_id() + "/" + "320x180.m3u8");
 		result.setStatus("DISTRIBUTING");
+		result.setEnabled(true);
 		vidRepo.save(result);
 
 

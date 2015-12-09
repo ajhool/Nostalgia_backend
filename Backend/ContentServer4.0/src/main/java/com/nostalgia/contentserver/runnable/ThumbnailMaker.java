@@ -4,62 +4,56 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.castlabs.dash.dashfragmenter.ExitCodeException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
 import com.nostalgia.contentserver.dash.ManualDashFileSet;
 import com.nostalgia.contentserver.resource.AsyncHLSerResource;
 
-public class BaselineTranscoder implements Runnable{
+public class ThumbnailMaker implements Runnable{
 
-	public static final Logger logger = LoggerFactory.getLogger(BaselineTranscoder.class);
+	public static final Logger logger = LoggerFactory.getLogger(ThumbnailMaker.class);
 	private final File sourceFile;
-	private final File output;
+	private final File thumbnailParent; 
+	private final ArrayList<File> output = new ArrayList<File>();
 	private boolean complete = false;
+	private final String fileName; 
 
-	public BaselineTranscoder(File source, String parentPath, String fileName){
+	public ThumbnailMaker(String fileNameNoExt, File tnailSource, File thumbnailParentDir){
 		super();
-		this.output = new File(parentPath, fileName);
-		this.sourceFile = source;
+		this.sourceFile = tnailSource;
+		this.thumbnailParent = thumbnailParentDir; 
+		if(!thumbnailParent.exists()){
+			thumbnailParent.mkdirs();
+		}
+		this.fileName = fileNameNoExt; 
 	}
 
 
 	@Override
 	public void run() {
 
-
-		//step 1: check for already exisiting file
-		if(output.exists()){
-			//assume sucessful
-			complete = true;
-			return;
-
-			//otherwise delete the old file
-			//FileUtils.deleteQuietly(output);
-
-		}
-
 		//step 2: if no matching file, begin transcoding
 
 		long start = System.currentTimeMillis();
 
-		String fullpath = output.getAbsolutePath();
-
-		File encoded = this.baselineEncodeWithFFMPEG();
+		makeThumbnailsWithFFMPEG(fileName);
 
 
 		long end = System.currentTimeMillis();
 
 		Duration thisRun = Duration.ofMillis(end -start);
-		logger.info("baseline for for file: " + this.output.getName() + " took " + thisRun.toString() + " to encode");
+		logger.info("created thumbnails for video: " + sourceFile.getName() + " in " + thisRun.toString());
 
-
+		loadCreatedFiles();
 
 
 
@@ -74,19 +68,35 @@ public class BaselineTranscoder implements Runnable{
 	}
 
 
-	public File getOutputFile(){
+	public ArrayList<File> getOutputFiles(){
 		if(!complete){
-			logger.warn("tried to fetch transcoded file that wasn't finished yet!");
+			logger.warn("tried to fetch thumbnails that werent finished yet!");
 			return null;
 		}
 
 		return this.output;
 	}
+	
+	private void loadCreatedFiles(){
+		//iterate through all files with thumbnail in their name in the thumbnail dir 
+		String[] extensions = new String[]{"jpg"};
+		Iterator<File> iter = FileUtils.iterateFiles(thumbnailParent, extensions, true);
 
-	private File baselineEncodeWithFFMPEG() {
+		ObjectMapper mapper = new ObjectMapper();
+
+		while(iter.hasNext()){
+			File toProcess= iter.next();
+			if(toProcess.getName().contains("thumbnail")){
+					this.output.add(toProcess);
+			}
+		}
+		
+	}
+
+	private void makeThumbnailsWithFFMPEG(String vidId) {
 		FFMPEGController controller = new FFMPEGController();
 
-		ArrayList<String> cmds = controller.generateFFMPEGBaselineCommand(sourceFile, output);
+		ArrayList<String> cmds = controller.generateFFMPEGThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
 
 		ShellCallback sc = null;
 		try {
@@ -105,7 +115,9 @@ public class BaselineTranscoder implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return output;
+		
+		
+		
 	}
 
 }
