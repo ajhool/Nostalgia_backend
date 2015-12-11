@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -40,10 +41,10 @@ public class SynchClient {
 		UriBuilder uribuild = UriBuilder.fromUri("http://" + conf.host + ":" + conf.port + conf.addUserPath);
 
 
-		
+
 		//name to be last part of id
 		String name = loggedIn.get_id().substring(loggedIn.get_id().lastIndexOf("-"));
-		
+
 		User copy = null;
 
 		try {
@@ -53,14 +54,20 @@ public class SynchClient {
 			e1.printStackTrace();
 		}
 		copy.setName(name);
+		Response resp = null; 
 		try {
-			Response resp = sComm.target(uribuild).request().post(Entity.json(copy));
+			resp = sComm.target(uribuild).request().post(Entity.json(copy));
 
 			logger.info("response: " + resp.getStatus());
 		} catch (Exception e){
 			logger.error("error registering new user", e);
 			return false;
-		} 
+		} finally {
+			if(resp != null){
+				resp.close();
+			}
+		}
+
 
 
 		return true;
@@ -71,14 +78,22 @@ public class SynchClient {
 		String name = loggedIn.get_id().substring(loggedIn.get_id().lastIndexOf("-"));
 		SyncSessionCreateRequest req = new SyncSessionCreateRequest();
 		req.setName(name);
-		SyncSessionCreateResponse resp = null;
+		SyncSessionCreateResponse syncResp = null;
+		Response resp = null;
 		try {
-			resp = sComm.target(uribuild).request().post(Entity.json(req), SyncSessionCreateResponse.class);
+			Builder build = sComm.target(uribuild).request();
+			 resp = build.post(Entity.json(req));
+			
+			syncResp = resp.readEntity(SyncSessionCreateResponse.class);
+			
+			
 		} catch (Exception e){
 			logger.info("error creating sync session for user");
 			return null;
+		} finally {
+			resp.close();
 		}
-		return resp;
+		return syncResp;
 	}
 
 	public boolean setSyncChannels(User hasNewLoc) {
@@ -115,6 +130,7 @@ public class SynchClient {
 			e.printStackTrace();
 		}
 
+		
 		boolean changed = false;
 
 		if(existing.getAdmin_channels().size() == hasNewLoc.getAdmin_channels().size()){
