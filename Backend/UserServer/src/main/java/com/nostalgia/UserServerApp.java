@@ -10,6 +10,8 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nostalgia.aws.AWSConfig;
+import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.LocationAdminResource;
@@ -98,14 +100,15 @@ public class UserServerApp extends Application<UserAppConfig>{
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		SynchClient sCli = this.createSynchClient(config, environment);
 		IconService icSvc = this.getIconService(config, environment);
-		
+		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
-		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc);
+		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
+		
 
 		environment.jersey().register(locSubRes); 
 		environment.jersey().register(queryRes);

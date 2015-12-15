@@ -46,6 +46,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.UserRepository;
+import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
@@ -85,24 +86,27 @@ public class UserResource {
 	private SynchClient syncClient;
 	private UserLocationResource userLocRes;
 	private final IconService icSvc; 
+	private final SignedCookieCreator creator; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc) {
+	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc, SignedCookieCreator create) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
 		this.icSvc = icSvc;
+		this.creator = create;
 	}
 
-	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate){
+	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate) throws Exception{
 		if(needsTokens.getStreamTokens() == null){
 			needsTokens.setStreamTokens(new HashMap<String, String>());
 		}
 
 		//call to aws here if needed for new tokens
-		needsTokens.getStreamTokens().put("CloudFront-Expires", Long.toString(tokenExpiryDate));
-		needsTokens.getStreamTokens().put("CloudFront-Signature", "hardc0ded");
-		needsTokens.getStreamTokens().put("CloudFront-Key-Pair-Id", "hardc0ded");
+		Map<String, String> generated = creator.generateCookies("https://d1natzk16yc4os.cloudfront.net/data/*", tokenExpiryDate);
+		
+		needsTokens.getStreamTokens().putAll(generated);
+		
 		return;
 	}
 	@SuppressWarnings("unused")
@@ -195,17 +199,17 @@ public class UserResource {
 		
 	
 		
-		//refresh tokens if necessary
-		if(loggedIn.getStreamTokens() != null){
-			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
-			if(expiry < System.currentTimeMillis()){
-				//need new set of tokens
-				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-			}
-			
-		} else {
+//		//refresh tokens if necessary
+//		if(loggedIn.getStreamTokens() != null){
+//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
+//			if(expiry < System.currentTimeMillis()){
+//				//need new set of tokens
+//				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+//			}
+//			
+//		} else {
 			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-		}
+//		}
 
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());

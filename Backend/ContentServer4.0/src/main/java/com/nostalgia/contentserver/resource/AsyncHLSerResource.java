@@ -158,10 +158,8 @@ public class AsyncHLSerResource extends AbstractScheduledService implements Mana
 			return; 
 		}
 
-
-
 		Video vid = unprocessed.iterator().next();
-		vid.setStatus("PROCESSED");
+		vid.setStatus("PROCESSING");
 
 		vidRepo.save(vid);
 		logger.info("processing video with id: " + vid.get_id());
@@ -178,12 +176,12 @@ public class AsyncHLSerResource extends AbstractScheduledService implements Mana
 
 		Video result = processFile(vid, contentPieceOrig);
 		result.setMpd(baseUrl + result.get_id() + "/" + "320x180.m3u8");
-		result.setStatus("DISTRIBUTING");
+//		result.setStatus("DISTRIBUTING");
+		vid.setStatus("PROCESSED");
 		result.setEnabled(true);
 		vidRepo.save(result);
 
-
-
+		return;
 	}
 
 	@Override

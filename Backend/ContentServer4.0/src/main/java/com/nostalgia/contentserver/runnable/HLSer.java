@@ -48,21 +48,21 @@ public class HLSer implements Runnable{
 	public void run() {
 
 		if(!skipPrevious){
-		while(!priorStage.isComplete()){
-			try {
-				Thread.sleep(60000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			while(!priorStage.isComplete()){
+				try {
+					Thread.sleep(60000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
+			sourceFile = priorStage.getOutputFile();
 		}
-		sourceFile = priorStage.getOutputFile();
-		}
-	
-		
+
+
 		//now, in targets we should have every representation type that needs to be created
 		ArrayList<File> encodedFiles = new ArrayList<File>();
-		
+
 		//run ffmpeg for each representation
 		//this could take some time...
 		for(String resolution : targets){
@@ -73,36 +73,36 @@ public class HLSer implements Runnable{
 			boolean exists = existing.exists();
 			if(!exists){
 				logger.info("File: " + existing.getPath() + " does not exist, encoding...");
-			File encoded = this.encodeWithFFMPEG(resolution, sourceFile);
-			encodedFiles.add(encoded);
+				File encoded = this.encodeWithFFMPEG(resolution, sourceFile);
+				encodedFiles.add(encoded);
 			} else {
 				encodedFiles.add(existing);
 				logger.info("File: " + existing.getPath() + "exists. Skipping encoding");
 			}
-			
+
 			long end = System.currentTimeMillis();
-			
+
 			Duration thisRun = Duration.ofMillis(end -start);
 			logger.info("File for representation: " + resolution + " took " + thisRun.toString() + " to encode to pre-dashing birate");
 
 		}
-		
+
 		//delete baseline file, we are done with it
 		FileUtils.deleteQuietly(sourceFile);
 
 		//now, we have  a sequence of encoded files
-		
-//		ManualDashFileSet dash = new ManualDashFileSet(output, encodedFiles);
-//		dash.setVerbose(true);
-//		try {
-//			dash.run();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (ExitCodeException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+
+		//		ManualDashFileSet dash = new ManualDashFileSet(output, encodedFiles);
+		//		dash.setVerbose(true);
+		//		try {
+		//			dash.run();
+		//		} catch (IOException e) {
+		//			// TODO Auto-generated catch block
+		//			e.printStackTrace();
+		//		} catch (ExitCodeException e) {
+		//			// TODO Auto-generated catch block
+		//			e.printStackTrace();
+		//		}
 		complete = true;
 		logger.info("dashing complete. Representations dashed:" );
 		for(String rep : targets){
@@ -120,9 +120,9 @@ public class HLSer implements Runnable{
 	//size looks like: 320x180
 	private synchronized File encodeWithFFMPEG(String size, File sourceFile2) {
 		FFMPEGController controller = new FFMPEGController();
-		
+
 		ArrayList<String> cmds = controller.generateFFMPEGCommand(size, sourceFile2, output);
-		
+
 		ShellCallback sc = null;
 		try {
 			sc = new StdoutCallback();
@@ -130,7 +130,7 @@ public class HLSer implements Runnable{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		try {
 			int exit = controller.execProcess(cmds, sc, sourceFile.getParentFile());
 		} catch (IOException e) {

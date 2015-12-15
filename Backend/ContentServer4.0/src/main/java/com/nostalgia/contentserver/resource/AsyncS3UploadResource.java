@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,16 +42,24 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.client.ClientConfig;
+import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.services.s3.transfer.MultipleFileUpload;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.Upload;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.nostalgia.contentserver.config.DataConfig;
+import com.nostalgia.contentserver.config.S3Config;
 import com.nostalgia.contentserver.model.dash.jaxb.AdaptationSetType;
 import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
 import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
@@ -66,37 +75,48 @@ import com.nostalgia.persistence.model.Video;
 import io.dropwizard.lifecycle.Managed;
 
 
-public class AsyncThumbnailResource extends AbstractScheduledService implements Managed {
+public class AsyncS3UploadResource extends AbstractScheduledService implements Managed {
 
-	public final String FileDataRootDir; //= "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
-	final static Logger logger = LoggerFactory.getLogger(AsyncThumbnailResource.class);
+	public final File fileDataRootDir; //= "/home/alex/Desktop/Nostalgia_backend/Backend/UserServer/videos";
+	final static Logger logger = LoggerFactory.getLogger(AsyncS3UploadResource.class);
 	private String baseUrl; 
+
+	private BasicAWSCredentials credentials;
+	private TransferManager tx;
+	private  String bucketName;
 
 	private boolean running = false; 
 
 	private final VideoRepository vidRepo;
 
-	public AsyncThumbnailResource(VideoRepository contentRepo, DataConfig dataConfig) {
+	public AsyncS3UploadResource(VideoRepository contentRepo, S3Config s3Config, DataConfig dataConfig) throws Exception {
 		super();
+		
 		this.vidRepo = contentRepo;
-		FileDataRootDir = dataConfig.datadir;
+		fileDataRootDir = new File(dataConfig.datadir);
 		baseUrl = dataConfig.baseurl;
+
+//		Properties properties = new Properties();
+//		properties.load( getClass().getResourceAsStream("awscredentials") );
+//
+//		String accessKeyId = properties.getProperty( "accessKey" );
+//		String secretKey = properties.getProperty( "secretKey" );
+		credentials = new BasicAWSCredentials( "AKIAJDDH56F4J3S7ROQA", "vkw9ts47X5Wql+1wxKTfeqj7tUnCsydmCLrw4yxJ");
+		tx = new TransferManager(credentials);
+		bucketName = s3Config.bucketName; 
+
+		
+		createAmazonS3Bucket();
 	}
 
-
-	public List<File> processFile(Video metaData, File original, File thumbnailParentDir) throws Exception {
-
-		ThumbnailMaker maker = new ThumbnailMaker(metaData.get_id(), original, thumbnailParentDir);
-
-		Thread runner = new Thread(maker);
-
-		runner.start();
-
-		runner.join();
-
-
-		return maker.getOutputFiles(); 
-
+	private void createAmazonS3Bucket() {
+		try {
+			if (tx.getAmazonS3Client().doesBucketExist(bucketName) == false) {
+				tx.getAmazonS3Client().createBucket(bucketName);
+			}
+		} catch (AmazonClientException ace) {
+			logger.error("error creating bucket", ace);
+		}
 	}
 
 	@Override
@@ -108,64 +128,57 @@ public class AsyncThumbnailResource extends AbstractScheduledService implements 
 	@Override
 	public void stop() throws Exception {
 		this.stopAsync().awaitTerminated();
+	}
 
+	private boolean uploadDirToS3(File rootDir){
+
+		MultipleFileUpload myUpload = tx.uploadDirectory(bucketName, "data/" + rootDir.getName() + "/" , rootDir, true);
+
+		try {
+			myUpload.waitForCompletion();
+		} catch (AmazonClientException | InterruptedException e) {
+			logger.error("error waiting for upload completion", e);
+			return false;
+
+		}
+		return true;	
 	}
 
 	@Override
 	protected synchronized void runOneIteration() throws Exception {
-		if(!running){
-			running = true;
-			try { 
-				HashSet<Video> unprocessed = vidRepo.getVideosWithNullThumbs();
 
-				if(unprocessed == null || unprocessed.size() < 1){
-					logger.info("no videos found to process, sleeping...");
-					return; 
-				}
-
-				Video vid = unprocessed.iterator().next();
-			
-				if(vid.getThumbNails() == null){
-					vid.setThumbNails(new ArrayList<String>());
-				}
-				vidRepo.save(vid);
-				logger.info("generating thumbs video with id: " + vid.get_id());
-
-				String filePath = FileDataRootDir + "/" + vid.get_id() + "/" + vid.get_id();
-				File contentPieceOrig = new File(filePath);
-
-				if(!contentPieceOrig.exists()){
-					logger.error("error - no matching file found at: " + contentPieceOrig.getAbsolutePath() + " for video with id: " + vid.get_id());
-					return;
-				}
-
-				//generate dir for thumbs
-				File thumbnailParentDir = new File(contentPieceOrig.getParentFile(), "thumbnails");
-				thumbnailParentDir.mkdirs(); 
-
-				//otherwise, we know it exists
-
-				List<File> result = processFile(vid, contentPieceOrig, thumbnailParentDir);
-
-				for(File thumb : result){
-					vid.getThumbNails().add(baseUrl + vid.get_id() + "/" + thumbnailParentDir.getName() + "/" + thumb.getName());
-				}
-
-				vidRepo.save(vid);
-
-			} finally {
-				running = false;
-			}
-		} else {
-			logger.warn("warning - skipping thumbnail creation");
+		HashSet<Video> readyForUpload = vidRepo.findVideosReadyForDeployment();
+		
+		if(readyForUpload == null){
+			return; 
 		}
+		
+		Video toUpload = readyForUpload.iterator().next(); 
+		
+		File target = new File(fileDataRootDir, toUpload.get_id());
+		
+		if(!target.exists() || !target.isDirectory()){
+			logger.error("target: " + target.getPath() + " does not exist or is not a dir.");
+			return;
+		}
+		
+		toUpload.setStatus("DISTRIBUTING");
+		vidRepo.save(toUpload);
+		
+		boolean success = uploadDirToS3(target);
+		
+		if(!success){
+			throw new Exception("UPLOAD TO S3 FAILED");
+		}
+		
+		
 		return; 
 
 	}
 
 	@Override
 	protected Scheduler scheduler() {
-		return AbstractScheduledService.Scheduler.newFixedRateSchedule(0, 25,
+		return AbstractScheduledService.Scheduler.newFixedRateSchedule(0, 10,
 				TimeUnit.SECONDS);
 	}
 
