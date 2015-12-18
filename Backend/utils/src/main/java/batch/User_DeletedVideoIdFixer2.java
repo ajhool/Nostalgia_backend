@@ -8,13 +8,13 @@ import java.util.Set;
 import com.couchbase.client.java.document.JsonDocument;
 import com.nostalgia.persistence.model.Video;
 
-public class NonAwsVideoJsonGetter extends VideoBatchClass{
+public class User_DeletedVideoIdFixer2 extends LocationBatchClass{
 
 	
 
 	@Override
 	public String getName() {
-		return "Non-AwsVideoJsonGetter"; 
+		return "Location video id fixer"; 
 	}
 
 
@@ -22,17 +22,11 @@ public class NonAwsVideoJsonGetter extends VideoBatchClass{
 	public Set<JsonDocument> execute(Collection<JsonDocument> input) {
 		HashSet<JsonDocument> toSave = new HashSet<JsonDocument>();
 		
-		//if video has exoatmospherics in links
+		//for all fields with video ids, check that video actually exists 
 		
-		//create video object from document 
+		//if not, remove
 		
-		//write video object to metadata folder
-		
-		//download video data + save in local folder
-		
-		//else, just add video to output, so that it is saved
-		
-		
+		//add to set so that updates get saved
 		return toSave;
 	}
 

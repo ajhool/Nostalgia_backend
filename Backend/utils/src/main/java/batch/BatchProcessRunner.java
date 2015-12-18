@@ -2,6 +2,7 @@ package batch;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -11,8 +12,23 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.view.DesignDocument;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
+import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.view.DefaultView;
+import com.couchbase.client.java.view.DesignDocument;
+import com.couchbase.client.java.view.SpatialView;
+import com.couchbase.client.java.view.SpatialViewQuery;
+import com.couchbase.client.java.view.SpatialViewResult;
+import com.couchbase.client.java.view.SpatialViewRow;
+import com.nostalgia.persistence.model.User;
 
 public class BatchProcessRunner {
 
@@ -94,34 +110,94 @@ public class BatchProcessRunner {
 	}
 
 
-	private static void update(JsonDocument mod) {
+	private static boolean update(JsonDocument mod) {
 		System.out.println("updating document: " + mod.id());
-
+		JsonDocument updated = bucket.upsert(mod);
+		
+		return updated.id().equals(mod.id());
 
 
 	}
 
 
-	private static void deleteDocument(JsonDocument orig) {
+	private static boolean deleteDocument(JsonDocument orig) {
 		System.out.println("Deleting document: " + orig.id());
-
+		JsonDocument removed = bucket.remove(orig.id());
+		return removed.id().equals(orig.id());
+		
 	}
 
 
 	private static Map<String, JsonDocument> getAllUserDocuments() {
-		// TODO Auto-generated method stub
-		return null;
+	
+		ViewQuery query = ViewQuery.from("user", "all_users");//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			System.err.println("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		HashMap<String, JsonDocument> users = new HashMap<String, JsonDocument>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    users.put(row.id(), JsonDocument.from(matching, row.id()));
+		}
+
+		return users;
+		
+		
+		
 	}
 
 
 	private static Map<String, JsonDocument> getAllVideoDocuments() {
-		// TODO Auto-generated method stub
-		return null;
+		ViewQuery query = ViewQuery.from("video_standard", "by_id");//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			System.err.println("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		HashMap<String, JsonDocument> videos = new HashMap<String, JsonDocument>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    videos.put(row.id(), JsonDocument.from(matching, row.id()));
+		}
+		return videos; 
 	}
 
 
 	private static Map<String, JsonDocument> getAllLocationDocuments() {
-		// TODO Auto-generated method stub
-		return null;
+		ViewQuery query = ViewQuery.from("location_standard", "by_name");//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			System.err.println("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		HashMap<String, JsonDocument> locs = new HashMap<String, JsonDocument>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    locs.put(row.id(), JsonDocument.from(matching, row.id()));
+		}
+		return locs; 
 	}
 }
