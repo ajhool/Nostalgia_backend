@@ -103,7 +103,7 @@ public class UserResource {
 		}
 
 		//call to aws here if needed for new tokens
-		Map<String, String> generated = creator.generateCookies("https://d1natzk16yc4os.cloudfront.net/data/*", tokenExpiryDate);
+		Map<String, String> generated = creator.generateCookies("https://d1natzk16yc4os.cloudfront.net/*", tokenExpiryDate);
 		
 		needsTokens.getStreamTokens().putAll(generated);
 		
@@ -198,6 +198,7 @@ public class UserResource {
 		response.setSessionTok(syncResp.getSession_id());
 		
 	
+		long time = 1451066974000L; 
 		
 //		//refresh tokens if necessary
 //		if(loggedIn.getStreamTokens() != null){
@@ -208,9 +209,9 @@ public class UserResource {
 //			}
 //			
 //		} else {
-			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 //		}
-
+		this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
 			loggedIn = userLocRes.updateSubscriptions(loggedIn);

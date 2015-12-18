@@ -35,20 +35,25 @@ public class SignedCookieCreator {
 		this.config = config;
 	}
 
+//	//see http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-setting-signed-cookie-canned-policy.html#private-content-canned-policy-statement-cookies-values
+//	final String cannedPolicy = "" +
+//	"{ "+
+//		  "\"Statement\": [ "+
+//		     "{" +
+//		        "\"Resource\":\"<BaseURL>\"," + 
+//		         "\"Condition\":{" +
+////		         "\"IpAddress\":{\"AWS:SourceIp\":\"192.0.2.0/24\"}," + 
+//		         "\"DateLessThan\":{\"AWS:EpochTime\":<ExpirationTime>}" +
+//		         "}" +
+//		     "}" +
+//		   "]" + 
+//		"}";
+
 	public Map<String, String> generateCookies(String baseUrl, long expirationTime) throws Exception {
 
 		HashMap<String, String> cookies = new HashMap<String, String>();
 		
-	
-		Date expiry = new Date(expirationTime);
-		Date minimum = new Date(System.currentTimeMillis() + 3600 * 1000);
-		
-		if(!expiry.after(minimum)){
-			throw new Exception("Invalid date, must expire later in time");
-		}
-		
-		String customPolicy = CloudFrontService.buildPolicyForSignedUrl(baseUrl, expiry, "0.0.0.0/0", null);
-		
+		String customPolicy = CloudFrontService.buildPolicyForSignedUrl(baseUrl, new Date(expirationTime), "0.0.0.0/0", null);
 		
 		cookies.put("CloudFront-Policy", ServiceUtils.toBase64(customPolicy.getBytes()));
 		byte[] signatureBytes = EncryptionUtil.signWithRsaSha1(getDerPrivateKey(), customPolicy.getBytes("UTF-8"));
@@ -57,6 +62,7 @@ public class SignedCookieCreator {
 		cookies.put("CloudFront-Signature", signature);
 
 		cookies.put("CloudFront-Key-Pair-Id", config.keyPairId);
+		cookies.put("original", customPolicy);
 		return cookies; 
 	}
 

@@ -15,6 +15,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.glassfish.jersey.client.ClientResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ public class SynchClient {
 	public SynchClient(SyncConfig syncConfig, Client jClient) {
 		conf = syncConfig;
 		sComm = jClient;
+
 	}
 
 	public boolean registerUser(User loggedIn) {
@@ -82,16 +85,20 @@ public class SynchClient {
 		Response resp = null;
 		try {
 			Builder build = sComm.target(uribuild).request();
-			 resp = build.post(Entity.json(req));
-			
+			resp = build.post(Entity.json(req));
+
 			syncResp = resp.readEntity(SyncSessionCreateResponse.class);
-			
-			
+			resp.close();
+		
+
+
 		} catch (Exception e){
 			logger.info("error creating sync session for user");
 			return null;
 		} finally {
-			resp.close();
+			if(resp != null){
+				resp.close();
+			}
 		}
 		return syncResp;
 	}
@@ -130,7 +137,7 @@ public class SynchClient {
 			e.printStackTrace();
 		}
 
-		
+
 		boolean changed = false;
 
 		if(existing.getAdmin_channels().size() == hasNewLoc.getAdmin_channels().size()){
@@ -148,6 +155,7 @@ public class SynchClient {
 			existing.setAdmin_channels(hasNewLoc.getAdmin_channels());
 
 			Response ack = sComm.target(uribuild).request().put(Entity.json(existing));
+			ack.close();
 			return true;
 		} else return false;
 
