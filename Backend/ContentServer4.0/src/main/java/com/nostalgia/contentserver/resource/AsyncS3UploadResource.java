@@ -169,6 +169,15 @@ public class AsyncS3UploadResource extends AbstractScheduledService implements M
 		
 		if(!success){
 			throw new Exception("UPLOAD TO S3 FAILED");
+		} else {
+			logger.info("Successfully uploaded dir: " + target + " to aws s3. Deleting dir...");
+			boolean result = FileUtils.deleteQuietly(target);
+			if(result){
+				logger.info("successfully deleted target: " + target.getAbsolutePath());
+			} else {
+				logger.error("error deleting file");
+				throw new Exception("error deleting target: " + target.getAbsolutePath());
+			}
 		}
 		
 		
