@@ -38,6 +38,7 @@ public class BatchProcessRunner {
 			new NonAwsVideoJsonGetter(),
 			new AwsUrlFixer(),
 			new DeletedVideoIdFixer(),
+			new MissingIdFieldFix()
 	};
 
 	// the DB we are using
@@ -96,7 +97,9 @@ public class BatchProcessRunner {
 
 		Collection<JsonDocument> copied = new ArrayList<JsonDocument>();
 
+		HashMap<String, Integer> originalHashes = new HashMap<String, Integer>();
 		for(JsonDocument orig : allOfType.values()){
+			originalHashes.put(orig.id(), orig.hashCode());
 			copied.add(JsonDocument.from(orig, orig.id()));
 		}
 
@@ -117,7 +120,15 @@ public class BatchProcessRunner {
 
 		for(JsonDocument mod : modded){
 			JsonDocument original = allOfType.get(mod.id());
-			if(!original.equals(mod)){
+			
+			boolean changed = false;
+			
+			int originalHashCode = originalHashes.get(mod.id());
+			if(mod.hashCode() != originalHashCode){
+				changed = true;
+			}
+			
+			if(changed){
 				update(mod);
 
 			}
