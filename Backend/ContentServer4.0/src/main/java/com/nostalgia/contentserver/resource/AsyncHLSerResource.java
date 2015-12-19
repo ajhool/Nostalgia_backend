@@ -175,7 +175,7 @@ public class AsyncHLSerResource extends AbstractScheduledService implements Mana
 		//otherwise, we know it exists
 
 		Video result = processFile(vid, contentPieceOrig);
-		result.setMpd(baseUrl + result.get_id() + "/" + "320x180.m3u8");
+		result.setUrl(baseUrl + result.get_id() + "/" + "320x180.m3u8");
 //		result.setStatus("DISTRIBUTING");
 		vid.setStatus("PROCESSED");
 		result.setEnabled(true);

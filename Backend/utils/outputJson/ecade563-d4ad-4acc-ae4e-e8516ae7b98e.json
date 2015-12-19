@@ -1,0 +1,27 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "type": "Video",
+    "ownerId": "62d0fb77-0970-4fbd-90bc-9b4407dfb6cd",
+    "enabled": false,
+    "url": null,
+    "skips": 0,
+    "dateCreated": 1448810875527,
+    "channels": ["ecade563"],
+    "location": {
+        "coordinates": [
+            -78.9482741,
+            36.0084716
+        ],
+        "type": "Point"
+    },
+    "_id": "ecade563-d4ad-4acc-ae4e-e8516ae7b98e",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "NOW",
+        "video_sound": "MUTE"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": null
+}

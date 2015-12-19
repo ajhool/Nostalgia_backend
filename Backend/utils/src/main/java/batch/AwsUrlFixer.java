@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.nostalgia.persistence.model.Video;
 
-public class AwsUrlFixer extends VideoBatchClass{
+public class AwsUrlFixer extends BatchClass{
 
-	
+
 
 	@Override
 	public String getName() {
@@ -21,16 +22,31 @@ public class AwsUrlFixer extends VideoBatchClass{
 	@Override
 	public Set<JsonDocument> execute(Collection<JsonDocument> input) {
 		HashSet<JsonDocument> toSave = new HashSet<JsonDocument>();
-		
-		//if video has /data in paths
-		
-		//remove + save
-		
-		//else just add to output, no changes needed
-		
-		
-		
-		
+
+		for(JsonDocument orig : input){
+
+			JsonObject video = orig.content();
+
+
+			String linkToVideo = video.getString("url");
+
+			if(linkToVideo == null){
+				linkToVideo = video.getString("mpd");
+			}
+
+			//if video has /data in paths
+			if(linkToVideo.contains("cloudfront.net") && linkToVideo.contains("data")){
+
+				linkToVideo = linkToVideo.replace("data/", "");
+				//fix url
+				video.put("url", linkToVideo);
+			}
+
+			toSave.add(orig);
+		}
+
+
+
 		return toSave;
 	}
 

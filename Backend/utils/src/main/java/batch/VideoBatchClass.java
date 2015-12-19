@@ -1,5 +1,5 @@
 package batch;
 
-public abstract class VideoBatchClass extends BatchClass{
+public abstract interface VideoBatchClass {
 
 }

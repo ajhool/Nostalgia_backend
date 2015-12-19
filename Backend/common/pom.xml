@@ -20,5 +20,6 @@
 			<artifactId>geojson-jackson</artifactId>
 			<version>1.5.1</version>
 		</dependency>
+		
 	</dependencies>
 </project>

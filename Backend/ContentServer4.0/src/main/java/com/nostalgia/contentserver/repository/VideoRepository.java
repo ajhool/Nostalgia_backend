@@ -86,8 +86,10 @@ public class VideoRepository {
 
 	}
 
-	public JsonDocument save(Video adding) {
+	public JsonDocument save(Video adding) throws Exception {
 
+		if(adding.get_id() == null) throw new Exception("non-null id required");
+		
 		String json = null;
 		try {
 			json = mapper.writeValueAsString(adding);
@@ -96,11 +98,21 @@ public class VideoRepository {
 			e.printStackTrace();
 		}
 
+		
 		JsonObject jsonObj = JsonObject.fromJson(json);
-
+		
+		if(jsonObj.get("_id") == null){
+			jsonObj.put("_id", adding.get_id());
+		}
 		JsonDocument  doc = JsonDocument.create(adding.get_id(), jsonObj);
-
+		if(doc.content().get("_id") == null){
+			doc.content().put("_id", adding.get_id());
+		}
 		JsonDocument inserted = bucket.upsert(doc);
+		
+		if(inserted.content().getString("_id") == null){
+			throw new Exception("ID FIELD REQUIRED");
+		}
 		return inserted; 
 	}
 

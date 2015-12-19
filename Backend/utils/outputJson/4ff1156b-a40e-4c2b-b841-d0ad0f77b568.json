@@ -1,0 +1,27 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "type": "Video",
+    "ownerId": "62d0fb77-0970-4fbd-90bc-9b4407dfb6cd",
+    "enabled": false,
+    "url": null,
+    "skips": 0,
+    "dateCreated": 1448778507526,
+    "channels": ["4ff1156b"],
+    "location": {
+        "coordinates": [
+            -78.9484448,
+            36.008649
+        ],
+        "type": "Point"
+    },
+    "_id": "4ff1156b-a40e-4c2b-b841-d0ad0f77b568",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "FRIENDS",
+        "sharing_when": "ONE_DAY",
+        "video_sound": "MUTE"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": null
+}

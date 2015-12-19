@@ -156,7 +156,7 @@ public class VideoAdder {
 		example.setSkips(12);
 		Point examplePoint = new Point(35.9999999, -79.0096901);
 		example.setLocation(examplePoint);
-		example.setMpd("<filled serverside>");
+		example.setUrl("<filled serverside>");
 		example.setOwnerId("<insert owner id here>");
 		example.setProperties(new HashMap<String, String>());
 		example.getProperties().put("comment", "example comment");

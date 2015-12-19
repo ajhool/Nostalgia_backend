@@ -1,5 +1,5 @@
 package batch;
 
-public abstract class LocationBatchClass extends BatchClass{
+public abstract interface LocationBatchClass {
 
 }

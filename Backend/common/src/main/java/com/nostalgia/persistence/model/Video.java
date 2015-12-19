@@ -68,7 +68,7 @@ public class Video implements Serializable {
 
 	private Point location;
 
-	private String mpd; 
+	private String url; 
 	
 	private List<String> locations; 
 
@@ -186,12 +186,12 @@ public class Video implements Serializable {
 		this.channels = channels;
 	}
 
-	public String getMpd() {
-		return mpd;
+	public String getUrl() {
+		return url;
 	}
 
-	public void setMpd(String mpd) {
-		this.mpd = mpd;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public List<String> getLocations() {

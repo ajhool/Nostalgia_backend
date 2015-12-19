@@ -3,8 +3,10 @@ package batch;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -33,7 +35,9 @@ import com.nostalgia.persistence.model.User;
 public class BatchProcessRunner {
 
 	final static BatchClass[] batchSources = new BatchClass[]{
-			new NonAwsVideoJsonGetter()
+			new NonAwsVideoJsonGetter(),
+			new AwsUrlFixer(),
+			new DeletedVideoIdFixer(),
 	};
 
 	// the DB we are using
@@ -69,15 +73,26 @@ public class BatchProcessRunner {
 
 		BatchClass toExecute = batchSources[selection];
 		setupDB() ;
-		Map<String, JsonDocument> allOfType = null;
+		Map<String, JsonDocument> allOfType = new HashMap<String, JsonDocument>();
 
+		int numTypes = 0;
 		if(toExecute instanceof VideoBatchClass){
-			allOfType = getAllVideoDocuments();
-		} else if(toExecute instanceof LocationBatchClass){
-			allOfType = getAllLocationDocuments(); 
-		} else if(toExecute instanceof UserBatchClass){
-			allOfType = getAllUserDocuments();
-		} else throw new Exception("Batch script: " + toExecute.getName() + " must extend valid superclass");
+			numTypes++;
+			allOfType.putAll(getAllVideoDocuments());
+		} 
+		if(toExecute instanceof LocationBatchClass){
+			numTypes++;
+			allOfType.putAll(getAllLocationDocuments()); 
+		}
+		
+		if(toExecute instanceof UserBatchClass){
+			numTypes++;
+			allOfType.putAll(getAllUserDocuments());
+		} 
+
+		if(numTypes < 1) {
+			throw new Exception("Batch script: " + toExecute.getName() + " must extend valid superclass");
+		}
 
 		Collection<JsonDocument> copied = new ArrayList<JsonDocument>();
 
@@ -87,12 +102,14 @@ public class BatchProcessRunner {
 
 		Set<JsonDocument> modded = batchSources[selection].execute(copied);
 
+		
 		//delete all missing 
-		for(JsonDocument orig: allOfType.values()){
+		for(Iterator<Entry<String, JsonDocument>> iter = allOfType.entrySet().iterator(); iter.hasNext(); ){
+			JsonDocument orig = iter.next().getValue();
 			if(!modded.contains(orig)){
 				//then the document was deleted in the batch script
 				deleteDocument(orig);
-				allOfType.remove(orig).id();
+				iter.remove();
 			}
 		}
 
@@ -145,7 +162,7 @@ public class BatchProcessRunner {
 		HashMap<String, JsonDocument> users = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
-		    
+		    if(matching != null)
 		    users.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 
@@ -172,7 +189,7 @@ public class BatchProcessRunner {
 		HashMap<String, JsonDocument> videos = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
-		    
+		    if(matching != null)
 		    videos.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 		return videos; 
@@ -195,7 +212,7 @@ public class BatchProcessRunner {
 		HashMap<String, JsonDocument> locs = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
-		    
+		    if(matching != null)
 		    locs.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 		return locs; 
