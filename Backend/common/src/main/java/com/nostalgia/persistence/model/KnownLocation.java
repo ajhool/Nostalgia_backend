@@ -28,7 +28,7 @@ public class KnownLocation implements Serializable {
 	private static final long serialVersionUID = -5929855999942363756L;
 
 	private String _id = UUID.randomUUID().toString();
-
+	private long versionNumber;
 	private String name;
 
 	private String creatorId; 
@@ -179,6 +179,16 @@ public class KnownLocation implements Serializable {
 
 	public void setThumbnails(List<String> thumbnails) {
 		this.thumbnails = thumbnails;
+	}
+
+
+	public long getVersionNumber() {
+		return versionNumber;
+	}
+
+
+	public void setVersionNumber(long versionNumber) {
+		this.versionNumber = versionNumber;
 	}
 
 

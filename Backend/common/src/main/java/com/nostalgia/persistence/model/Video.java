@@ -39,6 +39,7 @@ public class Video implements Serializable {
 		return _id.substring(0, 8);
 	}
 
+	private long versionNumber;
 	//channels that this document itself is in
 	protected List<String> channels; 
 
@@ -200,5 +201,13 @@ public class Video implements Serializable {
 
 	public void setLocations(List<String> locations) {
 		this.locations = locations;
+	}
+
+	public long getVersionNumber() {
+		return versionNumber;
+	}
+
+	public void setVersionNumber(long versionNumber) {
+		this.versionNumber = versionNumber;
 	}
 }

@@ -24,7 +24,7 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 3672636185090518520L;
 
 	private String type = this.getClass().getSimpleName();
-
+	private long versionNumber;
 	private String _id = UUID.randomUUID().toString();
 
 	private String name;
@@ -539,6 +539,16 @@ public class User implements Serializable {
 
 	private void setLocationHistory(HashMap<String, String> history) {
 		this.locationHistory = history;
+	}
+
+
+	public long getVersionNumber() {
+		return versionNumber;
+	}
+
+
+	public void setVersionNumber(long versionNumber) {
+		this.versionNumber = versionNumber;
 	}
 
 

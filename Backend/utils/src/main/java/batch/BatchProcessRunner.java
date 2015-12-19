@@ -57,7 +57,9 @@ public class BatchProcessRunner {
 
 	public static void main(String[] args) throws Exception{
 		System.out.println("Hello. welcome to the alex batch script runner");
-		Thread.sleep(1000);
+
+		System.out.println("connecting to db...");
+		setupDB();
 		System.out.println("The available scripts to execute are: ");
 
 		int index = 0; 
@@ -73,7 +75,7 @@ public class BatchProcessRunner {
 		int selection = in.nextInt(); 
 
 		BatchClass toExecute = batchSources[selection];
-		setupDB() ;
+
 		Map<String, JsonDocument> allOfType = new HashMap<String, JsonDocument>();
 
 		int numTypes = 0;
@@ -85,7 +87,7 @@ public class BatchProcessRunner {
 			numTypes++;
 			allOfType.putAll(getAllLocationDocuments()); 
 		}
-		
+
 		if(toExecute instanceof UserBatchClass){
 			numTypes++;
 			allOfType.putAll(getAllUserDocuments());
@@ -105,7 +107,7 @@ public class BatchProcessRunner {
 
 		Set<JsonDocument> modded = batchSources[selection].execute(copied);
 
-		
+
 		//delete all missing 
 		for(Iterator<Entry<String, JsonDocument>> iter = allOfType.entrySet().iterator(); iter.hasNext(); ){
 			JsonDocument orig = iter.next().getValue();
@@ -120,14 +122,14 @@ public class BatchProcessRunner {
 
 		for(JsonDocument mod : modded){
 			JsonDocument original = allOfType.get(mod.id());
-			
+
 			boolean changed = false;
-			
+
 			int originalHashCode = originalHashes.get(mod.id());
 			if(mod.hashCode() != originalHashCode){
 				changed = true;
 			}
-			
+
 			if(changed){
 				update(mod);
 
@@ -141,7 +143,7 @@ public class BatchProcessRunner {
 	private static boolean update(JsonDocument mod) {
 		System.out.println("updating document: " + mod.id());
 		JsonDocument updated = bucket.upsert(mod);
-		
+
 		return updated.id().equals(mod.id());
 
 
@@ -152,35 +154,35 @@ public class BatchProcessRunner {
 		System.out.println("Deleting document: " + orig.id());
 		JsonDocument removed = bucket.remove(orig.id());
 		return removed.id().equals(orig.id());
-		
+
 	}
 
 
 	private static Map<String, JsonDocument> getAllUserDocuments() {
-	
+
 		ViewQuery query = ViewQuery.from("user", "all_users");//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
 			System.err.println("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.totalRows() < 1){
 			return null;
 		}
-		
+
 		HashMap<String, JsonDocument> users = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    if(matching != null)
-		    users.put(row.id(), JsonDocument.from(matching, row.id()));
+			JsonDocument matching = row.document();
+			if(matching != null)
+				users.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 
 		return users;
-		
-		
-		
+
+
+
 	}
 
 
@@ -191,17 +193,17 @@ public class BatchProcessRunner {
 			String error = result.error().toString();
 			System.err.println("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.totalRows() < 1){
 			return null;
 		}
-		
+
 		HashMap<String, JsonDocument> videos = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    if(matching != null)
-		    videos.put(row.id(), JsonDocument.from(matching, row.id()));
+			JsonDocument matching = row.document();
+			if(matching != null)
+				videos.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 		return videos; 
 	}
@@ -214,17 +216,17 @@ public class BatchProcessRunner {
 			String error = result.error().toString();
 			System.err.println("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.totalRows() < 1){
 			return null;
 		}
-		
+
 		HashMap<String, JsonDocument> locs = new HashMap<String, JsonDocument>();
 		for (ViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    if(matching != null)
-		    locs.put(row.id(), JsonDocument.from(matching, row.id()));
+			JsonDocument matching = row.document();
+			if(matching != null)
+				locs.put(row.id(), JsonDocument.from(matching, row.id()));
 		}
 		return locs; 
 	}
