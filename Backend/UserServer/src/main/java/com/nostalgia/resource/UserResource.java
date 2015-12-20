@@ -483,6 +483,7 @@ public class UserResource {
 		}
 
 		if(registering.getLastKnownLoc() != null){
+			loggedInUser.setLastLocationUpdate(System.currentTimeMillis());
 			loggedInUser.setLastKnownLoc(registering.getLastKnownLoc());
 			loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
 		}

@@ -173,6 +173,10 @@ public class User implements Serializable {
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
+		
+		if(locationHistory == null){
+			locationHistory = new HashMap<String, String>();
+		}
 
 
 		for(Iterator<String> it = location_channels.iterator(); it.hasNext();){

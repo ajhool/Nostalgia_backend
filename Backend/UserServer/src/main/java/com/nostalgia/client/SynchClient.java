@@ -90,7 +90,7 @@ public class SynchClient {
 			syncResp = resp.readEntity(SyncSessionCreateResponse.class);
 			resp.close();
 		
-
+			if(syncResp.getSession_id() == null) return null; 
 
 		} catch (Exception e){
 			logger.info("error creating sync session for user");

@@ -234,8 +234,7 @@ public class LocationRepository {
 		try {
 			knownLoc = mapper.readValue( objString , KnownLocation.class );
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("error converting location to doc", e);
 		}
 		
 		return knownLoc; 
