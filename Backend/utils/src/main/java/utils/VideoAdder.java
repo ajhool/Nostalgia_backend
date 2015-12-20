@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -16,6 +17,14 @@ import org.apache.commons.io.FileUtils;
 import org.geojson.Feature;
 import org.geojson.Point;
 
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.bucket.BucketManager;
+import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +32,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nostalgia.persistence.model.KnownLocation;
 import com.nostalgia.persistence.model.User;
 import com.nostalgia.persistence.model.Video;
+
+import batch.CouchbaseConfig;
 
 public class VideoAdder {
 
@@ -59,6 +70,7 @@ public class VideoAdder {
 				System.out.println("      with comment: " + comment);
 				System.out.println("      created on: " + cur.getDateCreated());
 				System.out.println("      at location: " + cur.getLocation());
+				System.out.println();
 			}
 
 			if(scannedVideos.size() == 0){
@@ -77,7 +89,7 @@ public class VideoAdder {
 
 				case("q"):
 					System.out.println("Goodbye");
-				    System.exit(0);
+				System.exit(0);
 				break;
 
 				case("e"):
@@ -103,8 +115,8 @@ public class VideoAdder {
 			String searchPath = null;
 
 			if(path.length() < 2){
-				System.out.println("Searching in: " + videoDataDir.getAbsolutePath() + " for file: " + toAdd.get_id() + ".mp4");
-				searchPath = videoDataDir.getAbsolutePath() + "/" + toAdd.get_id() + ".mp4" ;
+				System.out.println("Searching in: " + videoDataDir.getAbsolutePath() + " for file: " + toAdd.get_id());
+				searchPath = videoDataDir.getAbsolutePath() + "/" + toAdd.get_id();
 
 			} else {
 				System.out.println("Searching in: " + path);
@@ -121,7 +133,7 @@ public class VideoAdder {
 
 			System.out.println("File found @" + data.getAbsolutePath());
 
-			File saved = new File(videoDataDir, toAdd.get_id() + ".mp4");
+			File saved = new File(videoDataDir, toAdd.get_id());
 			if(!data.getAbsolutePath().contains(videoDataDir.getName())){
 				//copy
 				System.out.println("Copying file...");
@@ -129,6 +141,26 @@ public class VideoAdder {
 				System.out.println("done");
 			}
 
+			System.out.print("tag video with locations(y/n)? " );
+			String tagAns = scanner.nextLine();
+
+			if(tagAns.contains("y") || tagAns.contains("Y")){
+				tagVideoWithLocations(toAdd, scanner);
+			} else {
+				System.out.println("Not tagging with any locations");
+			}
+			System.out.println();
+
+			FileWriter writer = new FileWriter(new File(videoJsonDir, toAdd.get_id() + ".json"));
+
+			String videoAsString = mapper.writeValueAsString(toAdd);
+
+			writer.write(videoAsString);
+			writer.flush();
+			writer.close();
+
+
+			System.out.println("Beginning video upload");
 			VideoUploadTask task = new VideoUploadTask(saved.getAbsolutePath(), toAdd);
 			task.start();
 			task.join();
@@ -139,6 +171,79 @@ public class VideoAdder {
 		scanner.close();
 	}
 
+	// the DB we are using
+	private static Cluster cluster; 
+	private static  Bucket bucket; 
+	private static  CouchbaseConfig config ;
+	private static BucketManager bucketManager;
+
+	private static void setupDB() {
+		config = new CouchbaseConfig();
+		cluster = CouchbaseCluster.create(config.host);
+		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
+		bucketManager = bucket.bucketManager();
+
+	}
+
+	private static void tagVideoWithLocations(Video toAdd, Scanner scanner) {
+		System.out.println("initing db connection...");
+		setupDB();
+		System.out.println("Done. Querying for locations...");
+
+		ViewQuery query = ViewQuery.from("location_standard", "by_name");//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			System.err.println("error from view query:" + error);
+		}
+
+
+		ArrayList<JsonDocument> locs = new ArrayList<JsonDocument>();
+		for (ViewRow row : result) {
+			JsonDocument matching = row.document();
+			if(matching != null)
+				locs.add(JsonDocument.from(matching, row.id()));
+		}
+
+		System.out.println("Locations available: ");
+
+		int index = 0;
+		for(JsonDocument doc : locs){
+			System.out.println(index + ": " + doc.content().getString("name"));
+			index++;
+		}
+
+		System.out.print("enter numbers of locations to tag, seperated by a space: ");
+
+		String tags = scanner.nextLine();
+
+		String[] ints = tags.split("\\s+");
+
+		for(String intStr : ints){
+			JsonDocument toAddLoc = locs.get(Integer.parseInt(intStr));
+			if(toAdd.getLocations() == null){
+				toAdd.setLocations(new ArrayList<String>());
+			}
+
+			if(!toAdd.getLocations().contains(toAddLoc.id())){
+				toAdd.getLocations().add(toAddLoc.id());
+			}
+		}
+
+		System.out.println("Video tagged with locations: " );
+
+		for(String locStr : toAdd.getLocations()){
+			System.out.println(locStr);
+		}
+
+
+	}
+	
+	final static ObjectMapper mapper = new ObjectMapper();
+	static{
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+	}
+	
 	private static void generateExampleJsonForVideo(File videoJsonDir) throws IOException {
 		File outputFile = new File(videoJsonDir, "exampleVideo.json");
 		videoJsonDir.mkdirs();
@@ -164,8 +269,6 @@ public class VideoAdder {
 		example.getProperties().put("sharing_when", "WIFI");
 		example.getProperties().put("sharing_where", "EVERYWHERE");
 		example.getProperties().put("video_sound", "MUTE");
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
 		FileWriter writer = new FileWriter(outputFile);
 
