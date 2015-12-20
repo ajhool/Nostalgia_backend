@@ -83,6 +83,17 @@ public class LocationSubscriptionResource {
 		userRepo.save(wantsSubscription);
 		return wantsSubscription;
 	}
+	
+	public User unsubscribeFromLocation(User wantsSubscription, String idToRemove) throws Exception{
+
+		wantsSubscription.unsubscribeFromLocation(idToRemove);
+
+		sync.setSyncChannels(wantsSubscription);
+
+		userRepo.save(wantsSubscription);
+		return wantsSubscription;
+	}
+	
 
 
 	public LocationSubscriptionResource( UserRepository userRepo, LocationRepository locRepo, SynchClient sync) {
@@ -92,6 +103,42 @@ public class LocationSubscriptionResource {
 		//this.sManager = manager;
 
 	}
+	
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/remove")
+	@Timed
+	public String removeLocation(@QueryParam("userId") String userId,  @QueryParam("locationId") String locationId, @Context HttpServletRequest req) throws Exception{
+
+		if(locationId== null){
+			throw new BadRequestException("no location specified to add");
+
+		}
+
+		if(userId == null){
+			throw new BadRequestException("user id required");
+		}
+
+	
+		User adding = userRepo.findOneById(userId);
+		
+		if(adding == null){
+			throw new NotFoundException("no user found for id");
+		}
+		
+		User unsubscribed = unsubscribeFromLocation(adding, locationId);
+		String loc = null; 
+		if(!unsubscribed.getUserLocations().values().contains(locationId)){
+			loc = locationId; 
+		} 
+		
+		return loc;
+
+	}
+	
+	
 
 	@SuppressWarnings("unused")
 	@POST

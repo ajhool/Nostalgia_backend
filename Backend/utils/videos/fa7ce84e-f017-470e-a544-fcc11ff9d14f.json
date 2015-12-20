@@ -1,26 +1,28 @@
 {
-  "channels" : [ "fa7ce84e" ],
-  "_id" : "fa7ce84e-f017-470e-a544-fcc11ff9d14f",
-  "type" : "Video",
-  "status" : "NEW",
-  "dateCreated" : 0,
-  "enabled" : false,
-  "loads" : 20,
-  "skips" : 10,
-  "location" : {
-    "type" : "Point",
-    "coordinates" : [ 35.9999999, -79.0096901 ]
-  },
-  "mpd" : "<filled serverside>",
-  "locations" : null,
-  "properties" : {
-    "sharing_who" : "EVERYONE",
-    "sharing_when" : "WIFI",
-    "sharing_where" : "EVERYWHERE",
-    "video_sound" : "MUTE",
-    "comment" : "Alex video added via command line"
-  },
-  "ownerId" : "95bcf68b-ddb7-4e1e-82b6-c61d1f759010",
-  "taggedUserIds" : null,
-  "thumbNail" : null
+    "taggedUserIds": null,
+    "loads": 20,
+    "type": "Video",
+    "ownerId": "95bcf68b-ddb7-4e1e-82b6-c61d1f759010",
+    "enabled": false,
+    "url": null,
+    "skips": 10,
+    "dateCreated": 1449609953630,
+    "channels": ["fa7ce84e"],
+    "location": {
+        "coordinates": [
+            35.9999999,
+            -79.0096901
+        ],
+        "type": "Point"
+    },
+    "_id": "fa7ce84e-f017-470e-a544-fcc11ff9d14f",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "EVERYONE",
+        "comment": "Alex video added via command line",
+        "sharing_when": "WIFI",
+        "video_sound": "MUTE"
+    },
+    "status": "PROCESSED",
+    "thumbNails": null
 }

@@ -1,6 +1,7 @@
 package com.nostalgia.persistence.model;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.geojson.GeoJsonObject;
 import org.geojson.Point;
@@ -553,6 +554,38 @@ public class User implements Serializable {
 
 	public void setVersionNumber(long versionNumber) {
 		this.versionNumber = versionNumber;
+	}
+
+
+	public Collection<String> unsubscribeFromLocation(String idToRemove) {
+
+				if(this.userLocations == null){
+					userLocations = new HashMap<Long, String>();
+				}
+
+				Collection<String> existing = userLocations.values();
+				if(!existing.contains(idToRemove)){
+					//no changes needed
+					return existing; 
+				}
+
+				//add in location + time it was added
+				Iterator<Entry<Long, String>> allSubs = userLocations.entrySet().iterator(); 
+				
+				while(allSubs.hasNext()){
+					Entry<Long, String> cur = allSubs.next();
+					if(cur.getValue().equals(idToRemove)){
+						allSubs.remove();
+					}
+				}
+
+				int end = idToRemove.indexOf('-');
+				String channelName = idToRemove.substring(0, end);
+				//add in channel ID to allow for subscriptions
+				admin_channels.remove(channelName);
+
+				return userLocations.values();
+		
 	}
 
 
