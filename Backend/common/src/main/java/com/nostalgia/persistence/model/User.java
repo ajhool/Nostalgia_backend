@@ -74,6 +74,8 @@ public class User implements Serializable {
 
 	private Map<String, List<String>> friendVideos;
 
+	 private Map<String, List<String>> tags;
+	 
 	private Set<String> location_channels; 
 
 	public Set<String> getLocation_channels() {
@@ -295,6 +297,9 @@ public class User implements Serializable {
 			locationHistory = new HashMap<String, String>();
 		}
 
+		if(this.tags == null){
+			tags = new HashMap<String, List<String>>();
+		}
 	}
 
 	public String get_id() {
@@ -586,6 +591,16 @@ public class User implements Serializable {
 
 				return userLocations.values();
 		
+	}
+
+
+	public Map<String, List<String>> getTags() {
+		return tags;
+	}
+
+
+	public void setTags(Map<String, List<String>> tags) {
+		this.tags = tags;
 	}
 
 
