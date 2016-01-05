@@ -55,16 +55,16 @@ public class VideoRepository {
 									+ "emit(doc.status, null); "
 									+ "} "
 									+ "}"),
-					DefaultView.create("processed_hasThumbs",
+					DefaultView.create("processed",
 							"function (doc, meta) { "
-									+ "if (doc.type == 'Video' && doc.status == 'PROCESSED' && doc.thumbNails != null) { "
+									+ "if (doc.type == 'Video' && doc.status == 'PROCESSED') { "
 									+ "emit(doc.status, null); "
 									+ "} "
 									+ "}"),
-					DefaultView.create("null_thumbnails",
+					DefaultView.create("no_thumbnails",
 							"function (doc, meta) { "
 									+ "if (doc.type == 'Video' && typeof doc.thumbNails !== 'undefined') { "
-									+ "    if(doc.thumbNails == null){"
+									+ "    if(doc.status == 'NEEDSTHUMBS'){"
 									+ "       emit(doc.status, null); "
 									+ "     } "
 									+ "}"
@@ -167,8 +167,8 @@ public class VideoRepository {
 	}
 
 
-	public HashSet<Video> getVideosWithNullThumbs() {
-		ViewQuery query = ViewQuery.from("video_processor_standard", "null_thumbnails").limit(20);//.stale(Stale.FALSE);
+	public HashSet<Video> getVideosNeedingThumbs() {
+		ViewQuery query = ViewQuery.from("video_processor_standard", "no_thumbnails").limit(20);//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
@@ -196,7 +196,7 @@ public class VideoRepository {
 	}
 
 	public HashSet<Video> findVideosReadyForDeployment() {
-		ViewQuery query = ViewQuery.from("video_processor_standard", "processed_hasThumbs").limit(20);//.stale(Stale.FALSE);
+		ViewQuery query = ViewQuery.from("video_processor_standard", "processed").limit(20);//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();

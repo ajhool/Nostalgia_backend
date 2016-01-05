@@ -116,7 +116,7 @@ public class AsyncThumbnailResource extends AbstractScheduledService implements 
 		if(!running){
 			running = true;
 			try { 
-				HashSet<Video> unprocessed = vidRepo.getVideosWithNullThumbs();
+				HashSet<Video> unprocessed = vidRepo.getVideosNeedingThumbs();
 
 				if(unprocessed == null || unprocessed.size() < 1){
 					logger.info("no videos found to process, sleeping...");
@@ -124,7 +124,7 @@ public class AsyncThumbnailResource extends AbstractScheduledService implements 
 				}
 
 				Video vid = unprocessed.iterator().next();
-			
+
 				if(vid.getThumbNails() == null){
 					vid.setThumbNails(new ArrayList<String>());
 				}
@@ -149,6 +149,10 @@ public class AsyncThumbnailResource extends AbstractScheduledService implements 
 
 				for(File thumb : result){
 					vid.getThumbNails().add(baseUrl + vid.get_id() + "/" + thumbnailParentDir.getName() + "/" + thumb.getName());
+				}
+
+				if(vid.getUrl() != null && vid.getUrl().length() > 5){
+					vid.setStatus("PROCESSED");
 				}
 
 				vidRepo.save(vid);
