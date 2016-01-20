@@ -440,6 +440,7 @@ public class UserResource {
 
 		loggedInUser.setDateJoined(System.currentTimeMillis());
 		loggedInUser.setLastSeen(System.currentTimeMillis());
+		loggedInUser.setPasswordChangeDate(System.currentTimeMillis());
 		loggedInUser.subscribeToUserChannel(userChannel);
 		SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedInUser);
 

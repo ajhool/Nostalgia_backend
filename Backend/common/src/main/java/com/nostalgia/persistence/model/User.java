@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.GeometryCollection;
 import org.geojson.Point;
 
 import com.fasterxml.jackson.annotation.*;
@@ -31,12 +32,14 @@ public class User implements Serializable {
 	private String name;
 
 	private String password;
+	private long passwordChangeDate; 
+
 	private String homeRegion = "us_east";
 
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
-	
+
 	private HashMap<String, String> locationHistory; 
 
 	private Map<String, String> streamTokens; 
@@ -74,9 +77,11 @@ public class User implements Serializable {
 
 	private Map<String, List<String>> friendVideos;
 
-	 private Map<String, List<String>> tags;
-	 
+	private Map<String, List<String>> tags;
+
 	private Set<String> location_channels; 
+
+	private List<Account> accountsList; 
 
 	public Set<String> getLocation_channels() {
 		return location_channels;
@@ -111,6 +116,8 @@ public class User implements Serializable {
 	private String token;
 
 	private String syncToken;
+
+	private List<String> createdLocations;
 
 	@JsonIgnore
 	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
@@ -176,7 +183,7 @@ public class User implements Serializable {
 		if(admin_channels == null){
 			admin_channels = new ArrayList<String>();
 		}
-		
+
 		if(locationHistory == null){
 			locationHistory = new HashMap<String, String>();
 		}
@@ -208,13 +215,13 @@ public class User implements Serializable {
 				admin_channels.add(loc.getChannelName());
 			}
 		}
-		
+
 		//update history
 		for(KnownLocation loc : nearbys.values()){
 			locationHistory.put(loc.get_id(), Long.toString(System.currentTimeMillis()));
 		}
-		
-		
+
+
 		return this.location_channels;
 
 	}
@@ -292,7 +299,7 @@ public class User implements Serializable {
 		if(this.userLocations == null){
 			userLocations = new HashMap<Long, String>();
 		}
-		
+
 		if(this.locationHistory== null){
 			locationHistory = new HashMap<String, String>();
 		}
@@ -300,6 +307,14 @@ public class User implements Serializable {
 		if(this.tags == null){
 			tags = new HashMap<String, List<String>>();
 		}
+
+		if(this.accountsList == null){
+			accountsList = new ArrayList<Account>();
+		}
+		if(this.createdLocations == null){
+			createdLocations = new ArrayList<String>();
+		}
+
 	}
 
 	public String get_id() {
@@ -564,33 +579,33 @@ public class User implements Serializable {
 
 	public Collection<String> unsubscribeFromLocation(String idToRemove) {
 
-				if(this.userLocations == null){
-					userLocations = new HashMap<Long, String>();
-				}
+		if(this.userLocations == null){
+			userLocations = new HashMap<Long, String>();
+		}
 
-				Collection<String> existing = userLocations.values();
-				if(!existing.contains(idToRemove)){
-					//no changes needed
-					return existing; 
-				}
+		Collection<String> existing = userLocations.values();
+		if(!existing.contains(idToRemove)){
+			//no changes needed
+			return existing; 
+		}
 
-				//add in location + time it was added
-				Iterator<Entry<Long, String>> allSubs = userLocations.entrySet().iterator(); 
-				
-				while(allSubs.hasNext()){
-					Entry<Long, String> cur = allSubs.next();
-					if(cur.getValue().equals(idToRemove)){
-						allSubs.remove();
-					}
-				}
+		//add in location + time it was added
+		Iterator<Entry<Long, String>> allSubs = userLocations.entrySet().iterator(); 
 
-				int end = idToRemove.indexOf('-');
-				String channelName = idToRemove.substring(0, end);
-				//add in channel ID to allow for subscriptions
-				admin_channels.remove(channelName);
+		while(allSubs.hasNext()){
+			Entry<Long, String> cur = allSubs.next();
+			if(cur.getValue().equals(idToRemove)){
+				allSubs.remove();
+			}
+		}
 
-				return userLocations.values();
-		
+		int end = idToRemove.indexOf('-');
+		String channelName = idToRemove.substring(0, end);
+		//add in channel ID to allow for subscriptions
+		admin_channels.remove(channelName);
+
+		return userLocations.values();
+
 	}
 
 
@@ -604,6 +619,40 @@ public class User implements Serializable {
 	}
 
 
+	public long getPasswordChangeDate() {
+		return passwordChangeDate;
+	}
 
+
+	public void setPasswordChangeDate(long passwordChangeDate) {
+		this.passwordChangeDate = passwordChangeDate;
+	}
+
+
+	public List<Account> getAccountsList() {
+		return accountsList;
+	}
+
+
+	public void setAccountsList(List<Account> accountsList) {
+		this.accountsList = accountsList;
+	}
+
+
+	public static class Account{
+		public String name;
+		public String id;
+	}
+
+
+	public List<String> getCreatedLocations() {
+
+		return createdLocations; 
+	}
+
+	public void setCreatedLocations(List<String> createdLocations) {
+		this.createdLocations = createdLocations; 
+
+	}
 
 }

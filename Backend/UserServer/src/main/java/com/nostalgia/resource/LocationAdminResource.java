@@ -132,6 +132,10 @@ public class LocationAdminResource {
 		}
 
 
+		//keep pointer back to location in user
+		User creator = userRepo.findOneById(toAdd.getCreatorId());
+		creator.getCreatedLocations().add(toAdd.get_id());
+		
 		GeoJsonObject rawGeo = toAdd.getLocation().getGeometry(); 
 		Polygon toBuildbbox = null;
 		//if location doesn't exist, find videos that fall within it
