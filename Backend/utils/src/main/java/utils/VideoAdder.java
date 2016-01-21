@@ -39,7 +39,7 @@ public class VideoAdder {
 
 
 
-	public static void main(String[] args) throws IOException, InterruptedException{
+	public static void main(String[] args) throws Exception{
 		Scanner scanner = new Scanner(System.in);
 		boolean running = true;
 		File operatingDir = new File(System.getProperty("user.dir"));
@@ -281,7 +281,7 @@ public class VideoAdder {
 		return; 
 	}
 
-	private static ArrayList<Video> scanForVideoFilesIn(File videoJsonDir) throws JsonParseException, JsonMappingException, IOException {
+	private static ArrayList<Video> scanForVideoFilesIn(File videoJsonDir) throws Exception {
 		// set date created where needed and make sure ids are unique
 		ArrayList<Video> vids = new ArrayList<Video>();
 		HashMap<String, Long> ids = new HashMap<String, Long>();
@@ -318,25 +318,13 @@ public class VideoAdder {
 			//check id
 			String id = fileContents.get_id();
 
-			if(ids.keySet().contains(id)){
-				System.out.println("duplicate id found. re-writing to use unique id");
-				changed = true;
-
-				if(ids.get(id) < fileContents.getDateCreated()){
-					//then keep the exisiting file's id and re-write this id
-					fileContents.set_id(UUID.randomUUID().toString());
-					toProcess.renameTo(new File(videoJsonDir, fileContents.get_id() + ".json"));
-				} else {
-					//keep this id, rename other file
-					File toRename = new File(videoJsonDir, id + ".json");
-					Video temp = mapper.readValue(toRename, Video.class);
-					temp.set_id(UUID.randomUUID().toString());
-					mapper.writeValue(new File(videoJsonDir, temp.get_id() + ".json"), temp);
-					toRename.delete();
-				}
+			if(ids.keySet().contains(id) && !id.contains("example")){
+				System.out.println("duplicate id found.");
+				throw new Exception("DUPLICATE IDS: " + id);
 
 			}
 
+			ids.put(id, System.currentTimeMillis());
 			vids.add(fileContents);
 		}
 		return vids; 

@@ -104,9 +104,9 @@ public class UserResource {
 
 		//call to aws here if needed for new tokens
 		Map<String, String> generated = creator.generateCookies("https://d1natzk16yc4os.cloudfront.net/*", tokenExpiryDate);
-		
+
 		needsTokens.getStreamTokens().putAll(generated);
-		
+
 		return;
 	}
 	@SuppressWarnings("unused")
@@ -196,21 +196,21 @@ public class UserResource {
 		loggedIn.setLastSeen(System.currentTimeMillis());
 
 		response.setSessionTok(syncResp.getSession_id());
-		
-	
+
+
 		long time = 1451066974000L; 
-		
-//		//refresh tokens if necessary
-//		if(loggedIn.getStreamTokens() != null){
-//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
-//			if(expiry < System.currentTimeMillis()){
-//				//need new set of tokens
-//				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-//			}
-//			
-//		} else {
-//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-//		}
+
+		//		//refresh tokens if necessary
+		//		if(loggedIn.getStreamTokens() != null){
+		//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
+		//			if(expiry < System.currentTimeMillis()){
+		//				//need new set of tokens
+		//				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+		//			}
+		//			
+		//		} else {
+		//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+		//		}
 		this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
@@ -419,16 +419,19 @@ public class UserResource {
 			throw new Exception("unable to parse user");
 		}
 
-//Set image
-		String image = null;
-		try {
-			image = icSvc.getBase64Icon(loggedInUser.getName());
-		} catch (Exception e){
-			logger.error("error getting icon", e);
-		}
+		//Set image
+		if(loggedInUser.getIcon() == null){
+			String image = null;
+			try {
+				image = icSvc.getBase64Icon(loggedInUser.getName());
+			} catch (Exception e){
+				logger.error("error getting icon", e);
+			}
 
-		loggedInUser.setIcon(image);
-		
+			loggedInUser.setIcon(image);
+		} else {
+			logger.info("User already had set icon, skipping icon generation. Icon: " + loggedInUser.getIcon());
+		}
 		//set default settings
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put("sharing_who", WHO_EVERYONE);

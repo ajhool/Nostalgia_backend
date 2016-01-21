@@ -14,6 +14,7 @@ import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
+import com.nostalgia.resource.FriendsResource;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
 import com.nostalgia.resource.LocationSubscriptionResource;
@@ -108,8 +109,9 @@ public class UserServerApp extends Application<UserAppConfig>{
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
-		
+		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 
+		environment.jersey().register(friendRes);
 		environment.jersey().register(locSubRes); 
 		environment.jersey().register(queryRes);
 		environment.jersey().register(locCRUD);

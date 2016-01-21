@@ -105,7 +105,7 @@ public class User implements Serializable {
 	private HashSet<String> user_channels; 
 
 	private HashMap<String, String> friends;
-
+	private HashMap<String, String> pendingFriends; 
 	private Map<String, String> settings;
 
 	private Map<String, String> accounts;
@@ -314,7 +314,12 @@ public class User implements Serializable {
 		if(this.createdLocations == null){
 			createdLocations = new ArrayList<String>();
 		}
-
+		if(friends == null){
+			friends = new HashMap<String, String>();
+		}
+		if(pendingFriends == null){
+			pendingFriends = new HashMap<String, String>();
+		}
 	}
 
 	public String get_id() {
@@ -653,6 +658,32 @@ public class User implements Serializable {
 	public void setCreatedLocations(List<String> createdLocations) {
 		this.createdLocations = createdLocations; 
 
+	}
+
+
+	public HashMap<String, String> getPendingFriends() {
+		return pendingFriends;
+	}
+
+
+	public void setPendingFriends(HashMap<String, String> pendingFriends) {
+		this.pendingFriends = pendingFriends;
+	}
+
+
+	public Map<String, String> subscribeToFriend(User friendToAdd) {
+		// TODO Auto-generated method stub
+		 friends.put(friendToAdd.get_id(), Long.toString(System.currentTimeMillis()));
+		 admin_channels.add(friendToAdd.getChannelName());
+		 return friends;
+	}
+	
+	public Map<String, String> unsubscribeFromFriend(User friendToRemove) {
+		// TODO Auto-generated method stub
+		 String removed = friends.remove(friendToRemove.get_id());
+		
+		 admin_channels.remove(friendToRemove.getChannelName());
+		 return friends;
 	}
 
 }
