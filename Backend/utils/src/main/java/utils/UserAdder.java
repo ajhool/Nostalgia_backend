@@ -53,8 +53,12 @@ public class UserAdder {
 		File userPicDir = new File(operatingDir, "userpics");
 
 		if(!userJsonDir.exists()){
+			userJsonDir.mkdirs();
+		}
+		if(!userPicDir.exists()){
 			userPicDir.mkdirs();
 		}
+
 
 		System.out.println("Welcome to the user adder. Scanning for .json files in: " + userJsonDir.getAbsolutePath() + "...");
 		while (running){
@@ -62,39 +66,41 @@ public class UserAdder {
 
 			ArrayList<User> scannedUsers = scanForUserFilesIn(userJsonDir);
 
-			System.out.print("Include users that already exist in the online db? ([y]/n):");
-			String ans = scanner.nextLine(); 
+			if(scannedUsers.size() > 0){
+				System.out.print("Include users that already exist in the online db? ([y]/n):");
+				String ans = scanner.nextLine(); 
 
-			if(ans == null || ans.equals("") || ans.length() == 0 || !ans.equals("n")){
-				//default to yes
-				System.out.println("including all scanned users...");
-			} else {
-				System.out.println("excluding online users...");
-				//search db and chop out any users that already exist online
-				System.out.println("initing db...");
-				setupDB();
-				System.out.println("db inited");
+				if(ans == null || ans.equals("") || ans.length() == 0 || !ans.equals("n")){
+					//default to yes
+					System.out.println("including all scanned users...");
+				} else {
+					System.out.println("excluding online users...");
+					//search db and chop out any users that already exist online
+					System.out.println("initing db...");
+					setupDB();
+					System.out.println("db inited");
 
-				for(User scanned : scannedUsers){
-					System.out.println("Checking for existence of user: " + scanned.getName());
-					if(bucket.get(scanned.get_id()) != null){
-						System.out.println("User: " + scanned.getName() + " exists, not re-adding...");
-						removeUserFrom(scannedUsers, scanned);
+					for(User scanned : scannedUsers){
+						System.out.println("Checking for existence of user: " + scanned.getName());
+						if(bucket.get(scanned.get_id()) != null){
+							System.out.println("User: " + scanned.getName() + " exists, not re-adding...");
+							removeUserFrom(scannedUsers, scanned);
+						}
 					}
+
 				}
 
-			}
 
+				System.out.println("Users found: ");
 
-			System.out.println("Users found: ");
+				for(int i = 0; i < scannedUsers.size(); i++){
+					User cur = scannedUsers.get(i);
 
-			for(int i = 0; i < scannedUsers.size(); i++){
-				User cur = scannedUsers.get(i);
-
-				System.out.println(i + ": USer name: " + scannedUsers.get(i).getName());
-				System.out.println("      with id: " + scannedUsers.get(i).get_id());
-				System.out.println("      created on: " + scannedUsers.get(i).getDateJoined());
-				System.out.println();
+					System.out.println(i + ": USer name: " + scannedUsers.get(i).getName());
+					System.out.println("      with id: " + scannedUsers.get(i).get_id());
+					System.out.println("      created on: " + scannedUsers.get(i).getDateJoined());
+					System.out.println();
+				}
 			}
 
 			if(scannedUsers.size() == 0){
@@ -174,11 +180,11 @@ public class UserAdder {
 						System.out.println("Copying file...");
 						FileUtils.copyFile(data, saved);
 						FileInputStream fileBytes = new FileInputStream(saved); 
-						
+
 						byte[] defaultEncoded = IOUtils.toByteArray(fileBytes);
 						System.out.println("encoding to base64 and attaching to user");
 						toAdd.setIcon(new String(Base64.encodeBase64(defaultEncoded, false, false)));
-						
+
 						System.out.println("done");
 					}
 				}
@@ -211,9 +217,9 @@ public class UserAdder {
 			task.join();
 
 			LoginResponse resp = task.getLoginResponse();
-			
+
 			if(resp.getSessionTok() != null){
-			System.out.println("video uploaded successfully");
+				System.out.println("video uploaded successfully");
 			} else {
 				System.err.println("error registering user");
 			}
@@ -272,7 +278,7 @@ public class UserAdder {
 		User example = new User();
 		example.set_id("example_id");
 		example.setName("Example User");
-		example.setPassword("<filled Serverside>");
+		example.setPassword("insert sha512 hash here");
 
 		example.setPasswordChangeDate(-1);
 		example.setEmail("example@example.com");
