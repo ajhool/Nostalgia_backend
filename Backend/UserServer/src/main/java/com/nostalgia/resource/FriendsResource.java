@@ -132,7 +132,7 @@ public class FriendsResource {
 	public List<User> findFriend(@QueryParam("friendName") String friendName, @Context HttpServletRequest req) throws Exception{
 
 
-		List<User> results = userRepo.findByName(friendName);
+		List<User> results = userRepo.searchByName(friendName);
 		
 		//scrub user info
 		for(User cur : results){

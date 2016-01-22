@@ -213,4 +213,22 @@ public class UserRepository {
 		return users.get(0);
 	}
 
+	public List<User> searchByName(String friendName) {
+		ViewQuery query = ViewQuery.from("user", "by_name").startKey(friendName).endKey(friendName + "\uefff").limit(20);
+		ViewResult result = bucket.query(query);
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		ArrayList<User> users = new ArrayList<User>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    users.add(docToUser(matching));
+		}
+		
+		
+		return users;
+	}
+
 }
