@@ -80,11 +80,12 @@ public class UserAdder {
 					setupDB();
 					System.out.println("db inited");
 
-					for(User scanned : scannedUsers){
+					for(Iterator<User> iter = scannedUsers.iterator(); iter.hasNext();){
+						User scanned = iter.next(); 
 						System.out.println("Checking for existence of user: " + scanned.getName());
 						if(bucket.get(scanned.get_id()) != null){
 							System.out.println("User: " + scanned.getName() + " exists, not re-adding...");
-							removeUserFrom(scannedUsers, scanned);
+							iter.remove();
 						}
 					}
 
@@ -155,7 +156,7 @@ public class UserAdder {
 
 					String searchPath = null;
 
-					if(path.length() < 2){
+					if(path.equals("")){
 						System.out.println("Searching in: " + userPicDir.getAbsolutePath() + " for file: " + toAdd.get_id());
 						searchPath = userPicDir.getAbsolutePath() + "/" + toAdd.get_id() + ".png";
 
@@ -179,14 +180,17 @@ public class UserAdder {
 						//copy
 						System.out.println("Copying file...");
 						FileUtils.copyFile(data, saved);
-						FileInputStream fileBytes = new FileInputStream(saved); 
+						
 
-						byte[] defaultEncoded = IOUtils.toByteArray(fileBytes);
-						System.out.println("encoding to base64 and attaching to user");
-						toAdd.setIcon(new String(Base64.encodeBase64(defaultEncoded, false, false)));
+						
 
-						System.out.println("done");
+						
 					}
+					FileInputStream fileBytes = new FileInputStream(saved); 
+					byte[] defaultEncoded = IOUtils.toByteArray(fileBytes);
+					System.out.println("encoding to base64 and attaching to user");
+					toAdd.setIcon(new String(Base64.encodeBase64(defaultEncoded, false, false)));
+					System.out.println("done");
 				}
 			}
 
@@ -219,7 +223,7 @@ public class UserAdder {
 			LoginResponse resp = task.getLoginResponse();
 
 			if(resp.getSessionTok() != null){
-				System.out.println("video uploaded successfully");
+				System.out.println("user uploaded successfully");
 			} else {
 				System.err.println("error registering user");
 			}
