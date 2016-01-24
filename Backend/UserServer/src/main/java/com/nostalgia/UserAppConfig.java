@@ -66,5 +66,14 @@ public class UserAppConfig extends Configuration{
 		return videoServConfig;
 	}
 	
+	@Valid
+	@NotNull
+	@JsonProperty("MediaCollectionCouch")
+	private CouchbaseConfig collectionServConfig = new  CouchbaseConfig();
+
+	public CouchbaseConfig getCollectionServerConfig() {
+		return collectionServConfig;
+	}
+	
 	
 }

@@ -77,7 +77,7 @@ public class User implements Serializable {
 
 	private Map<String, List<String>> friendVideos;
 
-	private Map<String, List<String>> tags;
+	private Map<String, String> collections;
 
 	private Set<String> location_channels; 
 
@@ -304,8 +304,8 @@ public class User implements Serializable {
 			locationHistory = new HashMap<String, String>();
 		}
 
-		if(this.tags == null){
-			tags = new HashMap<String, List<String>>();
+		if(this.collections == null){
+			collections = new HashMap<String, String>();
 		}
 
 		if(this.accountsList == null){
@@ -614,13 +614,13 @@ public class User implements Serializable {
 	}
 
 
-	public Map<String, List<String>> getTags() {
-		return tags;
+	public Map<String, String> getCollections() {
+		return collections;
 	}
 
 
-	public void setTags(Map<String, List<String>> tags) {
-		this.tags = tags;
+	public void setCollections(Map<String, String> collections) {
+		this.collections = collections;
 	}
 
 
@@ -670,7 +670,7 @@ public class User implements Serializable {
 		this.pendingFriends = pendingFriends;
 	}
 
-
+	@JsonIgnore
 	public Map<String, String> subscribeToFriend(User friendToAdd) {
 		// TODO Auto-generated method stub
 		 friends.put(friendToAdd.get_id(), Long.toString(System.currentTimeMillis()));
@@ -678,12 +678,58 @@ public class User implements Serializable {
 		 return friends;
 	}
 	
+	@JsonIgnore
 	public Map<String, String> unsubscribeFromFriend(User friendToRemove) {
 		// TODO Auto-generated method stub
 		 String removed = friends.remove(friendToRemove.get_id());
 		
 		 admin_channels.remove(friendToRemove.getChannelName());
 		 return friends;
+	}
+
+
+	//returns tags of all collections
+	@JsonIgnore
+	public Set<String> addCollection(MediaCollection creating) throws Exception {
+		
+		
+		if(creating.getName() == null || creating.getName().equals("")){
+			throw new IllegalArgumentException("name is required for storage in map");
+		}
+		//check for existence
+		String existing = collections.get(creating.getName());
+		
+		if(existing != null){
+			throw new Exception("collection already exists!");
+		}
+		
+		//add into collections
+		collections.put(creating.getName(), creating.get_id());
+		
+		//subscribe in channels
+		admin_channels.add(creating.getChannelName());
+		return collections.keySet(); 
+		
+		
+	}
+	
+	@JsonIgnore
+	public MediaCollection removeCollection(MediaCollection toRemove){
+		//check for existence
+		if(toRemove.getName() == null || toRemove.getName().equals("")){
+			throw new IllegalArgumentException("name is required for removal from map");
+		}
+		//check for existence
+		String existing = collections.remove(toRemove.getName());
+		
+		if(existing == null){
+			return null; 
+		}
+		
+		//remove from channels
+		admin_channels.remove(toRemove.getChannelName());
+		return toRemove; 
+		
 	}
 
 }

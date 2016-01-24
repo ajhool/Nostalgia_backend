@@ -18,6 +18,7 @@ import com.nostalgia.resource.FriendsResource;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
 import com.nostalgia.resource.LocationSubscriptionResource;
+import com.nostalgia.resource.MediaCollectionResource;
 import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
 import com.nostalgia.resource.UserResource;
@@ -72,6 +73,13 @@ public class UserServerApp extends Application<UserAppConfig>{
 
 		return repo;
 	}
+	
+	private MediaCollectionRepository getCollectionRepo(UserAppConfig config, Environment environment){
+		MediaCollectionRepository repo = new MediaCollectionRepository(config.getCollectionServerConfig());
+
+		return repo;
+	}
+
 
 	public IconService getIconService(UserAppConfig config, Environment environment){
 		logger.info("creating icon server client...");
@@ -99,6 +107,8 @@ public class UserServerApp extends Application<UserAppConfig>{
 		UserRepository userRepo = this.getUserRepo(config, environment);
 		LocationRepository locRepo = this.getLocationRepo(config, environment);
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
+		MediaCollectionRepository collRepo =this.getCollectionRepo(config, environment);
+	
 		SynchClient sCli = this.createSynchClient(config, environment);
 		IconService icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
@@ -110,7 +120,9 @@ public class UserServerApp extends Application<UserAppConfig>{
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
+		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
 
+		environment.jersey().register(collRes);
 		environment.jersey().register(friendRes);
 		environment.jersey().register(locSubRes); 
 		environment.jersey().register(queryRes);
