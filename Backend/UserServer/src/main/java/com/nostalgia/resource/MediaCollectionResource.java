@@ -156,6 +156,21 @@ public class MediaCollectionResource {
 		return toRemove; 
 
 	}
+	
+	@SuppressWarnings("unused")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/id")
+	@Timed
+	public MediaCollection getCollection(@QueryParam("collID") String targetId, @Context HttpServletRequest req) throws Exception{
+
+
+		MediaCollection found = collRepo.findOneById(targetId);
+		
+		return found; 
+
+	}
 
 
 
