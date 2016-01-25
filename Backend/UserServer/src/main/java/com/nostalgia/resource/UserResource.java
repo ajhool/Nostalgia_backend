@@ -45,12 +45,14 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
+import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
+import com.nostalgia.persistence.model.MediaCollection;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
 import com.nostalgia.persistence.model.User;
 
@@ -86,15 +88,17 @@ public class UserResource {
 	private SynchClient syncClient;
 	private UserLocationResource userLocRes;
 	private final IconService icSvc; 
-	private final SignedCookieCreator creator; 
+	private final SignedCookieCreator creator;
+	private final MediaCollectionRepository collRepo; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc, SignedCookieCreator create) {
+	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc, SignedCookieCreator create, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
 		this.icSvc = icSvc;
 		this.creator = create;
+		this.collRepo = collRepo;
 	}
 
 	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate) throws Exception{
@@ -215,6 +219,20 @@ public class UserResource {
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
 			loggedIn = userLocRes.updateSubscriptions(loggedIn);
+		}
+		
+		//make sure all video collection is subscribed 
+		
+		String allId = loggedIn.getCollections().get(loggedIn.get_id());
+		
+		if(allId == null){
+			//create new all video collection
+			MediaCollection allColl = new MediaCollection();
+			allColl.setName(loggedIn.get_id() + "_all");
+			allColl.setCreatorId(loggedIn.get_id());
+			allColl.setPublicColl(false);
+			collRepo.save(allColl);
+			loggedIn.addCollection(allColl);
 		}
 
 		userRepo.save(loggedIn);

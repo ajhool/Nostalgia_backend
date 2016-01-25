@@ -114,7 +114,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
-		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create);
+		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
