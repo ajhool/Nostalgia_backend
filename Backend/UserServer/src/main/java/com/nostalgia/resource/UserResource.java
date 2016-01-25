@@ -223,7 +223,7 @@ public class UserResource {
 		
 		//make sure all video collection is subscribed 
 		
-		String allId = loggedIn.getCollections().get(loggedIn.get_id());
+		String allId = loggedIn.getCollections().get(loggedIn.get_id() + "_all");
 		
 		if(allId == null){
 			//create new all video collection
