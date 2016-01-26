@@ -1,0 +1,52 @@
+{
+    "channels": ["8450dac4"],
+    "name": "   Ragamuffin Farm",
+    "creatorId": "d02afae3-3d85-4598-acc6-0bb940aaefbb",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "geometries": [
+                {
+                    "coordinates": [[
+                        [
+                            -78.934387849,
+                            36.072087861
+                        ],
+                        [
+                            -78.969767351,
+                            36.072087861
+                        ],
+                        [
+                            -78.934387849,
+                            36.070064739
+                        ],
+                        [
+                            -78.969767351,
+                            36.070064739
+                        ]
+                    ]],
+                    "type": "Polygon"
+                },
+                {
+                    "coordinates": [
+                        -78.9520776,
+                        36.0710763
+                    ],
+                    "type": "Point"
+                }
+            ],
+            "type": "GeometryCollection"
+        },
+        "type": "Feature",
+        "properties": {
+            "name": "   Ragamuffin Farm",
+            "radius": 0.07
+        }
+    },
+    "locationCollections": {},
+    "_id": "8450dac4-db8f-4351-8608-8df3935eb178",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Tue Dec 15 09:52:52 EST 2015"}
+}

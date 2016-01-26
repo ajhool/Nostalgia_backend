@@ -1,0 +1,40 @@
+{
+    "channels": ["5bfb7ea5"],
+    "name": "North America",
+    "creatorId": "00000000000000000000000000000000000",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -170.15625,
+                    16.467694748
+                ],
+                [
+                    -170.15625,
+                    77.579959144
+                ],
+                [
+                    -54.4921875,
+                    77.579959144
+                ],
+                [
+                    -54.4921875,
+                    16.467694748
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 60000000,
+            "name": "North America"
+        }
+    },
+    "locationCollections": {},
+    "_id": "5bfb7ea5-54a2-483d-a049-44dc76bb06ca",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Tue Dec 01 08:30:26 EST 2015"}
+}

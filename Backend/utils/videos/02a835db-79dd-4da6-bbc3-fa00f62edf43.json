@@ -1,0 +1,35 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "type": "Video",
+    "ownerId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "url": "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/320x180.m3u8",
+    "enabled": true,
+    "skips": 0,
+    "dateCreated": 1451189954711,
+    "channels": ["02a835db"],
+    "location": {
+        "coordinates": [
+            -76.8141692,
+            39.2946624
+        ],
+        "type": "Point"
+    },
+    "locations": ["2f1e7d7b-564d-4d48-9b4d-e4f556b23ed0"],
+    "_id": "02a835db-79dd-4da6-bbc3-fa00f62edf43",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "quick_thought": "",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI",
+        "video_sound": "ENABLED"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": [
+        "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/thumbnails/02a835db-79dd-4da6-bbc3-fa00f62edf43_thumbnail_01.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/thumbnails/02a835db-79dd-4da6-bbc3-fa00f62edf43_thumbnail_03.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/thumbnails/02a835db-79dd-4da6-bbc3-fa00f62edf43_thumbnail_05.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/thumbnails/02a835db-79dd-4da6-bbc3-fa00f62edf43_thumbnail_02.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/02a835db-79dd-4da6-bbc3-fa00f62edf43/thumbnails/02a835db-79dd-4da6-bbc3-fa00f62edf43_thumbnail_04.jpg"
+    ]
+}

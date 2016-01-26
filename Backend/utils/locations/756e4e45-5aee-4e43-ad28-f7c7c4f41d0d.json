@@ -1,0 +1,40 @@
+{
+    "channels": ["756e4e45"],
+    "name": "Research Triangle",
+    "creatorId": "18e1b26e-8891-4c3b-b3af-e8f8eb4a92b2",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -87.83,
+                    40.05
+                ],
+                [
+                    -89.67,
+                    40.78
+                ],
+                [
+                    -70.24,
+                    33.9
+                ],
+                [
+                    -90.93,
+                    33
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 252,
+            "name": "Research Triangle"
+        }
+    },
+    "locationCollections": {},
+    "_id": "756e4e45-5aee-4e43-ad28-f7c7c4f41d0d",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Sun Nov 29 13:05:03 EST 2015"}
+}

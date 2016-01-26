@@ -1,0 +1,52 @@
+{
+    "channels": ["830a0460"],
+    "name": "Location test",
+    "creatorId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "geometries": [
+                {
+                    "coordinates": [[
+                        [
+                            -78.844060336,
+                            36.021251246
+                        ],
+                        [
+                            -79.052655264,
+                            36.021251246
+                        ],
+                        [
+                            -78.844060336,
+                            35.996395754
+                        ],
+                        [
+                            -79.052655264,
+                            35.996395754
+                        ]
+                    ]],
+                    "type": "Polygon"
+                },
+                {
+                    "coordinates": [
+                        -78.9483578,
+                        36.0088235
+                    ],
+                    "type": "Point"
+                }
+            ],
+            "type": "GeometryCollection"
+        },
+        "type": "Feature",
+        "properties": {
+            "name": "Location test",
+            "radius": 0.86
+        }
+    },
+    "locationCollections": {},
+    "_id": "830a0460-2840-4dda-b900-5cc6d796bba4",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Thu Jan 21 17:34:12 EST 2016"}
+}

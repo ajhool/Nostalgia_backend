@@ -1,0 +1,40 @@
+{
+    "channels": ["58794ed1"],
+    "name": "Aidan Test",
+    "creatorId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -79.83,
+                    37.05
+                ],
+                [
+                    -79.67,
+                    36.78
+                ],
+                [
+                    -80.24,
+                    36.9
+                ],
+                [
+                    -79.93,
+                    37
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 252,
+            "name": "Research Triangle"
+        }
+    },
+    "locationCollections": {},
+    "_id": "58794ed1-e881-46e8-b76d-73bcf7c02e34",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Mon Dec 28 19:53:59 EST 2015"}
+}

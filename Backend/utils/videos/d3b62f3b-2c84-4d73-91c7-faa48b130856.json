@@ -1,0 +1,38 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "ownerId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "type": "Video",
+    "enabled": true,
+    "url": "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/320x180.m3u8",
+    "versionNumber": 0,
+    "skips": 0,
+    "dateCreated": 1.452826358553E12,
+    "channels": ["d3b62f3b"],
+    "location": {
+        "coordinates": [
+            -80.8649346,
+            35.2301924
+        ],
+        "type": "Point"
+    },
+    "locations": ["62b57496-8e4c-4f29-8c69-163a92338f72"],
+    "_id": "d3b62f3b-2c84-4d73-91c7-faa48b130856",
+    "properties": {
+        "quick_thought": "",
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI",
+        "video_sound": "ENABLED"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": [
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_07.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_03.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_02.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_01.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_04.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_05.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/d3b62f3b-2c84-4d73-91c7-faa48b130856/thumbnails/d3b62f3b-2c84-4d73-91c7-faa48b130856_thumbnail_06.jpg"
+    ]
+}

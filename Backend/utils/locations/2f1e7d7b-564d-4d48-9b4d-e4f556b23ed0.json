@@ -1,0 +1,40 @@
+{
+    "channels": ["2f1e7d7b"],
+    "name": "USA",
+    "creatorId": "00000000000000000000000000000000000",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -131.484375,
+                    24.527134823
+                ],
+                [
+                    -131.484375,
+                    49.837982453
+                ],
+                [
+                    -65.390625,
+                    49.837982453
+                ],
+                [
+                    -65.390625,
+                    24.527134823
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 6000000,
+            "name": "The USA"
+        }
+    },
+    "locationCollections": {},
+    "_id": "2f1e7d7b-564d-4d48-9b4d-e4f556b23ed0",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Tue Dec 01 08:47:50 EST 2015"}
+}

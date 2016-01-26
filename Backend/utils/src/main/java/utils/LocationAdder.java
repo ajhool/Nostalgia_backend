@@ -1,333 +1,200 @@
 package utils;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
 
+import org.apache.commons.io.FileUtils;
 import org.geojson.Feature;
 import org.geojson.Point;
 
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.bucket.BucketManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nostalgia.persistence.model.KnownLocation;
 import com.nostalgia.persistence.model.User;
+import com.nostalgia.persistence.model.Video;
+
+import batch.CouchbaseConfig;
 
 public class LocationAdder {
-
-	private static void addRTLocation()  {
-		KnownLocation duke = new KnownLocation();
-		duke.setName("Research Triangle");
-		//	        User uploader = app.getUserRepo().getLoggedInUser();
-		Feature object = null;
-		try {
-			object=   new ObjectMapper().readValue("{\n" +
-					"  \"type\": \"Feature\",\n" +
-					"  \"properties\": {\n" +
-					"    \"name\": \"Research Triangle\",\n" +
-					"    \"area\": 252\n" +
-					"  },\n" +
-					"  \"geometry\": {\n" +
-					"    \"type\": \"Polygon\",\n" +
-					"    \"coordinates\": [\n" +
-					"      [\n" +
-					"        [-87.83, 40.05],\n" +
-					"        [-89.67, 40.78],\n" +
-					"        [-70.24, 33.90],\n" +
-					"        [-90.93, 33.00]\n" +
-					"      ]\n" +
-					"    ]\n" +
-					"  }\n" +
-					"}   ", Feature.class);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		//	        if(uploader == null || object == null){
-		//	            String msg = "error - must have logged in user to upload location";
-		//	            Log.e(TAG, msg );
-		//	            Toast.makeText(MainCaptureActivity.this, msg, Toast.LENGTH_LONG).show();
-		//	            return;
-		//	        }
-
-		duke.setCreatorId("000000000000000000");
-
-
-
-		duke.setLocation(object);
-		duke.set_id("756e4e45-5aee-4e43-ad28-f7c7c4f41d0d");
-
-		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(duke);
-		creator.start();
-		//	        result.closeDrawer();
-		try {
-			creator.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		KnownLocation added = creator.getAdded();
-
-		// Toast.makeText(MainCaptureActivity.this, "location: " + added.getName() + " added successfully", Toast.LENGTH_LONG).show();
-		System.out.println("location: " + added.getName() + " added successfully");
-		return;
+	final static ObjectMapper mapper = new ObjectMapper();
+	static{
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 	}
+	private static ArrayList<KnownLocation> scanForLocationFilesIn(File locationJsonDir) throws Exception {
+		// set date created where needed and make sure ids are unique
+		ArrayList<KnownLocation> locs = new ArrayList<KnownLocation>();
+		HashMap<String, Long> ids = new HashMap<String, Long>();
+		ids.put("example_id", 0L);
 
-	private static void addMaineLocation()  {
-		KnownLocation maine = new KnownLocation();
-		maine.setName("Maine");
-		//	        User uploader = app.getUserRepo().getLoggedInUser();
-		Feature object = null;
-		try {
-			object=   new ObjectMapper().readValue("{\n" +
-					"  \"type\": \"Feature\",\n" +
-					"  \"properties\": {\n" +
-					"    \"name\": \"Maine\",\n" +
-					"    \"area\": 6000\n" +
-					"  },\n" +
-					"  \"geometry\": {\n" +
-					"    \"type\": \"Polygon\",\n" +
-					"    \"coordinates\": [\n" +
-					"      [\n" +
-					"        [-70.828857421875, 43.50872101129684],\n" +
-					"        [-70.828857421875, 47.05515408550348],\n" +
-					"        [-67.576904296875, 47.05515408550348],\n" +
-					"        [-67.576904296875, 43.50872101129684]\n" +
-					"      ]\n" +
-					"    ]\n" +
-					"  }\n" +
-					"}   ", Feature.class);
-		} catch (Exception e) {
-			e.printStackTrace();
+		String[] extensions = new String[]{"json"};
+		Iterator<File> iter = FileUtils.iterateFiles(locationJsonDir, extensions, true);
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		boolean changed = false; 
+		while(iter.hasNext()){
+			File toProcess= iter.next();
+			if(toProcess.getName().contains("example")) {
+				continue;
+			}
+			KnownLocation fileContents = null;
+			try {
+				fileContents = mapper.readValue(toProcess, KnownLocation.class);
+			} catch (Exception e) {
+				System.err.println("error reading in file: " + toProcess.getName());
+				e.printStackTrace();
+				continue;
+			}
+
+			//check id
+			String id = fileContents.get_id();
+
+			if(ids.keySet().contains(id) && !id.contains("example")){
+				System.out.println("duplicate id found.");
+				throw new Exception("DUPLICATE IDS: " + id);
+
+			}
+
+			ids.put(id, System.currentTimeMillis());
+			locs.add(fileContents);
 		}
-
-		//	        if(uploader == null || object == null){
-		//	            String msg = "error - must have logged in user to upload location";
-		//	            Log.e(TAG, msg );
-		//	            Toast.makeText(MainCaptureActivity.this, msg, Toast.LENGTH_LONG).show();
-		//	            return;
-		//	        }
-
-		maine.setCreatorId("00000000000000000000000000000000000");
-
-		maine.set_id("234c5080-28f9-47b4-bfea-37587e7d3054");
-
-		maine.setLocation(object);
-
-		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(maine);
-		creator.start();
-		// result.closeDrawer();
-		try {
-			creator.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		KnownLocation added = creator.getAdded();
-
-		// Toast.makeText(MainCaptureActivity.this, "location: " + added.getName() + " added successfully", Toast.LENGTH_LONG).show();
-		System.out.println("location: " + added.getName() + " added successfully");
-		return;
+		return locs; 
 	}
+	
+	// the DB we are using
+		private static Cluster cluster; 
+		private static  Bucket bucket; 
+		private static  CouchbaseConfig config ;
+		private static BucketManager bucketManager;
 
-	public static void main(String[] args){
-		Scanner scanner = new Scanner(System.in);
-		boolean running = true;
+		private static void setupDB() {
+			config = new CouchbaseConfig();
+			cluster = CouchbaseCluster.create(config.host);
+			bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
+			bucketManager = bucket.bucketManager();
+
+		}
+		
+	
+	public static void main(String[] args) throws Exception{
+			Scanner scanner = new Scanner(System.in);
+			boolean running = true;
+			File operatingDir = new File(System.getProperty("user.dir"));
+			File locationJsonDir = new File(operatingDir, "locations");
+	
+
+			if(!locationJsonDir.exists()){
+				locationJsonDir.mkdirs();
+			}
 		while (running){
-			System.out.print("Enter your command: ");
+			ArrayList<KnownLocation> scannedLocations = scanForLocationFilesIn(locationJsonDir);
 			
-			String command = scanner.nextLine();
-
-			switch(command){
-			case("addresearchtriangle"):{
-				addRTLocation();
-			}
-			break;
-			case("addmaine"):{
-				addMaineLocation();
-			}
-			break;
-			case("addusa"):{
-				addUSALocation();
-			}
-			break;
-			case("addnorthcarolina"):{
-				addNCLocation();
-			}
-			break;
-			case("addnorthamerica"):{
-				addNALocation();
-			}
-			break;
-			case("createalexuser"):{
-				addAlexUser();
-			}
-			break;
-			case("exit"):
-			case("quit"):
-			case("q"):
-				running = false;
-			break;
-			default:
-				System.out.println("Command: " + command + " not recognized");
-
-			}
-
+			System.out.print("include locations already in online db? ([y]/n): ");
+			String include = scanner.nextLine();
 			
+			if(include.contains("n")){
+				System.out.println("starting up db to make comparisons...");
+				setupDB();
+				
+				for(Iterator<KnownLocation> iter = scannedLocations.iterator(); iter.hasNext();){
+					KnownLocation cur = iter.next();
+					if(bucket.exists(cur.get_id())){
+						System.out.println("Location with id: " + cur.get_id() + " already exisits online. skipping");
+						iter.remove();
+					} else {
+						System.out.println("Location with id: " + cur.get_id() + " does not exist. keeping.");
+					}
+				}
+				
+			}
+			
+			
+			System.out.println("Locations available to add: ");
+
+			for(int i = 0; i < scannedLocations.size(); i++){
+				KnownLocation cur = scannedLocations.get(i);
+				
+				System.out.println(i + ": location Id: " + scannedLocations.get(i).get_id());
+				System.out.println("      with name: " + cur.getName());
+				System.out.println("      at location: " + cur.getLocation());
+				System.out.println();
+			}
+
+			if(scannedLocations.size() == 0){
+				System.out.println("None.");
+			}
+			System.out.println("\n");
+			System.out.print("add which location #? (q to quit, e for example gen): ");
+			String selection = null;
+
+			selection = scanner.nextLine();
+			int asNum = -1;
+			try {
+				asNum = Integer.parseInt(selection);
+			} catch (Exception e){
+				switch(selection){
+
+				case("q"):
+					System.out.println("Goodbye");
+				System.exit(0);
+				break;
+
+				case("e"):
+					generateExampleLocation(locationJsonDir);
+				continue;
+
+				default:
+					System.out.println("Error - command not recognized: " + selection);
+					Thread.sleep(150);
+					continue;
+				}
+			}
+
+			KnownLocation toAdd = scannedLocations.get(asNum);
+
+			System.out.println("Adding location: " + toAdd.get_id());
+
+		
+			System.out.println();
+
+		
+
+			System.out.println("Beginning location online creation");
+			KnownLocationCreatorThread creator = new KnownLocationCreatorThread(toAdd);
+			creator.start();
+			try {
+				creator.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+	
+			KnownLocation added = creator.getAdded();
+			
+			if(added.get_id().equals(toAdd.get_id())){
 
 
+			System.out.println("location created oinline successfully");
+			} else {
+				throw new Exception("Error - video not uploaded correctly"); 
+			}
 		}
 		scanner.close();
 	}
 
-	private static void addAlexUser() {
-
-		 Point here = null;
-
-	        
-	            here = new Point(35.9999999, -79.0096901);
-	        
-	      
-	        LoginRegisterThread register = new LoginRegisterThread("alex@alex.com", "alex", "alex", "app", true, here, "95bcf68b-ddb7-4e1e-82b6-c61d1f759010");
-	        register.start();
-	        try {
-	            register.join();
-	        } catch (InterruptedException e) {
-	            e.printStackTrace();
-	        }
-
-	        String sessToken;
-	        String region;
-
-	        try {
-	            sessToken = register.getLoginResponse().getSessionTok();
-	            region = register.getLoginResponse().getRegion();
-	            
-	        } catch (NullPointerException e) {
-	            //getLoginResponse might be null;
-	            e.printStackTrace();
-	            //Toast.makeText(this.getActivity(), "Can't connect to user database.", Toast.LENGTH_LONG).show();
-	            System.out.println( "Can't connect to user database.");
-	        }
-		
-	}
-
-	private static void addUSALocation() {
+	private static void generateExampleLocation(File dir) throws Exception {
 		KnownLocation maine = new KnownLocation();
-		maine.setName("USA");
-		//	        User uploader = app.getUserRepo().getLoggedInUser();
-		Feature object = null;
-		try {
-			object=   new ObjectMapper().readValue("{\n" +
-					"  \"type\": \"Feature\",\n" +
-					"  \"properties\": {\n" +
-					"    \"name\": \"The USA\",\n" +
-					"    \"area\": 6000000\n" +
-					"  },\n" +
-					"  \"geometry\": {\n" +
-					"    \"type\": \"Polygon\",\n" +
-					"    \"coordinates\": [\n" +
-					"      [\n" +
-					"        [-131.484375, 24.5271348225978],\n" +
-					"        [-131.484375, 49.83798245308484],\n" +
-					"        [-65.390625,  49.83798245308484],\n" +
-					"        [ -65.390625, 24.5271348225978]\n" +
-					"      ]\n" +
-					"    ]\n" +
-					"  }\n" +
-					"}   ", Feature.class);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		//	        if(uploader == null || object == null){
-		//	            String msg = "error - must have logged in user to upload location";
-		//	            Log.e(TAG, msg );
-		//	            Toast.makeText(MainCaptureActivity.this, msg, Toast.LENGTH_LONG).show();
-		//	            return;
-		//	        }
-
-		maine.setCreatorId("00000000000000000000000000000000000");
-
-		maine.set_id("2f1e7d7b-564d-4d48-9b4d-e4f556b23ed0");
-
-		maine.setLocation(object);
-
-		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(maine);
-		creator.start();
-		// result.closeDrawer();
-		try {
-			creator.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		KnownLocation added = creator.getAdded();
-
-		// Toast.makeText(MainCaptureActivity.this, "location: " + added.getName() + " added successfully", Toast.LENGTH_LONG).show();
-		System.out.println("location: " + added.getName() + " added successfully");
-		return;
-		
-	}
-
-	private static void addNCLocation() {
-		KnownLocation maine = new KnownLocation();
-		maine.setName("North Caroline");
-		//	        User uploader = app.getUserRepo().getLoggedInUser();
-		Feature object = null;
-		try {
-			object=   new ObjectMapper().readValue("{\n" +
-					"  \"type\": \"Feature\",\n" +
-					"  \"properties\": {\n" +
-					"    \"name\": \"North Carolina\",\n" +
-					"    \"area\": 60000\n" +
-					"  },\n" +
-					"  \"geometry\": {\n" +
-					"    \"type\": \"Polygon\",\n" +
-					"    \"coordinates\": [\n" +
-					"      [\n" +
-					"        [-84.24316406249999, 34.45221847282654],\n" +
-					"        [-84.24316406249999, 36.76529191711624],\n" +
-					"        [-75.948486328125,  36.76529191711624],\n" +
-					"        [-75.948486328125, 34.45221847282654]\n" +
-					"      ]\n" +
-					"    ]\n" +
-					"  }\n" +
-					"}   ", Feature.class);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		//	        if(uploader == null || object == null){
-		//	            String msg = "error - must have logged in user to upload location";
-		//	            Log.e(TAG, msg );
-		//	            Toast.makeText(MainCaptureActivity.this, msg, Toast.LENGTH_LONG).show();
-		//	            return;
-		//	        }
-
-		maine.setCreatorId("00000000000000000000000000000000000");
-
-		maine.set_id("f5852e4e-1f65-4d31-b2e0-3ac453e8b1ba");
-
-		maine.setLocation(object);
-
-		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(maine);
-		creator.start();
-		// result.closeDrawer();
-		try {
-			creator.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		KnownLocation added = creator.getAdded();
-
-		// Toast.makeText(MainCaptureActivity.this, "location: " + added.getName() + " added successfully", Toast.LENGTH_LONG).show();
-		System.out.println("location: " + added.getName() + " added successfully");
-		
-	}
-
-	private static void addNALocation() {
-		KnownLocation maine = new KnownLocation();
-		maine.setName("North America");
+		maine.setName("Example");
 		//	        User uploader = app.getUserRepo().getLoggedInUser();
 		Feature object = null;
 		try {
@@ -362,24 +229,41 @@ public class LocationAdder {
 
 		maine.setCreatorId("00000000000000000000000000000000000");
 
-		maine.set_id("5bfb7ea5-54a2-483d-a049-44dc76bb06ca");
+		maine.set_id("example");
 
 		maine.setLocation(object);
 
-		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(maine);
-		creator.start();
+//		KnownLocationCreatorThread creator = new KnownLocationCreatorThread(maine);
+//		creator.start();
 		// result.closeDrawer();
-		try {
-			creator.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		KnownLocation added = creator.getAdded();
+//		try {
+//			creator.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//
+//		KnownLocation added = creator.getAdded();
 
 		// Toast.makeText(MainCaptureActivity.this, "location: " + added.getName() + " added successfully", Toast.LENGTH_LONG).show();
-		System.out.println("location: " + added.getName() + " added successfully");
+		System.out.println("location: " + maine.getName() + " created successfully");
+		File outputFile = new File(dir, "exampleLocation.json");
+		if(outputFile.exists()){
+			System.out.println("example already exists @ " + outputFile.getAbsolutePath());
+			System.out.println("no changes made");
+			return; 
+		} else {
+			outputFile.createNewFile();
+		}
 		
+		FileWriter writer = new FileWriter(outputFile);
+
+		String videoAsString = mapper.writeValueAsString(maine);
+
+		writer.write(videoAsString);
+		writer.flush();
+		writer.close();
+		System.out.print("File: " + outputFile.getAbsolutePath() + " written");
+		return; 
 	}
 
 }

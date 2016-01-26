@@ -1,27 +1,38 @@
 {
-  "versionNumber" : 0,
-  "channels" : [ "f17898a0" ],
-  "_id" : "f17898a0-8609-4fbd-a399-94e7ccbb6598",
-  "type" : "Video",
-  "status" : "ADDINGTHUMBS",
-  "dateCreated" : 1449677082950,
-  "enabled" : true,
-  "loads" : 0,
-  "skips" : 0,
-  "location" : {
-    "type" : "Point",
-    "coordinates" : [ 36.0263022, -79.1096901 ]
-  },
-  "url" : null,
-  "locations" : [ "5bfb7ea5-54a2-483d-a049-44dc76bb06ca", "e89c56e9-edb4-48e9-b25f-364c0206e27a", "f5852e4e-1f65-4d31-b2e0-3ac453e8b1ba", "756e4e45-5aee-4e43-ad28-f7c7c4f41d0d" ],
-  "properties" : {
-    "sharing_where" : "EVERYWHERE",
-    "quick_thought" : "",
-    "sharing_who" : "EVERYONE",
-    "sharing_when" : "WIFI",
-    "video_sound" : "MUTE"
-  },
-  "ownerId" : "e1ab9ae1-2ed0-48db-a3e7-e25396f69879",
-  "taggedUserIds" : null,
-  "thumbNails" : null
+    "taggedUserIds": null,
+    "loads": 0,
+    "type": "Video",
+    "ownerId": "e1ab9ae1-2ed0-48db-a3e7-e25396f69879",
+    "url": "https://d1natzk16yc4os.cloudfront.net/f17898a0-8609-4fbd-a399-94e7ccbb6598/320x180.m3u8",
+    "enabled": true,
+    "skips": 0,
+    "dateCreated": 1450631221507,
+    "channels": ["f17898a0"],
+    "location": {
+        "coordinates": [
+            36.0263022,
+            -79.1096901
+        ],
+        "type": "Point"
+    },
+    "locations": [
+        "e89c56e9-edb4-48e9-b25f-364c0206e27a",
+        "f5852e4e-1f65-4d31-b2e0-3ac453e8b1ba",
+        "5bfb7ea5-54a2-483d-a049-44dc76bb06ca",
+        "756e4e45-5aee-4e43-ad28-f7c7c4f41d0d"
+    ],
+    "_id": "f17898a0-8609-4fbd-a399-94e7ccbb6598",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "quick_thought": "",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI",
+        "video_sound": "MUTE"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": [
+        "https://d1natzk16yc4os.cloudfront.net/f17898a0-8609-4fbd-a399-94e7ccbb6598/thumbnails/f17898a0-8609-4fbd-a399-94e7ccbb6598_thumbnail_01.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/f17898a0-8609-4fbd-a399-94e7ccbb6598/thumbnails/f17898a0-8609-4fbd-a399-94e7ccbb6598_thumbnail_02.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/f17898a0-8609-4fbd-a399-94e7ccbb6598/thumbnails/f17898a0-8609-4fbd-a399-94e7ccbb6598_thumbnail_03.jpg"
+    ]
 }

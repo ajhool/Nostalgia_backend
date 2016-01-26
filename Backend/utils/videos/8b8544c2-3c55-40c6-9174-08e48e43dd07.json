@@ -1,0 +1,33 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "ownerId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "type": "Video",
+    "enabled": false,
+    "url": null,
+    "versionNumber": 0,
+    "skips": 0,
+    "dateCreated": 1.453473503075E12,
+    "channels": ["8b8544c2"],
+    "location": {
+        "coordinates": [
+            -78.9485251,
+            36.0087183
+        ],
+        "type": "Point"
+    },
+    "locations": [
+        "e89c56e9-edb4-48e9-b25f-364c0206e27a",
+        "756e4e45-5aee-4e43-ad28-f7c7c4f41d0d"
+    ],
+    "_id": "8b8544c2-3c55-40c6-9174-08e48e43dd07",
+    "properties": {
+        "quick_thought": "state of emergency, declared!",
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI",
+        "video_sound": "ENABLED"
+    },
+    "status": "METAANDDATA",
+    "thumbNails": null
+}

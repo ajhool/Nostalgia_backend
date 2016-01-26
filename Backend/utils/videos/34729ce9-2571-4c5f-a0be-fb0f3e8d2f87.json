@@ -1,0 +1,22 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "ownerId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "type": "Video",
+    "enabled": false,
+    "url": null,
+    "versionNumber": 0,
+    "skips": 0,
+    "dateCreated": 0,
+    "channels": ["34729ce9"],
+    "location": null,
+    "locations": null,
+    "_id": "34729ce9-2571-4c5f-a0be-fb0f3e8d2f87",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI"
+    },
+    "status": "PENDING",
+    "thumbNails": null
+}

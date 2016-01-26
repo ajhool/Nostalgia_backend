@@ -1,0 +1,35 @@
+{
+    "taggedUserIds": null,
+    "loads": 0,
+    "type": "Video",
+    "ownerId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "url": "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/320x180.m3u8",
+    "enabled": true,
+    "skips": 0,
+    "dateCreated": 1451156424164,
+    "channels": ["eec3971a"],
+    "location": {
+        "coordinates": [
+            -76.8139971,
+            39.2940242
+        ],
+        "type": "Point"
+    },
+    "locations": ["5bfb7ea5-54a2-483d-a049-44dc76bb06ca"],
+    "_id": "eec3971a-847a-450e-8fdf-2a395443e5d9",
+    "properties": {
+        "sharing_where": "EVERYWHERE",
+        "quick_thought": "",
+        "sharing_who": "EVERYONE",
+        "sharing_when": "WIFI",
+        "video_sound": "ENABLED"
+    },
+    "status": "DISTRIBUTING",
+    "thumbNails": [
+        "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/thumbnails/eec3971a-847a-450e-8fdf-2a395443e5d9_thumbnail_02.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/thumbnails/eec3971a-847a-450e-8fdf-2a395443e5d9_thumbnail_05.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/thumbnails/eec3971a-847a-450e-8fdf-2a395443e5d9_thumbnail_01.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/thumbnails/eec3971a-847a-450e-8fdf-2a395443e5d9_thumbnail_04.jpg",
+        "https://d1natzk16yc4os.cloudfront.net/eec3971a-847a-450e-8fdf-2a395443e5d9/thumbnails/eec3971a-847a-450e-8fdf-2a395443e5d9_thumbnail_03.jpg"
+    ]
+}

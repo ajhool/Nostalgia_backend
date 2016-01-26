@@ -38,7 +38,9 @@ public class BatchProcessRunner {
 			new NonAwsVideoJsonGetter(),
 			new AwsUrlFixer(),
 			new DeletedVideoIdFixer(),
-			new MissingIdFieldFix()
+			new MissingIdFieldFix(),
+			new VideoJsonGetter(),
+			new LocationJsonGetter()
 	};
 
 	// the DB we are using

@@ -1,0 +1,52 @@
+{
+    "channels": ["fe82466e"],
+    "name": "ClipBored HQ",
+    "creatorId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "geometries": [
+                {
+                    "coordinates": [[
+                        [
+                            -76.310030024,
+                            39.307004346
+                        ],
+                        [
+                            -77.318147576,
+                            39.307004346
+                        ],
+                        [
+                            -76.310030024,
+                            39.282148854
+                        ],
+                        [
+                            -77.318147576,
+                            39.282148854
+                        ]
+                    ]],
+                    "type": "Polygon"
+                },
+                {
+                    "coordinates": [
+                        -76.8140888,
+                        39.2945766
+                    ],
+                    "type": "Point"
+                }
+            ],
+            "type": "GeometryCollection"
+        },
+        "type": "Feature",
+        "properties": {
+            "name": "ClipBored HQ",
+            "radius": 0.86
+        }
+    },
+    "locationCollections": {},
+    "_id": "fe82466e-1208-483b-829a-c5c19e3ce437",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Sun Dec 27 01:56:22 EST 2015"}
+}

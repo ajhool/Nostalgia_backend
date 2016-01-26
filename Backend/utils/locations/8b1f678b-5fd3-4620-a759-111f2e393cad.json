@@ -1,0 +1,52 @@
+{
+    "channels": ["8b1f678b"],
+    "name": "Wesley Heights",
+    "creatorId": "2871004d-eefb-4349-b148-94e7a2920587",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "geometries": [
+                {
+                    "coordinates": [[
+                        [
+                            -80.858677285,
+                            35.235432349
+                        ],
+                        [
+                            -80.871433515,
+                            35.235432349
+                        ],
+                        [
+                            -80.858677285,
+                            35.225461251
+                        ],
+                        [
+                            -80.871433515,
+                            35.225461251
+                        ]
+                    ]],
+                    "type": "Polygon"
+                },
+                {
+                    "coordinates": [
+                        -80.8650554,
+                        35.2304468
+                    ],
+                    "type": "Point"
+                }
+            ],
+            "type": "GeometryCollection"
+        },
+        "type": "Feature",
+        "properties": {
+            "name": "Wesley Heights",
+            "radius": 0.345
+        }
+    },
+    "locationCollections": {},
+    "_id": "8b1f678b-5fd3-4620-a759-111f2e393cad",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Thu Jan 14 12:51:35 EST 2016"}
+}

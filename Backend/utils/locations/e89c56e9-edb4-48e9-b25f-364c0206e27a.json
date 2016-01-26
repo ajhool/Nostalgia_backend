@@ -1,0 +1,52 @@
+{
+    "channels": ["e89c56e9"],
+    "name": "Bradford riddge",
+    "creatorId": "95bcf68b-ddb7-4e1e-82b6-c61d1f759010",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "geometries": [
+                {
+                    "coordinates": [[
+                        [
+                            -78.940163727,
+                            36.00901079
+                        ],
+                        [
+                            -78.950406073,
+                            36.00901079
+                        ],
+                        [
+                            -78.940163727,
+                            36.00850501
+                        ],
+                        [
+                            -78.950406073,
+                            36.00850501
+                        ]
+                    ]],
+                    "type": "Polygon"
+                },
+                {
+                    "coordinates": [
+                        -78.9482849,
+                        36.0087579
+                    ],
+                    "type": "Point"
+                }
+            ],
+            "type": "GeometryCollection"
+        },
+        "type": "Feature",
+        "properties": {
+            "name": "Bradford riddge",
+            "radius": 0.0175
+        }
+    },
+    "locationCollections": {},
+    "_id": "e89c56e9-edb4-48e9-b25f-364c0206e27a",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Sun Dec 06 23:21:08 EST 2015"}
+}

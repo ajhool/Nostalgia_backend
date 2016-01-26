@@ -1,0 +1,40 @@
+{
+    "channels": ["f5852e4e"],
+    "name": "North Caroline",
+    "creatorId": "00000000000000000000000000000000000",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -84.243164062,
+                    34.452218473
+                ],
+                [
+                    -84.243164062,
+                    36.765291917
+                ],
+                [
+                    -75.948486328,
+                    36.765291917
+                ],
+                [
+                    -75.948486328,
+                    34.452218473
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 60000,
+            "name": "North Carolina"
+        }
+    },
+    "locationCollections": {},
+    "_id": "f5852e4e-1f65-4d31-b2e0-3ac453e8b1ba",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Tue Dec 01 08:29:45 EST 2015"}
+}

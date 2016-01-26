@@ -1,0 +1,40 @@
+{
+    "channels": ["234c5080"],
+    "name": "Maine",
+    "creatorId": "18e1b26e-8891-4c3b-b3af-e8f8eb4a92b2",
+    "sponsoredVideos": null,
+    "location": {
+        "geometry": {
+            "coordinates": [[
+                [
+                    -70.828857422,
+                    43.508721011
+                ],
+                [
+                    -70.828857422,
+                    47.055154086
+                ],
+                [
+                    -67.576904297,
+                    47.055154086
+                ],
+                [
+                    -67.576904297,
+                    43.508721011
+                ]
+            ]],
+            "type": "Polygon"
+        },
+        "type": "Feature",
+        "properties": {
+            "area": 6100,
+            "name": "Maine"
+        }
+    },
+    "locationCollections": {},
+    "_id": "234c5080-28f9-47b4-bfea-37587e7d3054",
+    "type": "KnownLocation",
+    "thumbnails": [],
+    "versionNumber": 0,
+    "properties": {"date_uploaded": "Sun Nov 29 13:25:53 EST 2015"}
+}
