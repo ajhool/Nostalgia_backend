@@ -24,7 +24,9 @@ public class MediaCollection implements Serializable {
      *
      */
     private static final long serialVersionUID = 3372689185090518529L;
-
+	public static final String PUBLIC = "PUBLIC";
+	public static final String SHARED = "SHARED";
+	public static final String PRIVATE = "PRIVATE";
 
     private long versionNumber;
     @JsonIgnore
@@ -40,6 +42,8 @@ public class MediaCollection implements Serializable {
 
     //channels that this document itself is in
     private List<String> channels;
+    
+    //ID -> time added
     private Map<String, String> matchingVideos;
     private String creatorId;
 
@@ -49,7 +53,7 @@ public class MediaCollection implements Serializable {
     private List<String> tags;
     private List<String> locations;
 
-    boolean publicColl;
+    private String visibility = PRIVATE; 
     private String linkedLocation;
     private Set<String> readers;
     private Set<String> writers;
@@ -104,15 +108,6 @@ public class MediaCollection implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-
-    public boolean isPublicColl() {
-        return publicColl;
-    }
-
-    public void setPublicColl(boolean publicColl) {
-        this.publicColl = publicColl;
     }
 
     public Map<String, String> getProperties() {
@@ -233,5 +228,15 @@ public class MediaCollection implements Serializable {
 
 	public void setLinkedLocation(String linkedLocation) {
 		this.linkedLocation = linkedLocation;
+	}
+
+
+	public String getVisibility() {
+		return visibility;
+	}
+
+
+	public void setVisibility(String visibility) {
+		this.visibility = visibility;
 	}
 }

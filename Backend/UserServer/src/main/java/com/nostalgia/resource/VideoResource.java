@@ -88,11 +88,13 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.LocationRepository;
+import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.VideoRepository;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.persistence.model.KnownLocation;
 import com.nostalgia.persistence.model.LoginResponse;
+import com.nostalgia.persistence.model.MediaCollection;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
 import com.nostalgia.persistence.model.User;
 import com.nostalgia.persistence.model.Video;
@@ -120,12 +122,14 @@ public class VideoResource {
 
 	private static final ObjectMapper om = new ObjectMapper();
 	private SynchClient syncClient;
+	private final MediaCollectionRepository collRepo; 
 
 
-	public VideoResource( UserRepository userRepo, VideoRepository vidRepo, LocationRepository locRepo) {
+	public VideoResource( UserRepository userRepo, VideoRepository vidRepo, LocationRepository locRepo, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.vidRepo = vidRepo;
 		this.locRepo = locRepo;
+		this.collRepo = collRepo;
 
 	}
 
@@ -200,11 +204,22 @@ public class VideoResource {
 		switch(sharing){
 
 		case(Video.WHO_EVERYONE): {
-			Map<String, List<String>> userVids = uploader.getPublicVideos();
+			String pubVidCollId = uploader.getPublicVideoCollId();
+			MediaCollection publics = null;
+			if(pubVidCollId == null){
+				publics = new MediaCollection();
+				publics.setName(uploader.get_id() + "_pub");
+				publics.setCreatorId(uploader.get_id());
+				publics.setVisibility(MediaCollection.PUBLIC);
 
-			if(userVids == null){
-				userVids = new HashMap<String, List<String>>();
+				uploader.addCollection(publics);
+
+			} else {
+				publics =  collRepo.findOneById(pubVidCollId); 
 			}
+
+			publics.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis()));
+			collRepo.save(publics);
 
 			//for public videos, maintain a reference in the location 
 			if(matchingLocs != null && matchingLocs.size() > 0){
@@ -229,67 +244,107 @@ public class VideoResource {
 			}
 
 			for(KnownLocation loc : matchingLocs.values()){
-				List<String> existing = userVids.get(loc.get_id());
+				String existingLocationCollId = uploader.findCollection(MediaCollection.PRIVATE,uploader.get_id() + ":" + loc.get_id()); 
 				//if null, we have no videos here previously
-				if(existing == null){
-					existing = new ArrayList<String>();
+				MediaCollection byLocation = null; 
+				if(existingLocationCollId  == null){
+					//create new media collection for this location for this user
+					byLocation = new MediaCollection();
+					byLocation.setName(uploader.get_id() + ":" + loc.get_id());
+					byLocation.setCreatorId(uploader.get_id());
+					byLocation.setVisibility(MediaCollection.PRIVATE);
+
+					uploader.addCollection(byLocation);
+				} else {
+					byLocation = collRepo.findOneById(existingLocationCollId); 
 				}
 
-				if(existing.contains(adding.get_id())){
+
+
+				if(byLocation.getMatchingVideos().keySet().contains(adding.get_id())){
 					//then this video is already mapped to the location
-					continue;
+
 				} else {
-					existing.add(adding.get_id());
+					byLocation.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis())); 
 				}
-				userVids.put(loc.get_id(), existing);
+				collRepo.save(byLocation);
+			}
+			break;
+		}
+		case(Video.WHO_FRIENDS): {
+			String sharedVidCollId = uploader.getSharedVideoCollId();
+			MediaCollection shareds = null;
+			if(sharedVidCollId == null){
+				shareds = new MediaCollection();
+				shareds.setName(uploader.get_id() + "_shared");
+				shareds.setCreatorId(uploader.get_id());
+				shareds.setVisibility(MediaCollection.SHARED);
+
+				uploader.addCollection(shareds);
+			} else {
+				shareds =  collRepo.findOneById(sharedVidCollId); 
 			}
 
-			uploader.setPublicVideos(userVids);
+			shareds.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis()));
+			collRepo.save(shareds);
 
-
-
-
-
-		}
-		break;
-		case(Video.WHO_FRIENDS): {
-			if(matchingLocs == null || matchingLocs.size() < 1){
+			//for public videos, maintain a reference in the location 
+			if(matchingLocs == null){
 				//set special null location for video
 				matchingLocs = new HashMap<String, KnownLocation>();
 				KnownLocation nullLoc = new KnownLocation();
 				nullLoc.set_id("null_location");
 				matchingLocs.put("null_location", nullLoc);
-			}
-
-			Map<String, List<String>> userVids = uploader.getFriendVideos();
-
-			if(userVids == null){
-				userVids = new HashMap<String, List<String>>();
 			}
 
 			for(KnownLocation loc : matchingLocs.values()){
-				List<String> existing = userVids.get(loc.get_id());
+				String existingLocationCollId = uploader.findCollection(MediaCollection.SHARED, uploader.get_id() + ":" + loc.get_id()); 
 				//if null, we have no videos here previously
-				if(existing == null){
-					existing = new ArrayList<String>();
+				MediaCollection byLocation = null; 
+				if(existingLocationCollId  == null){
+					//create new media collection for this location for this user
+					byLocation = new MediaCollection();
+					byLocation.setName(uploader.get_id() + ":" + loc.get_id());
+					byLocation.setCreatorId(uploader.get_id());
+					byLocation.setVisibility(MediaCollection.SHARED);
+
+					uploader.addCollection(byLocation);
+				} else {
+					byLocation = collRepo.findOneById(existingLocationCollId); 
 				}
 
-				if(existing.contains(adding.get_id())){
+
+
+				if(byLocation.getMatchingVideos().keySet().contains(adding.get_id())){
 					//then this video is already mapped to the location
-					continue;
+
 				} else {
-					existing.add(adding.get_id());
+					byLocation.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis())); 
 				}
-				userVids.put(loc.get_id(), existing);
+				collRepo.save(byLocation);
+			}
+			break;
+		}
+		default:
+		case(Video.WHO_PRIVATE):{
+			String privateVidCollId = uploader.getPrivateVideoCollId();
+			MediaCollection privates = null;
+			if(privateVidCollId == null){
+				privates = new MediaCollection();
+				privates.setName(uploader.get_id() + "_priv");
+				privates.setCreatorId(uploader.get_id());
+				privates.setVisibility(MediaCollection.PRIVATE);
+
+				uploader.addCollection(privates);
+			} else {
+				privates =  collRepo.findOneById(privateVidCollId); 
 			}
 
-			uploader.setFriendVideos(userVids);
+			privates.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis()));
+			collRepo.save(privates);
 
-		}
-		break;
-		default:
-		case(Video.WHO_PRIVATE):
-			if(matchingLocs == null || matchingLocs.size() < 1){
+			//for public videos, maintain a reference in the location 
+			if(matchingLocs == null){
 				//set special null location for video
 				matchingLocs = new HashMap<String, KnownLocation>();
 				KnownLocation nullLoc = new KnownLocation();
@@ -297,31 +352,32 @@ public class VideoResource {
 				matchingLocs.put("null_location", nullLoc);
 			}
 
-		Map<String, List<String>> userVids = uploader.getPrivateVideos();
+			for(KnownLocation loc : matchingLocs.values()){
+				String existingLocationCollId = uploader.findCollection(MediaCollection.PRIVATE, uploader.get_id() + ":" + loc.get_id()); 
+				//if null, we have no videos here previously
+				MediaCollection byLocation = null; 
+				if(existingLocationCollId  == null){
+					//create new media collection for this location for this user
+					byLocation = new MediaCollection();
+					byLocation.setName(uploader.get_id() + ":" + loc.get_id());
+					byLocation.setCreatorId(uploader.get_id());
+					byLocation.setVisibility(MediaCollection.PRIVATE);
 
-		if(userVids == null){
-			userVids = new HashMap<String, List<String>>();
-		}
+					uploader.addCollection(byLocation);
+				} else {
+					byLocation = collRepo.findOneById(existingLocationCollId); 
+				}
 
-		for(KnownLocation loc : matchingLocs.values()){
-			List<String> existing = userVids.get(loc.get_id());
-			//if null, we have no videos here previously
-			if(existing == null){
-				existing = new ArrayList<String>();
+				if(byLocation.getMatchingVideos().keySet().contains(adding.get_id())){
+					//then this video is already mapped to the location
+
+				} else {
+					byLocation.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis())); 
+				}
+				collRepo.save(byLocation);
 			}
-
-			if(existing.contains(adding.get_id())){
-				//then this video is already mapped to the location
-				continue;
-			} else {
-				existing.add(adding.get_id());
-			}
-			userVids.put(loc.get_id(), existing);
+			break;
 		}
-
-		uploader.setPrivateVideos(userVids);
-		break;
-
 		}
 
 		//subscribe the user to their video
@@ -454,6 +510,7 @@ public class VideoResource {
 		return savedmd5;
 
 	}
+
 
 
 	private File saveFile(InputStream uploadedInputStream,

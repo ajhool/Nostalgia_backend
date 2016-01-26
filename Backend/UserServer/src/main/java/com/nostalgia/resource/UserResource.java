@@ -223,14 +223,36 @@ public class UserResource {
 		
 		//make sure all video collection is subscribed 
 		
-		String allId = loggedIn.getCollections().get(loggedIn.get_id() + "_all");
+		String privates = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.PRIVATE, loggedIn.get_id() + "_priv")); 
+		String publics = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.PUBLIC, loggedIn.get_id() + "_pub")); 
+		String shareds = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.SHARED, loggedIn.get_id() + "_shared")); 
 		
-		if(allId == null){
+		if(privates == null){
 			//create new all video collection
 			MediaCollection allColl = new MediaCollection();
-			allColl.setName(loggedIn.get_id() + "_all");
+			allColl.setName(loggedIn.get_id() + "_priv");
 			allColl.setCreatorId(loggedIn.get_id());
-			allColl.setPublicColl(false);
+			allColl.setVisibility(MediaCollection.PRIVATE);
+			collRepo.save(allColl);
+			loggedIn.addCollection(allColl);
+		}
+		
+		if(publics == null){
+			//create new all video collection
+			MediaCollection allColl = new MediaCollection();
+			allColl.setName(loggedIn.get_id() + "_pub");
+			allColl.setCreatorId(loggedIn.get_id());
+			allColl.setVisibility(MediaCollection.PUBLIC);
+			collRepo.save(allColl);
+			loggedIn.addCollection(allColl);
+		}
+		
+		if(shareds == null){
+			//create new all video collection
+			MediaCollection allColl = new MediaCollection();
+			allColl.setName(loggedIn.get_id() + "_shared");
+			allColl.setCreatorId(loggedIn.get_id());
+			allColl.setVisibility(MediaCollection.SHARED);
 			collRepo.save(allColl);
 			loggedIn.addCollection(allColl);
 		}

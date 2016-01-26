@@ -115,7 +115,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
 		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo);
-		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo);
+		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);

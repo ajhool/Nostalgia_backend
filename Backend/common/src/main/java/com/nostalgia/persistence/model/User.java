@@ -8,6 +8,7 @@ import org.geojson.GeometryCollection;
 import org.geojson.Point;
 
 import com.fasterxml.jackson.annotation.*;
+import com.nostalgia.persistence.model.User.CollectionKey;
 
 import java.io.Serializable;
 
@@ -16,6 +17,40 @@ import java.io.Serializable;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements Serializable {
+
+	public static class CollectionKey {
+
+		public String visibility; 
+		public String key; 
+
+		public CollectionKey(String visibility, String key) {
+			super();
+			this.visibility = visibility;
+			this.key = key;
+		}
+
+		public CollectionKey() {
+			super();
+		}
+		@Override
+		public int hashCode() {
+			long result = key.hashCode() * visibility.hashCode();
+			return (int) result; 
+
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!(obj instanceof CollectionKey))
+				return false;
+			if (obj == this)
+				return true;
+
+			return obj.hashCode() == this.hashCode(); 
+		}
+	}
+
+
 	@JsonIgnore
 	public String getChannelName(){
 		return _id.substring(0, 8);
@@ -71,13 +106,8 @@ public class User implements Serializable {
 	private long dateJoined;
 	private long lastSeen;
 
-	private Map<String, List<String>> publicVideos;
 
-	private Map<String, List<String>> privateVideos;
-
-	private Map<String, List<String>> friendVideos;
-
-	private Map<String, String> collections;
+	private Map<CollectionKey, String> collections; 
 
 	private Set<String> location_channels; 
 
@@ -305,7 +335,7 @@ public class User implements Serializable {
 		}
 
 		if(this.collections == null){
-			collections = new HashMap<String, String>();
+			collections = new HashMap<CollectionKey, String>();
 		}
 
 		if(this.accountsList == null){
@@ -531,37 +561,6 @@ public class User implements Serializable {
 
 	}
 
-
-	public Map<String, List<String>> getPrivateVideos() {
-		return privateVideos;
-	}
-
-
-	public void setPrivateVideos(Map<String, List<String>> privateVideos) {
-		this.privateVideos = privateVideos;
-	}
-
-
-	public Map<String, List<String>> getFriendVideos() {
-		return friendVideos;
-	}
-
-
-	public void setFriendVideos(Map<String, List<String>> friendVideos) {
-		this.friendVideos = friendVideos;
-	}
-
-
-	public Map<String, List<String>> getPublicVideos() {
-		return publicVideos;
-	}
-
-
-	public void setPublicVideos(Map<String, List<String>> publicVideos) {
-		this.publicVideos = publicVideos;
-	}
-
-
 	public HashMap<String, String> getLocationHistory() {
 		return locationHistory;
 	}
@@ -614,12 +613,12 @@ public class User implements Serializable {
 	}
 
 
-	public Map<String, String> getCollections() {
+	public Map<CollectionKey, String> getCollections() {
 		return collections;
 	}
 
 
-	public void setCollections(Map<String, String> collections) {
+	public void setCollections(Map<CollectionKey, String> collections) {
 		this.collections = collections;
 	}
 
@@ -673,63 +672,123 @@ public class User implements Serializable {
 	@JsonIgnore
 	public Map<String, String> subscribeToFriend(User friendToAdd) {
 		// TODO Auto-generated method stub
-		 friends.put(friendToAdd.get_id(), Long.toString(System.currentTimeMillis()));
-		 admin_channels.add(friendToAdd.getChannelName());
-		 return friends;
+		friends.put(friendToAdd.get_id(), Long.toString(System.currentTimeMillis()));
+		admin_channels.add(friendToAdd.getChannelName());
+		return friends;
 	}
-	
+
 	@JsonIgnore
 	public Map<String, String> unsubscribeFromFriend(User friendToRemove) {
 		// TODO Auto-generated method stub
-		 String removed = friends.remove(friendToRemove.get_id());
-		
-		 admin_channels.remove(friendToRemove.getChannelName());
-		 return friends;
+		String removed = friends.remove(friendToRemove.get_id());
+
+		admin_channels.remove(friendToRemove.getChannelName());
+		return friends;
 	}
 
 
 	//returns tags of all collections
 	@JsonIgnore
-	public Set<String> addCollection(MediaCollection creating) throws Exception {
-		
-		
+	public Collection<String> addCollection(MediaCollection creating) throws Exception {
+
+
 		if(creating.getName() == null || creating.getName().equals("")){
 			throw new IllegalArgumentException("name is required for storage in map");
 		}
+
+		//create key 
+		CollectionKey key = new CollectionKey();
+		key.visibility = creating.getVisibility(); 
+		key.key = creating.getName(); 
+
 		//check for existence
-		String existing = collections.get(creating.getName());
-		
+		String existing = collections.get(key);
+
 		if(existing != null){
 			throw new Exception("collection already exists!");
 		}
-		
+
 		//add into collections
-		collections.put(creating.getName(), creating.get_id());
-		
+		collections.put(key, creating.get_id());
+
 		//subscribe in channels
 		admin_channels.add(creating.getChannelName());
-		return collections.keySet(); 
-		
-		
+		return collections.values(); 
+
+
 	}
-	
+
 	@JsonIgnore
 	public MediaCollection removeCollection(MediaCollection toRemove){
 		//check for existence
 		if(toRemove.getName() == null || toRemove.getName().equals("")){
 			throw new IllegalArgumentException("name is required for removal from map");
 		}
+		//create key 
+		CollectionKey key = new CollectionKey();
+		key.visibility = toRemove.getVisibility(); 
+		key.key = toRemove.getName(); 
+
 		//check for existence
-		String existing = collections.remove(toRemove.getName());
-		
+		String existing = collections.remove(key);
+
 		if(existing == null){
 			return null; 
 		}
-		
+
 		//remove from channels
 		admin_channels.remove(toRemove.getChannelName());
 		return toRemove; 
-		
+
+	}
+
+
+	@JsonIgnore
+	public String getPublicVideoCollId() {
+		CollectionKey pubVids = new CollectionKey(MediaCollection.PUBLIC, this.get_id() + "_pub");
+		String matching = collections.get(pubVids); 
+		return matching; 
+	}
+
+	@JsonIgnore
+	public String getPrivateVideoCollId() {
+		CollectionKey privVids = new CollectionKey(MediaCollection.PRIVATE, this.get_id() + "_priv");
+		String matching = collections.get(privVids); 
+		return matching; 
+	}
+
+	@JsonIgnore
+	public String getSharedVideoCollId() {
+		CollectionKey sharedVids = new CollectionKey(MediaCollection.SHARED, this.get_id() + "_shared");
+		String matching = collections.get(sharedVids); 
+		return matching; 
+	}
+
+
+	@JsonIgnore
+	public String findCollection(String visibility, String key) {
+
+		CollectionKey query = new CollectionKey(visibility, key);
+		String result = collections.get(query);
+
+		return result; 
+	}
+
+	@JsonIgnore
+	public List<String> findCollectionbyTag(String key) {
+		String[] visibilities = new String[] {MediaCollection.PRIVATE, MediaCollection.PUBLIC, MediaCollection.SHARED};
+		ArrayList<String> results = new ArrayList<String>();
+
+		for(String visibility : visibilities){
+			CollectionKey thisViz = new CollectionKey(visibility, key);
+			String matchingAtViz = collections.get(thisViz);
+			if(matchingAtViz != null){
+				results.add(matchingAtViz);
+			}
+		}
+
+		if(results.size() < 1) return null;
+		return results; 
 	}
 
 }
