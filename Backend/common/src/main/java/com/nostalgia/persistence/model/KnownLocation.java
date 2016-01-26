@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public class KnownLocation implements Serializable {
 	//channels that this document itself is in
 	private List<String> channels; 
 
-	private Map<String, String> matchingVideos;
+	private Map<String, String> locationCollections; 
 
 	private List<String> thumbnails; 
 
@@ -58,6 +59,9 @@ public class KnownLocation implements Serializable {
 
 		if(thumbnails == null){
 			thumbnails = new ArrayList<String>();
+		}
+		if(locationCollections == null){
+			locationCollections = new HashMap<String, String>();
 		}
 	}
 
@@ -106,14 +110,6 @@ public class KnownLocation implements Serializable {
 	}
 
 
-	public Map<String, String> getMatchingVideos() {
-		return matchingVideos;
-	}
-
-
-	public void setMatchingVideos(Map<String, String> matchingVideos) {
-		this.matchingVideos = matchingVideos;
-	}
 
 
 	public String getType() {
@@ -158,15 +154,6 @@ public class KnownLocation implements Serializable {
 		buf.append("ID: " + _id + "\n");
 		buf.append("Location: " + location + "\n");
 
-		buf.append("Videos: \n");
-		if(this.matchingVideos != null && !matchingVideos.isEmpty()) {
-			for (String key : matchingVideos.keySet()){
-				buf.append("Video #" + key + ": " + matchingVideos.get(key) + "\n");
-			}
-
-		} else {
-			buf.append("no videos");
-		}
 
 		return buf.toString();
 	}
@@ -189,6 +176,16 @@ public class KnownLocation implements Serializable {
 
 	public void setVersionNumber(long versionNumber) {
 		this.versionNumber = versionNumber;
+	}
+
+
+	public Map<String, String> getLocationCollections() {
+		return locationCollections;
+	}
+
+
+	public void setLocationCollections(Map<String, String> locationCollections) {
+		this.locationCollections = locationCollections;
 	}
 
 

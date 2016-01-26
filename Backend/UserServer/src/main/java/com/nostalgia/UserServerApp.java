@@ -113,10 +113,10 @@ public class UserServerApp extends Application<UserAppConfig>{
 		IconService icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		
-		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli/*, sMan*/);
+		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
 		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
-		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo);
+		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo, collRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
 		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);

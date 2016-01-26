@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nostalgia.LocationRepository;
+import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.VideoRepository;
 import com.nostalgia.client.SynchClient;
@@ -48,12 +49,15 @@ private final SynchClient sync;
 	private VideoRepository vidRepo;
 	//private final SubscriptionManager sManager; 
 
+	private MediaCollectionRepository collRepo;
 
-	public UserLocationResource( UserRepository userRepo, LocationRepository locRepo, VideoRepository vidRepo, SynchClient syncClient/*, SubscriptionManager manager*/) {
+
+	public UserLocationResource( UserRepository userRepo, LocationRepository locRepo, VideoRepository vidRepo, SynchClient syncClient, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.locRepo = locRepo;
 		this.vidRepo = vidRepo;
 		this.sync = syncClient;
+		this.collRepo = collRepo; 
 		//this.sManager = manager;
 
 	}
@@ -68,7 +72,10 @@ private final SynchClient sync;
 			hasNewLoc.updateLocationChannels(nearbys);
 			HashSet<String> vidChannels = new HashSet<String>();
 			for(KnownLocation loc: nearbys.values()){
-				for(String videoId : loc.getMatchingVideos().values()){
+				
+				MediaCollection coll = collRepo.findOneById(loc.getLocationCollections().get("primary"));
+				
+				for(String videoId : coll.getMatchingVideos().keySet()){
 					String channelName = videoId.substring(0, videoId.indexOf("-"));
 					vidChannels.add(channelName);
 				}

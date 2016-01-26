@@ -50,10 +50,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.nostalgia.ImageDownloaderBase64;
-import com.nostalgia.LocationRepository;
-import com.nostalgia.UserRepository;
-import com.nostalgia.VideoRepository;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.persistence.model.*;
 
@@ -77,12 +73,15 @@ public class LocationAdminResource {
 
 	private VideoRepository vidRepo;
 
+	private MediaCollectionRepository collRepo;
 
 
-	public LocationAdminResource( UserRepository userRepo, LocationRepository locRepo, VideoRepository vidRepo) {
+
+	public LocationAdminResource( UserRepository userRepo, LocationRepository locRepo, VideoRepository vidRepo, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.locRepo = locRepo;
 		this.vidRepo = vidRepo; 
+		this.collRepo = collRepo;
 		//this.sManager = manager;
 
 	}
@@ -154,19 +153,20 @@ public class LocationAdminResource {
 		
 		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toBuildbbox);
 
-		if(toAdd.getMatchingVideos() == null){
-			toAdd.setMatchingVideos(new HashMap<String, String>());
+		MediaCollection linked = new MediaCollection();
+		linked.setCreatorId(toAdd.getCreatorId());
+		linked.setLinkedLocation(toAdd.get_id());
+		linked.getLocations().add(toAdd.get_id());
+		linked.setName(toAdd.get_id() + "_linked");
+		
+		for(Video vid : matchingVids.values()){
+			linked.getMatchingVideos().put(vid.get_id(), Long.toString(System.currentTimeMillis()));
 		}
+		
+		collRepo.save(linked);
+		
+		toAdd.getLocationCollections().put("primary", linked.get_id());
 
-		int currentMax = toAdd.getMatchingVideos().size() - 1;
-
-		//add them in
-		if(matchingVids != null){
-			for(Video vid : matchingVids.values()){
-				currentMax++;
-				toAdd.getMatchingVideos().put(currentMax + "", vid.get_id());
-			}
-		}
 
 		//save
 		JsonDocument saved = locRepo.save(toAdd);

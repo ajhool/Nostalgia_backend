@@ -224,14 +224,16 @@ public class VideoResource {
 			//for public videos, maintain a reference in the location 
 			if(matchingLocs != null && matchingLocs.size() > 0){
 				for(KnownLocation loc : matchingLocs.values()){
-					if(loc.getMatchingVideos() == null){
-						loc.setMatchingVideos(new HashMap<String, String>());
+					
+					MediaCollection linked = collRepo.findOneById(loc.getLocationCollections().get("primary")); 
+					
+					if(linked.getMatchingVideos() == null){
+						linked.setMatchingVideos(new HashMap<String, String>());
 					}
 
-					int currentMax = loc.getMatchingVideos().size() - 1;
-
-					currentMax++;
-					loc.getMatchingVideos().put(currentMax + "", adding.get_id());
+			
+					linked.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis()));
+					collRepo.save(linked); 
 					JsonDocument saved = locRepo.save(loc);
 
 				}

@@ -64,6 +64,7 @@ public class User implements Serializable {
 	private long versionNumber;
 	private String _id = UUID.randomUUID().toString();
 
+	private Map<String, String> seenVideos; 
 	private String name;
 
 	private String password;
@@ -74,7 +75,21 @@ public class User implements Serializable {
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
+	public Set<String> silentSubscribeToLocations(Collection<KnownLocation> values) {
 
+        for(KnownLocation toSubTo : values){
+            if(!silentSubscriptions.contains(toSubTo.get_id())){
+                //add to set
+                silentSubscriptions.add(toSubTo.get_id());
+
+                //add to admin chanells
+                admin_channels.add(toSubTo.getChannelName());
+
+            }
+        }
+
+        return silentSubscriptions;
+    }
 	private HashMap<String, String> locationHistory; 
 
 	private Map<String, String> streamTokens; 
@@ -148,6 +163,8 @@ public class User implements Serializable {
 	private String syncToken;
 
 	private List<String> createdLocations;
+
+	private HashSet<String> silentSubscriptions;
 
 	@JsonIgnore
 	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
@@ -350,6 +367,12 @@ public class User implements Serializable {
 		if(pendingFriends == null){
 			pendingFriends = new HashMap<String, String>();
 		}
+		if(seenVideos == null){
+			seenVideos = new HashMap<String, String>();
+		}
+		if (this.silentSubscriptions == null) {
+            this.silentSubscriptions = new HashSet<String>();
+        }
 	}
 
 	public String get_id() {
@@ -646,6 +669,7 @@ public class User implements Serializable {
 	public static class Account{
 		public String name;
 		public String id;
+		public String email; 
 	}
 
 
@@ -789,6 +813,34 @@ public class User implements Serializable {
 
 		if(results.size() < 1) return null;
 		return results; 
+	}
+
+
+	public Map<String, String> getSeenVideos() {
+		return seenVideos;
+	}
+
+
+	public void setSeenVideos(Map<String, String> seenVideos) {
+		this.seenVideos = seenVideos;
+	}
+
+	@JsonIgnore
+	public boolean addSeenVideo(String viewedVideoId){
+		String existing = seenVideos.get(viewedVideoId);
+
+		if(existing != null) return false;
+
+		seenVideos.put(viewedVideoId, Long.toString(System.currentTimeMillis()));
+		return true;
+	}
+
+	@JsonIgnore
+	public boolean hasSeenVideo(String videoIdToCheck){
+		String existing = seenVideos.get(videoIdToCheck);
+
+		if(existing != null) return true;
+		else return false; 
 	}
 
 }
