@@ -36,7 +36,7 @@ public class MediaCollection implements Serializable {
 
     private String _id = UUID.randomUUID().toString();
 
-    private String type = MediaCollection.class.getName();
+    private String type = this.getClass().getSimpleName();
 
     private String name;
 

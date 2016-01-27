@@ -6,49 +6,19 @@ import java.util.Map.Entry;
 import org.geojson.GeoJsonObject;
 import org.geojson.GeometryCollection;
 import org.geojson.Point;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.annotation.*;
-import com.nostalgia.persistence.model.User.CollectionKey;
 
 import java.io.Serializable;
+import java.io.StringWriter;
 
 /**
  * Created by alex on 11/4/15.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements Serializable {
-
-	public static class CollectionKey {
-
-		public String visibility; 
-		public String key; 
-
-		public CollectionKey(String visibility, String key) {
-			super();
-			this.visibility = visibility;
-			this.key = key;
-		}
-
-		public CollectionKey() {
-			super();
-		}
-		@Override
-		public int hashCode() {
-			long result = key.hashCode() * visibility.hashCode();
-			return (int) result; 
-
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof CollectionKey))
-				return false;
-			if (obj == this)
-				return true;
-
-			return obj.hashCode() == this.hashCode(); 
-		}
-	}
 
 
 	@JsonIgnore
@@ -122,7 +92,7 @@ public class User implements Serializable {
 	private long lastSeen;
 
 
-	private Map<CollectionKey, String> collections; 
+	private Map<String, String> collections; 
 
 	private Set<String> location_channels; 
 
@@ -352,7 +322,7 @@ public class User implements Serializable {
 		}
 
 		if(this.collections == null){
-			collections = new HashMap<CollectionKey, String>();
+			collections = new HashMap<String, String>();
 		}
 
 		if(this.accountsList == null){
@@ -636,12 +606,12 @@ public class User implements Serializable {
 	}
 
 
-	public Map<CollectionKey, String> getCollections() {
+	public Map<String, String> getCollections() {
 		return collections;
 	}
 
 
-	public void setCollections(Map<CollectionKey, String> collections) {
+	public void setCollections(Map<String, String> collections) {
 		this.collections = collections;
 	}
 
@@ -719,21 +689,24 @@ public class User implements Serializable {
 		if(creating.getName() == null || creating.getName().equals("")){
 			throw new IllegalArgumentException("name is required for storage in map");
 		}
-
-		//create key 
-		CollectionKey key = new CollectionKey();
-		key.visibility = creating.getVisibility(); 
-		key.key = creating.getName(); 
-
+		
+		JSONObject key = new JSONObject(); 
+		JSONObject visibility = new JSONObject(); 
+		visibility.put("visibility", creating.getVisibility());
+		key.put("key", creating.getName());
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibility);
+		ordered.put(key);
+		
 		//check for existence
-		String existing = collections.get(key);
+		String existing = collections.get(ordered.toString());
 
 		if(existing != null){
 			throw new Exception("collection already exists!");
 		}
 
 		//add into collections
-		collections.put(key, creating.get_id());
+		collections.put(ordered.toString(), creating.get_id());
 
 		//subscribe in channels
 		admin_channels.add(creating.getChannelName());
@@ -748,13 +721,17 @@ public class User implements Serializable {
 		if(toRemove.getName() == null || toRemove.getName().equals("")){
 			throw new IllegalArgumentException("name is required for removal from map");
 		}
-		//create key 
-		CollectionKey key = new CollectionKey();
-		key.visibility = toRemove.getVisibility(); 
-		key.key = toRemove.getName(); 
-
+		
+		JSONObject key = new JSONObject(); 
+		JSONObject visibility = new JSONObject(); 
+		visibility.put("visibility", toRemove.getVisibility());
+		key.put("key", toRemove.getName());
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibility);
+		ordered.put(key);
+		
 		//check for existence
-		String existing = collections.remove(key);
+		String existing = collections.remove(ordered.toString());
 
 		if(existing == null){
 			return null; 
@@ -769,22 +746,42 @@ public class User implements Serializable {
 
 	@JsonIgnore
 	public String getPublicVideoCollId() {
-		CollectionKey pubVids = new CollectionKey(MediaCollection.PUBLIC, this.get_id() + "_pub");
-		String matching = collections.get(pubVids); 
+		JSONObject key = new JSONObject(); 
+		JSONObject visibility = new JSONObject(); 
+		visibility.put("visibility", MediaCollection.PUBLIC);
+		key.put("key", this.get_id() + "_pub");
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibility);
+		ordered.put(key);
+		
+		String matching = collections.get(ordered.toString()); 
 		return matching; 
 	}
 
 	@JsonIgnore
 	public String getPrivateVideoCollId() {
-		CollectionKey privVids = new CollectionKey(MediaCollection.PRIVATE, this.get_id() + "_priv");
-		String matching = collections.get(privVids); 
+		
+		JSONObject key = new JSONObject(); 
+		JSONObject visibility = new JSONObject(); 
+		visibility.put("visibility", MediaCollection.PRIVATE);
+		key.put("key", this.get_id() + "_priv");
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibility);
+		ordered.put(key);
+		String matching = collections.get(ordered.toString()); 
 		return matching; 
 	}
 
 	@JsonIgnore
 	public String getSharedVideoCollId() {
-		CollectionKey sharedVids = new CollectionKey(MediaCollection.SHARED, this.get_id() + "_shared");
-		String matching = collections.get(sharedVids); 
+		JSONObject key = new JSONObject(); 
+		JSONObject visibility = new JSONObject(); 
+		visibility.put("visibility", MediaCollection.SHARED);
+		key.put("key", this.get_id() + "_shared");
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibility);
+		ordered.put(key);
+		String matching = collections.get(ordered.toString()); 
 		return matching; 
 	}
 
@@ -792,10 +789,17 @@ public class User implements Serializable {
 	@JsonIgnore
 	public String findCollection(String visibility, String key) {
 
-		CollectionKey query = new CollectionKey(visibility, key);
-		String result = collections.get(query);
-
-		return result; 
+	
+		JSONObject keyobj = new JSONObject(); 
+		JSONObject visibilityobj = new JSONObject(); 
+		visibilityobj.put("visibility", visibility);
+		keyobj.put("key", key);
+		JSONArray  ordered = new JSONArray();
+		ordered.put(visibilityobj);
+		ordered.put(keyobj);
+		String matching = collections.get(ordered.toString()); 
+		return matching; 
+		
 	}
 
 	@JsonIgnore
@@ -804,8 +808,14 @@ public class User implements Serializable {
 		ArrayList<String> results = new ArrayList<String>();
 
 		for(String visibility : visibilities){
-			CollectionKey thisViz = new CollectionKey(visibility, key);
-			String matchingAtViz = collections.get(thisViz);
+			JSONObject keyobj = new JSONObject(); 
+			JSONObject visibilityobj = new JSONObject(); 
+			visibilityobj.put("visibility", visibility);
+			keyobj.put("key", key);
+			JSONArray  ordered = new JSONArray();
+			ordered.put(visibilityobj);
+			ordered.put(key);
+			String matchingAtViz = collections.get(ordered.toString()); 
 			if(matchingAtViz != null){
 				results.add(matchingAtViz);
 			}

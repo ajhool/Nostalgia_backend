@@ -222,47 +222,50 @@ public class UserResource {
 		}
 		
 		//make sure all video collection is subscribed 
-		
-		String privates = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.PRIVATE, loggedIn.get_id() + "_priv")); 
-		String publics = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.PUBLIC, loggedIn.get_id() + "_pub")); 
-		String shareds = loggedIn.getCollections().get(new User.CollectionKey(MediaCollection.SHARED, loggedIn.get_id() + "_shared")); 
-		
-		if(privates == null){
-			//create new all video collection
-			MediaCollection allColl = new MediaCollection();
-			allColl.setName(loggedIn.get_id() + "_priv");
-			allColl.setCreatorId(loggedIn.get_id());
-			allColl.setVisibility(MediaCollection.PRIVATE);
-			collRepo.save(allColl);
-			loggedIn.addCollection(allColl);
-		}
-		
-		if(publics == null){
-			//create new all video collection
-			MediaCollection allColl = new MediaCollection();
-			allColl.setName(loggedIn.get_id() + "_pub");
-			allColl.setCreatorId(loggedIn.get_id());
-			allColl.setVisibility(MediaCollection.PUBLIC);
-			collRepo.save(allColl);
-			loggedIn.addCollection(allColl);
-		}
-		
-		if(shareds == null){
-			//create new all video collection
-			MediaCollection allColl = new MediaCollection();
-			allColl.setName(loggedIn.get_id() + "_shared");
-			allColl.setCreatorId(loggedIn.get_id());
-			allColl.setVisibility(MediaCollection.SHARED);
-			collRepo.save(allColl);
-			loggedIn.addCollection(allColl);
-		}
+		checkAndSetDefaultCollections(loggedIn);
+		syncClient.setSyncChannels(loggedIn);
 
+		
 		userRepo.save(loggedIn);
 		return response;
 
 	}
 
-
+private void checkAndSetDefaultCollections(User loggedIn) throws Exception{
+	String privates = loggedIn.findCollection(MediaCollection.PRIVATE, loggedIn.get_id() + "_priv"); 
+	String publics = loggedIn.findCollection(MediaCollection.PUBLIC, loggedIn.get_id() + "_pub");   
+	String shareds = loggedIn.findCollection(MediaCollection.SHARED, loggedIn.get_id() + "_shared"); 
+	
+	if(privates == null){
+		//create new all video collection
+		MediaCollection allColl = new MediaCollection();
+		allColl.setName(loggedIn.get_id() + "_priv");
+		allColl.setCreatorId(loggedIn.get_id());
+		allColl.setVisibility(MediaCollection.PRIVATE);
+		collRepo.save(allColl);
+		loggedIn.addCollection(allColl);
+	}
+	
+	if(publics == null){
+		//create new all video collection
+		MediaCollection allColl = new MediaCollection();
+		allColl.setName(loggedIn.get_id() + "_pub");
+		allColl.setCreatorId(loggedIn.get_id());
+		allColl.setVisibility(MediaCollection.PUBLIC);
+		collRepo.save(allColl);
+		loggedIn.addCollection(allColl);
+	}
+	
+	if(shareds == null){
+		//create new all video collection
+		MediaCollection allColl = new MediaCollection();
+		allColl.setName(loggedIn.get_id() + "_shared");
+		allColl.setCreatorId(loggedIn.get_id());
+		allColl.setVisibility(MediaCollection.SHARED);
+		collRepo.save(allColl);
+		loggedIn.addCollection(allColl);
+	}
+}
 	private static final String CLIENT_ID = "455723277988-mdc4rhk2nitc31slqdrhhgdlv0u6m3vk.apps.googleusercontent.com";
 	/**
 	 * Default JSON factory to use to deserialize JSON.
@@ -531,7 +534,8 @@ public class UserResource {
 			loggedInUser.setLastKnownLoc(registering.getLastKnownLoc());
 			loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
 		}
-
+		checkAndSetDefaultCollections(loggedInUser);
+		syncClient.setSyncChannels(loggedInUser);
 		userRepo.save(loggedInUser);
 
 		return response;

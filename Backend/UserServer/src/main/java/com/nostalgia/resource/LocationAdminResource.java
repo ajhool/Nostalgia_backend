@@ -154,6 +154,7 @@ public class LocationAdminResource {
 		HashMap<String, Video> matchingVids = vidRepo.findVideosWithin(toBuildbbox);
 
 		MediaCollection linked = new MediaCollection();
+		linked.setVisibility(MediaCollection.PUBLIC);
 		linked.setCreatorId(toAdd.getCreatorId());
 		linked.setLinkedLocation(toAdd.get_id());
 		linked.getLocations().add(toAdd.get_id());
@@ -165,6 +166,9 @@ public class LocationAdminResource {
 		
 		collRepo.save(linked);
 		
+		if(toAdd.getLocationCollections() == null){
+			toAdd.setLocationCollections(new HashMap<String, String>());
+		}
 		toAdd.getLocationCollections().put("primary", linked.get_id());
 
 
