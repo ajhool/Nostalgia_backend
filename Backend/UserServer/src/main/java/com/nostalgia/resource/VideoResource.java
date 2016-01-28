@@ -132,7 +132,25 @@ public class VideoResource {
 		this.collRepo = collRepo;
 
 	}
-
+	
+	
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/addtocoll")
+	@Timed
+	public List<String> addVideoMeta(List<String> toAddTo, @QueryParam("vidId") String vidId, @Context HttpServletRequest req) throws Exception{
+		ArrayList<String> added = new ArrayList<String>();	
+		for(String collId : toAddTo){
+				MediaCollection toAdd = collRepo.findOneById(collId);
+				toAdd.getMatchingVideos().put(vidId, Long.toString(System.currentTimeMillis()));
+				JsonDocument add = collRepo.save(toAdd);
+				added.add(add.id());
+			}
+		return added; 
+	}
+	
 	//part 1, metadata is uploaded, in return for a video upload key
 	@SuppressWarnings("unused")
 	@POST

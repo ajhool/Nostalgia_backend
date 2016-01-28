@@ -63,16 +63,17 @@ import facebook4j.conf.Configuration;
 import facebook4j.conf.ConfigurationBuilder;
 
 @Path("/api/v0/user/subscribe")
-public class LocationSubscriptionResource {
+public class SubscriptionResource {
 
 
 	@Context HttpServletResponse resp; 
 
-	private static final Logger logger = LoggerFactory.getLogger(LocationSubscriptionResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(SubscriptionResource.class);
 
 	private final UserRepository userRepo;
 	private final LocationRepository locRepo;
 	private final SynchClient sync;
+	private final MediaCollectionRepository collRepo; 
 
 	public User subscribeToLocation(User wantsSubscription, KnownLocation toSubscribeTo) throws Exception{
 
@@ -83,7 +84,7 @@ public class LocationSubscriptionResource {
 		userRepo.save(wantsSubscription);
 		return wantsSubscription;
 	}
-	
+
 	public User unsubscribeFromLocation(User wantsSubscription, String idToRemove) throws Exception{
 
 		wantsSubscription.unsubscribeFromLocation(idToRemove);
@@ -94,26 +95,47 @@ public class LocationSubscriptionResource {
 		return wantsSubscription;
 	}
 	
+	public User subscribeToCollection(User wantsSubscription, MediaCollection toSubscribeTo) throws Exception{
+
+		wantsSubscription.addCollection(toSubscribeTo); 
+
+		sync.setSyncChannels(wantsSubscription);
+
+		userRepo.save(wantsSubscription);
+		return wantsSubscription;
+	}
+
+	public User unsubscribeFromCollection(User wantsSubscription,MediaCollection toRemove) throws Exception{
+
+		wantsSubscription.removeCollection(toRemove);
+
+		sync.setSyncChannels(wantsSubscription);
+
+		userRepo.save(wantsSubscription);
+		return wantsSubscription;
+	}
 
 
-	public LocationSubscriptionResource( UserRepository userRepo, LocationRepository locRepo, SynchClient sync) {
+
+	public SubscriptionResource( UserRepository userRepo, LocationRepository locRepo, SynchClient sync, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.locRepo = locRepo;
 		this.sync = sync;
+		this.collRepo = collRepo; 
 		//this.sManager = manager;
 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/remove")
 	@Timed
-	public String removeLocation(@QueryParam("userId") String userId,  @QueryParam("locationId") String locationId, @Context HttpServletRequest req) throws Exception{
+	public String removeLocation(@QueryParam("userId") String userId,  @QueryParam("id") String id, @Context HttpServletRequest req) throws Exception{
 
-		if(locationId== null){
-			throw new BadRequestException("no location specified to add");
+		if(id== null){
+			throw new BadRequestException("no id specified to add");
 
 		}
 
@@ -121,24 +143,39 @@ public class LocationSubscriptionResource {
 			throw new BadRequestException("user id required");
 		}
 
-	
+
 		User adding = userRepo.findOneById(userId);
-		
+
 		if(adding == null){
 			throw new NotFoundException("no user found for id");
 		}
+
 		
-		User unsubscribed = unsubscribeFromLocation(adding, locationId);
-		String loc = null; 
-		if(!unsubscribed.getUserLocations().values().contains(locationId)){
-			loc = locationId; 
-		} 
+		KnownLocation loc = locRepo.findOneById(id);
+		MediaCollection coll = null;
+		if(loc == null){
+			coll = collRepo.findOneById(id);
+			
+		}
 		
-		return loc;
+		if(loc != null){
+			User subscribed = unsubscribeFromLocation(adding, loc.get_id());
+			return id;
+		}
+
+		if(coll != null){
+			if(coll.getName().contains("_linked")){
+				throw new BadRequestException("not allowed to sub to linked colls directly"); 
+			}
+			User subscribed = unsubscribeFromCollection(adding, coll);
+			return id;
+		}
+
+		return null;
 
 	}
-	
-	
+
+
 
 	@SuppressWarnings("unused")
 	@POST
@@ -146,10 +183,10 @@ public class LocationSubscriptionResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/add")
 	@Timed
-	public KnownLocation newLocation(@QueryParam("userId") String userId,  @QueryParam("locationId") String locationId,@Context HttpServletRequest req) throws Exception{
+	public String newLocation(@QueryParam("userId") String userId,  @QueryParam("id") String id,@Context HttpServletRequest req) throws Exception{
 
-		if(locationId== null){
-			throw new BadRequestException("no location specified to add");
+		if(id== null){
+			throw new BadRequestException("no id specified to add");
 
 		}
 
@@ -157,20 +194,34 @@ public class LocationSubscriptionResource {
 			throw new BadRequestException("user id required");
 		}
 
-	
+
 		User adding = userRepo.findOneById(userId);
-		
+
 		if(adding == null){
 			throw new NotFoundException("no user found for id");
 		}
-		
-		KnownLocation loc = locRepo.findOneById(locationId);
+
+		KnownLocation loc = locRepo.findOneById(id);
+		MediaCollection coll = null;
 		if(loc == null){
-			throw new NotFoundException("no location found for id: " + locationId);
+			coll = collRepo.findOneById(id);
 		}
-		
-		User subscribed = subscribeToLocation(adding, loc);
-		return loc;
+
+		if(loc == null && coll == null){
+			throw new NotFoundException("no resource found for id: " + id);
+		}
+
+		if(loc != null){
+			User subscribed = subscribeToLocation(adding, loc);
+			return id;
+		}
+
+		if(coll != null){
+			User subscribed = subscribeToCollection(adding, coll);
+			return id;
+		}
+
+		return null;
 
 	}
 

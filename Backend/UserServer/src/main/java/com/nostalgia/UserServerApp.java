@@ -17,7 +17,7 @@ import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.FriendsResource;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
-import com.nostalgia.resource.LocationSubscriptionResource;
+import com.nostalgia.resource.SubscriptionResource;
 import com.nostalgia.resource.MediaCollectionResource;
 import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
@@ -118,7 +118,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo, collRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
-		LocationSubscriptionResource locSubRes = new LocationSubscriptionResource(userRepo, locRepo, sCli);
+		SubscriptionResource locSubRes = new SubscriptionResource(userRepo, locRepo, sCli, collRepo);
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
 

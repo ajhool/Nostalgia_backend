@@ -91,7 +91,7 @@ public class User implements Serializable {
 	private long dateJoined;
 	private long lastSeen;
 
-
+	
 	private Map<String, String> collections; 
 
 	private Set<String> location_channels; 
