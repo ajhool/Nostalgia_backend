@@ -12,8 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
+import com.nostalgia.client.AtomicOpsClient;
 import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
+import com.nostalgia.resource.AtomicOpsResource;
 import com.nostalgia.resource.FriendsResource;
 import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
@@ -110,6 +112,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		MediaCollectionRepository collRepo =this.getCollectionRepo(config, environment);
 	
 		SynchClient sCli = this.createSynchClient(config, environment);
+		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
 		IconService icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		
@@ -121,7 +124,9 @@ public class UserServerApp extends Application<UserAppConfig>{
 		SubscriptionResource locSubRes = new SubscriptionResource(userRepo, locRepo, sCli, collRepo);
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
-
+		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli);
+		
+		environment.jersey().register(aOps);
 		environment.jersey().register(collRes);
 		environment.jersey().register(friendRes);
 		environment.jersey().register(locSubRes); 

@@ -66,6 +66,7 @@ public class Video implements Serializable {
     //these are updated using atomic prepend
     private String upvoteTrackerId;
     private String downvoteTrackerId;
+    private String flagTrackerId; 
 
 	private Point location;
 
@@ -219,5 +220,11 @@ public class Video implements Serializable {
 	}
 	public void setDownvoteTrackerId(String downvoteTrackerId) {
 		this.downvoteTrackerId = downvoteTrackerId;
+	}
+	public String getFlagTrackerId() {
+		return flagTrackerId;
+	}
+	public void setFlagTrackerId(String flagTrackerId) {
+		this.flagTrackerId = flagTrackerId;
 	}
 }

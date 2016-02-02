@@ -1,14 +1,25 @@
 package com.nostalgia.client;
 
 import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.Document;
 import com.couchbase.client.java.document.JsonLongDocument;
 import com.couchbase.client.java.document.LegacyDocument;
+import com.nostalgia.CouchbaseConfig;
 
 public class AtomicOpsClient {
 
 	//todo make atomics bucket
-	private final Bucket bucket; 
+	private final Bucket bucket;
+	private CouchbaseConfig config;
+	private CouchbaseCluster cluster; 
+	
+	public AtomicOpsClient(CouchbaseConfig conf){
+		config = conf;
+		cluster = CouchbaseCluster.create(conf.host);
+		bucket = cluster.openBucket(conf.bucketName, conf.bucketPassword);
+	
+	}
 	
 	public long incrementCounter(String counterId){
 		 JsonLongDocument rv = bucket.counter(counterId, 1, 0);
@@ -21,7 +32,7 @@ public class AtomicOpsClient {
 		 return rv.content();
 	}
 	
-	public boolean addVote(String trackerId, String voterId, long voteTime){
+	public boolean addPrependedItem(String trackerId, String voterId, long voteTime){
 		Document existing = bucket.get(trackerId); 
 		if(existing == null){
 		LegacyDocument initial = LegacyDocument.create(trackerId);
@@ -34,6 +45,8 @@ public class AtomicOpsClient {
 
 		return prepended.id().equals(toPrepend.id());
 	}
+	
+	
 	
 	
 }

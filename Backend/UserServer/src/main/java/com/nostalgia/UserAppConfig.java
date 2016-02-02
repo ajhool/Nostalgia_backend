@@ -76,4 +76,13 @@ public class UserAppConfig extends Configuration{
 	}
 	
 	
+	@Valid
+	@NotNull
+	@JsonProperty("AtomicsCouch")
+	private CouchbaseConfig atomicsServConfig = new  CouchbaseConfig();
+
+	public CouchbaseConfig getAtomicsServerConfig() {
+		return atomicsServConfig;
+	}
+	
 }
