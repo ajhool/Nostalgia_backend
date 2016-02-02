@@ -1,5 +1,6 @@
 package com.nostalgia.resource;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper; 
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
@@ -158,7 +159,7 @@ public class VideoResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/new")
 	@Timed
-	public String addVideoMeta(Video adding, @QueryParam("auto") String auto, @Context HttpServletRequest req) throws Exception{
+	public String addVideoMeta(Video adding, @QueryParam("auto") String auto, @QueryParam("tags") String idTags, @Context HttpServletRequest req) throws Exception{
 
 		//Video adding = om.readValue(addingString, Video.class);
 		if(adding == null){
@@ -167,6 +168,7 @@ public class VideoResource {
 
 		boolean autoAdd = true;
 
+		
 		try {
 			autoAdd = Boolean.parseBoolean(auto);
 		} catch (Exception e){
@@ -198,26 +200,45 @@ public class VideoResource {
 			matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
 		}
 
+		
+		List<MediaCollection> matchingColls = new ArrayList<MediaCollection>();
+		
 		//add in user specified locations 
-		if(adding.getLocations() != null){
-			for(String locId : adding.getLocations()){
+		if(idTags != null){
+			
+			//parse json array
+			List<String> taggedIds = om.readValue(idTags, new TypeReference<List<String>>(){});
+			
+			for(String locId : taggedIds){
 				String channel = locId.substring(0, 8);
 				if(!matchingLocs.containsKey(channel)){
 
 					KnownLocation userSpecified = locRepo.findOneById(locId);
+					if(userSpecified != null){
 					matchingLocs.put(channel, userSpecified);
+					} else {
+						//try to find a media collection
+						MediaCollection userColl = collRepo.findOneById(locId);
+						if(userColl != null){
+							matchingColls.add(userColl); 
+						}
+						
+					}
 				}
 			}
-		} else {
-			adding.setLocations(new ArrayList<String>());
 		}
 
-		adding.getLocations().clear();
-
-		for(KnownLocation locToAdd : matchingLocs.values()){
-			adding.getLocations().add(locToAdd.get_id());
+		
+		//add pointers from all tagged mediacollections
+		for(MediaCollection coll : matchingColls){
+			if(coll.getMatchingVideos().keySet().contains(adding.get_id())){
+				continue;
+			}
+			
+			coll.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis())); 
+			collRepo.save(coll); 
+			
 		}
-
 
 		switch(sharing){
 

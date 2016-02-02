@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
@@ -145,7 +146,7 @@ public class VideoAdder {
 			String tagAns = scanner.nextLine();
 
 			if(tagAns.contains("y") || tagAns.contains("Y")){
-				tagVideoWithLocations(toAdd, scanner);
+				//tagVideoWithLocations(toAdd, scanner);
 			} else {
 				System.out.println("Not tagging with any locations");
 			}
@@ -161,7 +162,7 @@ public class VideoAdder {
 
 
 			System.out.println("Beginning video upload");
-			VideoUploadTask task = new VideoUploadTask(saved.getAbsolutePath(), toAdd);
+			VideoUploadTask task = new VideoUploadTask(saved.getAbsolutePath(), toAdd, null, true);
 			task.start();
 			task.join();
 
@@ -185,59 +186,59 @@ public class VideoAdder {
 
 	}
 
-	private static void tagVideoWithLocations(Video toAdd, Scanner scanner) {
-		System.out.println("initing db connection...");
-		setupDB();
-		System.out.println("Done. Querying for locations...");
-
-		ViewQuery query = ViewQuery.from("location_standard", "by_name");//.stale(Stale.FALSE);
-		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
-		if(!result.success()){
-			String error = result.error().toString();
-			System.err.println("error from view query:" + error);
-		}
-
-
-		ArrayList<JsonDocument> locs = new ArrayList<JsonDocument>();
-		for (ViewRow row : result) {
-			JsonDocument matching = row.document();
-			if(matching != null)
-				locs.add(JsonDocument.from(matching, row.id()));
-		}
-
-		System.out.println("Locations available: ");
-
-		int index = 0;
-		for(JsonDocument doc : locs){
-			System.out.println(index + ": " + doc.content().getString("name"));
-			index++;
-		}
-
-		System.out.print("enter numbers of locations to tag, seperated by a space: ");
-
-		String tags = scanner.nextLine();
-
-		String[] ints = tags.split("\\s+");
-
-		for(String intStr : ints){
-			JsonDocument toAddLoc = locs.get(Integer.parseInt(intStr));
-			if(toAdd.getLocations() == null){
-				toAdd.setLocations(new ArrayList<String>());
-			}
-
-			if(!toAdd.getLocations().contains(toAddLoc.id())){
-				toAdd.getLocations().add(toAddLoc.id());
-			}
-		}
-
-		System.out.println("Video tagged with locations: " );
-
-		for(String locStr : toAdd.getLocations()){
-			System.out.println(locStr);
-		}
-
-
-	}
+//	private static List<String> tagVideoWithLocations(Video toAdd, Scanner scanner) {
+//		System.out.println("initing db connection...");
+//		setupDB();
+//		System.out.println("Done. Querying for locations...");
+//
+//		ViewQuery query = ViewQuery.from("location_standard", "by_name");//.stale(Stale.FALSE);
+//		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+//		if(!result.success()){
+//			String error = result.error().toString();
+//			System.err.println("error from view query:" + error);
+//		}
+//
+//
+//		ArrayList<JsonDocument> locs = new ArrayList<JsonDocument>();
+//		for (ViewRow row : result) {
+//			JsonDocument matching = row.document();
+//			if(matching != null)
+//				locs.add(JsonDocument.from(matching, row.id()));
+//		}
+//
+//		System.out.println("Locations available: ");
+//
+//		int index = 0;
+//		for(JsonDocument doc : locs){
+//			System.out.println(index + ": " + doc.content().getString("name"));
+//			index++;
+//		}
+//
+//		System.out.print("enter numbers of locations to tag, seperated by a space: ");
+//
+//		String tags = scanner.nextLine();
+//
+//		String[] ints = tags.split("\\s+");
+//
+//		for(String intStr : ints){
+//			JsonDocument toAddLoc = locs.get(Integer.parseInt(intStr));
+//			if(toAdd.getLocations() == null){
+//				toAdd.setLocations(new ArrayList<String>());
+//			}
+//
+//			if(!toAdd.getLocations().contains(toAddLoc.id())){
+//				toAdd.getLocations().add(toAddLoc.id());
+//			}
+//		}
+//
+//		System.out.println("Video tagged with locations: " );
+//
+//		for(String locStr : toAdd.getLocations()){
+//			System.out.println(locStr);
+//		}
+//
+//
+//	}
 	
 	final static ObjectMapper mapper = new ObjectMapper();
 	static{
@@ -257,8 +258,6 @@ public class VideoAdder {
 
 		Video example = new Video();
 		example.set_id("example_id");
-		example.setLoads(14);
-		example.setSkips(12);
 		Point examplePoint = new Point(35.9999999, -79.0096901);
 		example.setLocation(examplePoint);
 		example.setUrl("<filled serverside>");

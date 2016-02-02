@@ -58,7 +58,8 @@ public class MediaCollection implements Serializable {
     private Set<String> readers;
     private Set<String> writers;
 
-
+    private String upvoteTrackerId;
+    private String downvoteTrackerId;
 
     public MediaCollection(){
         if(channels == null){
@@ -238,5 +239,25 @@ public class MediaCollection implements Serializable {
 
 	public void setVisibility(String visibility) {
 		this.visibility = visibility;
+	}
+
+
+	public String getUpvoteTrackerId() {
+		return upvoteTrackerId;
+	}
+
+
+	public void setUpvoteTrackerId(String upvoteTrackerId) {
+		this.upvoteTrackerId = upvoteTrackerId;
+	}
+
+
+	public String getDownvoteTrackerId() {
+		return downvoteTrackerId;
+	}
+
+
+	public void setDownvoteTrackerId(String downvoteTrackerId) {
+		this.downvoteTrackerId = downvoteTrackerId;
 	}
 }

@@ -56,22 +56,20 @@ public class Video implements Serializable {
 	private long dateCreated;
 	boolean enabled = false;
 
-	public boolean isEnabled() {
-		return enabled;
-	}
+    //ptrs to atomic documents
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-	private int loads;
+    //atomic counters
+	private String favoriteCounterId;
+    private String skipCounterId;
+    private String viewCounterId;
 
-	private int skips;
+    //these are updated using atomic prepend
+    private String upvoteTrackerId;
+    private String downvoteTrackerId;
 
 	private Point location;
 
 	private String url; 
-	
-	private List<String> locations; 
 
 	private Map<String, String> properties;
 
@@ -142,25 +140,15 @@ public class Video implements Serializable {
 	public String getOwnerId() {
 		return ownerId;
 	}
+	public boolean isEnabled() {
+		return enabled;
+	}
 
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 	public void setOwnerId(String ownerId) {
 		this.ownerId = ownerId;
-	}
-
-	public int getLoads() {
-		return loads;
-	}
-
-	public void setLoads(int loads) {
-		this.loads = loads;
-	}
-
-	public int getSkips() {
-		return skips;
-	}
-
-	public void setSkips(int skips) {
-		this.skips = skips;
 	}
 
 	public String getType() {
@@ -195,19 +183,41 @@ public class Video implements Serializable {
 		this.url = url;
 	}
 
-	public List<String> getLocations() {
-		return locations;
-	}
-
-	public void setLocations(List<String> locations) {
-		this.locations = locations;
-	}
-
 	public long getVersionNumber() {
 		return versionNumber;
 	}
 
 	public void setVersionNumber(long versionNumber) {
 		this.versionNumber = versionNumber;
+	}
+	public String getFavoriteCounterId() {
+		return favoriteCounterId;
+	}
+	public void setFavoriteCounterId(String favoriteCounterId) {
+		this.favoriteCounterId = favoriteCounterId;
+	}
+	public String getSkipCounterId() {
+		return skipCounterId;
+	}
+	public void setSkipCounterId(String skipCounterId) {
+		this.skipCounterId = skipCounterId;
+	}
+	public String getViewCounterId() {
+		return viewCounterId;
+	}
+	public void setViewCounterId(String viewCounterId) {
+		this.viewCounterId = viewCounterId;
+	}
+	public String getUpvoteTrackerId() {
+		return upvoteTrackerId;
+	}
+	public void setUpvoteTrackerId(String upvoteTrackerId) {
+		this.upvoteTrackerId = upvoteTrackerId;
+	}
+	public String getDownvoteTrackerId() {
+		return downvoteTrackerId;
+	}
+	public void setDownvoteTrackerId(String downvoteTrackerId) {
+		this.downvoteTrackerId = downvoteTrackerId;
 	}
 }

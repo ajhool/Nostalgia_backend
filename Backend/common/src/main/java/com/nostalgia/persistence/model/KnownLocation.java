@@ -33,7 +33,11 @@ public class KnownLocation implements Serializable {
 	private String name;
 
 	private String creatorId; 
-
+	
+	
+    //these are updated using atomic prepend
+    private String upvoteTrackerId;
+    private String downvoteTrackerId;
 
 	private Feature location;
 
@@ -186,6 +190,26 @@ public class KnownLocation implements Serializable {
 
 	public void setLocationCollections(Map<String, String> locationCollections) {
 		this.locationCollections = locationCollections;
+	}
+
+
+	public String getUpvoteTrackerId() {
+		return upvoteTrackerId;
+	}
+
+
+	public void setUpvoteTrackerId(String upvoteTrackerId) {
+		this.upvoteTrackerId = upvoteTrackerId;
+	}
+
+
+	public String getDownvoteTrackerId() {
+		return downvoteTrackerId;
+	}
+
+
+	public void setDownvoteTrackerId(String downvoteTrackerId) {
+		this.downvoteTrackerId = downvoteTrackerId;
 	}
 
 
