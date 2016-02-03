@@ -124,7 +124,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		SubscriptionResource locSubRes = new SubscriptionResource(userRepo, locRepo, sCli, collRepo);
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
-		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli);
+		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli,  collRepo, vidRepo,  locRepo);
 		
 		environment.jersey().register(aOps);
 		environment.jersey().register(collRes);

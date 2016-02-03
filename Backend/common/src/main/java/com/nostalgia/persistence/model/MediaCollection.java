@@ -58,8 +58,8 @@ public class MediaCollection implements Serializable {
     private Set<String> readers;
     private Set<String> writers;
 
-    private String upvoteTrackerId;
-    private String downvoteTrackerId;
+    private String upvoteTrackerId= UUID.randomUUID().toString();
+    private String downvoteTrackerId= UUID.randomUUID().toString();
 
     public MediaCollection(){
         if(channels == null){

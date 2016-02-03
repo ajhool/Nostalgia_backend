@@ -45,6 +45,14 @@ public class AtomicOpsClient {
 
 		return prepended.id().equals(toPrepend.id());
 	}
+
+	public Object getContents(String idOfTracker) {
+		Document doc = bucket.get(idOfTracker);
+		if(doc == null){
+			return null; 
+		}
+		return doc.content();
+	}
 	
 	
 	

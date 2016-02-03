@@ -59,14 +59,14 @@ public class Video implements Serializable {
     //ptrs to atomic documents
 
     //atomic counters
-	private String favoriteCounterId;
-    private String skipCounterId;
-    private String viewCounterId;
+	private String favoriteCounterId= UUID.randomUUID().toString();
+    private String skipCounterId= UUID.randomUUID().toString();
+    private String viewCounterId= UUID.randomUUID().toString();
 
     //these are updated using atomic prepend
-    private String upvoteTrackerId;
-    private String downvoteTrackerId;
-    private String flagTrackerId; 
+    private String upvoteTrackerId= UUID.randomUUID().toString();
+    private String downvoteTrackerId= UUID.randomUUID().toString();
+    private String flagTrackerId= UUID.randomUUID().toString();
 
 	private Point location;
 

@@ -36,8 +36,8 @@ public class KnownLocation implements Serializable {
 	
 	
     //these are updated using atomic prepend
-    private String upvoteTrackerId;
-    private String downvoteTrackerId;
+    private String upvoteTrackerId= UUID.randomUUID().toString();
+    private String downvoteTrackerId= UUID.randomUUID().toString();
 
 	private Feature location;
 

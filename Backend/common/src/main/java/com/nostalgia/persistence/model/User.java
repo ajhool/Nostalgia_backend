@@ -135,7 +135,10 @@ public class User implements Serializable {
 	private List<String> createdLocations;
 
 	private HashSet<String> silentSubscriptions;
-
+	
+	//these are updated using atomic prepend
+    private String upvoteTrackerId = UUID.randomUUID().toString();
+    
 	@JsonIgnore
 	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
 		if( video_channels == null) return null;
@@ -851,6 +854,16 @@ public class User implements Serializable {
 
 		if(existing != null) return true;
 		else return false; 
+	}
+
+
+	public String getUpvoteTrackerId() {
+		return upvoteTrackerId;
+	}
+
+
+	public void setUpvoteTrackerId(String upvoteTrackerId) {
+		this.upvoteTrackerId = upvoteTrackerId;
 	}
 
 }
