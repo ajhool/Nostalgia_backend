@@ -49,8 +49,8 @@ public class UserRepository {
 	DesignDocument userDoc = DesignDocument.create(
 		"user",
 		Arrays.asList(
-			DefaultView.create("all_users",
-				"function (doc, meta) { if (doc.type == 'User') { emit(meta.id, null); } }"),
+			DefaultView.create("by_id",
+				"function (doc, meta) { if (doc.type == 'User') { emit(doc._id, null); } }"),
 			DefaultView.create("by_email",
 				"function (doc, meta) { if (doc.type == 'User') { emit(doc.email, null); } }"),
 			DefaultView.create("by_name",
@@ -132,10 +132,30 @@ public class UserRepository {
 
 
 	public User findOneById(String id) throws Exception {
-		JsonDocument found = bucket.get(id);
-		if(found == null){
+		ViewQuery query = ViewQuery.from("user", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
 			return null;
-		} else return docToUser(found);
+		}
+		
+		ArrayList<User> users = new ArrayList<User>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    users.add(docToUser(matching));
+		}
+
+		if(users.size() > 1){
+			logger.error("TOO MANY USERS MATCHING id");
+		}
+		if(users.size() < 1) return null; 
+		return users.get(0);
 
 	}
 

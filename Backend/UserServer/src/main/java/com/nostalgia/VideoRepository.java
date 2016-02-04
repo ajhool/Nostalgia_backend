@@ -1,6 +1,7 @@
 package com.nostalgia;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +24,15 @@ import com.couchbase.client.java.view.SpatialView;
 import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.SpatialViewResult;
 import com.couchbase.client.java.view.SpatialViewRow;
+import com.couchbase.client.java.view.ViewQuery;
+import com.couchbase.client.java.view.ViewResult;
+import com.couchbase.client.java.view.ViewRow;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.KnownLocation;
+import com.nostalgia.persistence.model.User;
 import com.nostalgia.persistence.model.Video;
 
 import flexjson.JSONDeserializer;
@@ -132,10 +137,30 @@ public class VideoRepository {
 	}
 
 	public Video findOneById(String id) {
-		JsonDocument found = bucket.get(id);
-		if(found == null){
+		ViewQuery query = ViewQuery.from("video_standard", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
 			return null;
-		} else return docToVideo(found);
+		}
+		
+		ArrayList<Video> vids = new ArrayList<Video>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    vids.add(docToVideo(matching));
+		}
+
+		if(vids.size() > 1){
+			logger.error("TOO MANY vids MATCHING id");
+		}
+		if(vids.size() < 1) return null; 
+		return vids.get(0);
 	}
 	public static Video docToVideo(JsonDocument document) {
 		JsonObject obj = document.content();

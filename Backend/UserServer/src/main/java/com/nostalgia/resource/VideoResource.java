@@ -159,7 +159,7 @@ public class VideoResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/new")
 	@Timed
-	public String addVideoMeta(Video adding, @QueryParam("auto") String auto, @QueryParam("tags") String idTags, @Context HttpServletRequest req) throws Exception{
+	public String addVideoMeta(Video adding, @QueryParam("auto") String auto, @Context HttpServletRequest req) throws Exception{
 
 		//Video adding = om.readValue(addingString, Video.class);
 		if(adding == null){
@@ -202,13 +202,19 @@ public class VideoResource {
 
 		
 		List<MediaCollection> matchingColls = new ArrayList<MediaCollection>();
-		
+		List<String> taggedIds = new ArrayList<String>(); 
 		//add in user specified locations 
-		if(idTags != null){
+//		if(idTags != null){
+//			
+//			//parse json array
+//			taggedIds.addAll( (List<String>)om.readValue(idTags, new TypeReference<List<String>>(){}));
+//		} else {
+			//try and get from video itself
+			String rawTagString = adding.getProperties().get("initialTags");
+			List<String> reatTags = om.readValue(rawTagString, new TypeReference<List<String>>(){});
+			taggedIds.addAll( reatTags);
 			
-			//parse json array
-			List<String> taggedIds = om.readValue(idTags, new TypeReference<List<String>>(){});
-			
+	//	}
 			for(String locId : taggedIds){
 				String channel = locId.substring(0, 8);
 				if(!matchingLocs.containsKey(channel)){
@@ -226,7 +232,7 @@ public class VideoResource {
 					}
 				}
 			}
-		}
+		
 
 		
 		//add pointers from all tagged mediacollections

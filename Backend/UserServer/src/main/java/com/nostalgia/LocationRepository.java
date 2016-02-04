@@ -39,10 +39,31 @@ public class LocationRepository {
 		private static final Logger logger = LoggerFactory.getLogger(LocationRepository.class);
 		
 		public KnownLocation findOneById(String id) throws Exception {
-			JsonDocument found = bucket.get(id);
-			if(found == null){
+			ViewQuery query = ViewQuery.from("location_standard", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
+			ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+			if(!result.success()){
+				String error = result.error().toString();
+				logger.error("error from view query:" + error);
+			}
+		
+
+			if (result == null || result.totalRows() < 1){
 				return null;
-			} else return docToLocation(found);
+			}
+			
+			ArrayList<KnownLocation> locs = new ArrayList<KnownLocation>();
+			for (ViewRow row : result) {
+			    JsonDocument matching = row.document();
+			    
+			    locs.add(docToLocation(matching));
+			}
+
+			if(locs.size() > 1){
+				logger.error("TOO MANY locations MATCHING ID");
+			}
+			if(locs.size() < 1) return null; 
+			return locs.get(0);
+
 
 		}
 		
@@ -52,6 +73,8 @@ public class LocationRepository {
 			Arrays.asList(
 				DefaultView.create("by_name",
 					"function (doc, meta) { if (doc.type == 'KnownLocation') { emit(doc.name, null); } }"),
+				DefaultView.create("by_id",
+						"function (doc, meta) { if (doc.type == 'KnownLocation') { emit(doc._id, null); } }"),
 				DefaultView.create("by_channel",
 						"function (doc, meta) { "
 						+ "if (doc.type == 'KnownLocation') { "

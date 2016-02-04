@@ -40,10 +40,30 @@ public class MediaCollectionRepository {
 	private static final Logger logger = LoggerFactory.getLogger(MediaCollectionRepository.class);
 
 	public MediaCollection findOneById(String id) throws Exception {
-		JsonDocument found = bucket.get(id);
-		if(found == null){
+		ViewQuery query = ViewQuery.from("mediaCollection_standard", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
 			return null;
-		} else return docToCollection(found);
+		}
+		
+		ArrayList<MediaCollection> colls = new ArrayList<MediaCollection>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    colls.add(docToCollection(matching));
+		}
+
+		if(colls.size() > 1){
+			logger.error("TOO MANY colls MATCHING ID");
+		}
+		if(colls.size() < 1) return null; 
+		return colls.get(0);
 
 	}
 
@@ -53,6 +73,8 @@ public class MediaCollectionRepository {
 			Arrays.asList(
 					DefaultView.create("by_name",
 							"function (doc, meta) { if (doc.type == 'MediaCollection') { emit(doc.name, null); } }"),
+					DefaultView.create("by_id",
+							"function (doc, meta) { if (doc.type == 'MediaCollection') { emit(doc._id, null); } }"),
 					DefaultView.create("by_channel",
 							"function (doc, meta) { "
 									+ "if (doc.type == 'MediaCollection') { "
