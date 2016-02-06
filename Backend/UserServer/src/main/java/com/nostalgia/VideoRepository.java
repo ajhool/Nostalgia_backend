@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.java.PersistTo;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonArray;
@@ -128,7 +129,7 @@ public class VideoRepository {
 		if(doc.content().get("_id") == null){
 			doc.content().put("_id", adding.get_id());
 		}
-		JsonDocument inserted = bucket.upsert(doc);
+		JsonDocument inserted = bucket.upsert(doc, PersistTo.MASTER);
 		
 		if(inserted.content().getString("_id") == null){
 			throw new Exception("ID FIELD REQUIRED");

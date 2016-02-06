@@ -284,10 +284,10 @@ public class VideoResource {
 				}
 			} else {
 				//set special null location for video
-				matchingLocs = new HashMap<String, KnownLocation>();
-				KnownLocation nullLoc = new KnownLocation();
-				nullLoc.set_id("null_location");
-				matchingLocs.put("null_location", nullLoc);
+//				matchingLocs = new HashMap<String, KnownLocation>();
+//				KnownLocation nullLoc = new KnownLocation();
+//				nullLoc.set_id("null_location");
+//				matchingLocs.put("null_location", nullLoc);
 			}
 
 			for(KnownLocation loc : matchingLocs.values()){
@@ -452,7 +452,14 @@ public class VideoResource {
 			@QueryParam("vidId") String contentKey,
 			@QueryParam("checksum") String checksum) throws Exception{
 
-		Video matching = vidRepo.findOneById(contentKey);
+		Video matching = null;
+		int numTries = 0;
+		
+		while(matching == null && numTries < 10){
+			numTries++;
+			matching = vidRepo.findOneById(contentKey);
+			Thread.sleep(150);
+		}
 
 
 		//Save video
@@ -551,7 +558,7 @@ public class VideoResource {
 
 
 		FileInputStream fis = new FileInputStream(saved);
-		String savedmd5 = DigestUtils.md5Hex(fis);
+		String savedmd5 = new String(DigestUtils.md5Hex(fis));
 		fis.close();
 
 		return savedmd5;
