@@ -21,6 +21,7 @@ import com.nostalgia.contentserver.repository.VideoRepository;
 import com.nostalgia.contentserver.resource.AsyncHLSerResource;
 import com.nostalgia.contentserver.resource.AsyncS3UploadResource;
 import com.nostalgia.contentserver.resource.AsyncThumbnailResource;
+//import com.nostalgia.contentserver.resource.VideoUploadResource;
 
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -89,7 +90,9 @@ public class ContentApplication extends Application<ContentServConfig> {
 		AsyncHLSerResource processor = new AsyncHLSerResource(vidRepo, config.getDataConfig());
 		AsyncThumbnailResource thumbs = new AsyncThumbnailResource(vidRepo, config.getDataConfig());
 		AsyncS3UploadResource s3UL = new AsyncS3UploadResource(vidRepo, new S3Config(), config.getDataConfig());
+		//VideoUploadResource ulRes = new VideoUploadResource(vidRepo); 
 		
+		//environment.jersey().register(ulRes);
 		environment.lifecycle().manage(processor);
 		environment.lifecycle().manage(thumbs);
 		environment.lifecycle().manage(s3UL);

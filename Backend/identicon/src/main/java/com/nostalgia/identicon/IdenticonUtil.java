@@ -1,11 +1,17 @@
 package com.nostalgia.identicon;
 
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.nostalgia.identicon.cache.IdenticonCache;
 
 /**
  * Utility methods useful for implementing identicon functionality. Methods are
@@ -33,6 +39,40 @@ public class IdenticonUtil {
 	private static int inetMask = DEFAULT_INET_MASK;
 
 	private static String inetSalt;
+	private IdenticonRenderer renderer = new NineBlockIdenticonRenderer2();
+
+	private IdenticonCache cache;
+	
+	private int version = 1;
+	
+	private static final String IDENTICON_IMAGE_FORMAT = "PNG";
+
+	private static final String IDENTICON_IMAGE_MIMETYPE = "iicmage/png";
+	
+public byte[] makeIdenticon(String seedData) throws Exception {
+		
+		int code = IdenticonUtil.getIdenticonCode(seedData);
+		int size = 256;
+		
+		String identiconETag = IdenticonUtil.getIdenticonETag(code, size,
+				version);
+
+			byte[] imageBytes = null;
+			// retrieve image bytes from either cache or renderer
+			if (cache == null
+					|| (imageBytes = cache.get(identiconETag)) == null) {
+				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+				RenderedImage image = renderer.render(code, size);
+				ImageIO.write(image, IDENTICON_IMAGE_FORMAT, byteOut);
+				imageBytes = byteOut.toByteArray();
+				if (cache != null) {
+					cache.add(identiconETag, imageBytes);
+				}
+			}
+		
+		return imageBytes;
+	}
+
 
 	/**
 	 * Returns current IP address mask. Default is 0xffffffff.

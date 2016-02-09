@@ -14,6 +14,7 @@ import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.AtomicOpsClient;
 import com.nostalgia.client.IconService;
+import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.AtomicOpsResource;
 import com.nostalgia.resource.FriendsResource;
@@ -25,6 +26,7 @@ import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
 import com.nostalgia.resource.UserResource;
 import com.nostalgia.resource.VideoResource;
+import com.nostalgia.resource.VideoUploadResource;
 
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -115,6 +117,8 @@ public class UserServerApp extends Application<UserAppConfig>{
 		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
 		IconService icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
+		S3UploadClient s3Cli = new S3UploadClient(new S3Config()); 
+		environment.lifecycle().manage(s3Cli);
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
 		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo);
@@ -125,7 +129,9 @@ public class UserServerApp extends Application<UserAppConfig>{
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
 		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli,  collRepo, vidRepo,  locRepo);
+		VideoUploadResource ulRes = new VideoUploadResource(vidRepo, s3Cli);
 		
+		environment.jersey().register(ulRes);
 		environment.jersey().register(aOps);
 		environment.jersey().register(collRes);
 		environment.jersey().register(friendRes);

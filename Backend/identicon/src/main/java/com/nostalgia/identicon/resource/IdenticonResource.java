@@ -43,11 +43,12 @@ import com.nostalgia.persistence.model.icon.IconReply;
 public class IdenticonResource {
 
 
+	IdenticonUtil generator; 
 
 	private static final Logger logger = LoggerFactory.getLogger(IdenticonResource.class);
 
 	public IdenticonResource(IconGeneratorConfig conf) {
-
+		generator = new IdenticonUtil(); 
 	}
 
 	@SuppressWarnings("unused")
@@ -66,7 +67,7 @@ public class IdenticonResource {
 			throw new ForbiddenException();
 		}
 
-		byte[] encodedImg = makeIdenticon(seed);
+		byte[] encodedImg = generator.makeIdenticon(seed);
 
 		reply.setEncodedImage(encodedImg);
 		return reply;
@@ -74,39 +75,9 @@ public class IdenticonResource {
 
 	}
 	
-	private IdenticonRenderer renderer = new NineBlockIdenticonRenderer2();
 
-	private IdenticonCache cache;
 	
-	private int version = 1;
 	
-	private static final String IDENTICON_IMAGE_FORMAT = "PNG";
-
-	private static final String IDENTICON_IMAGE_MIMETYPE = "iicmage/png";
-	
-	private byte[] makeIdenticon(String seedData) throws Exception {
-		
-		int code = IdenticonUtil.getIdenticonCode(seedData);
-		int size = 256;
-		
-		String identiconETag = IdenticonUtil.getIdenticonETag(code, size,
-				version);
-
-			byte[] imageBytes = null;
-			// retrieve image bytes from either cache or renderer
-			if (cache == null
-					|| (imageBytes = cache.get(identiconETag)) == null) {
-				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-				RenderedImage image = renderer.render(code, size);
-				ImageIO.write(image, IDENTICON_IMAGE_FORMAT, byteOut);
-				imageBytes = byteOut.toByteArray();
-				if (cache != null) {
-					cache.add(identiconETag, imageBytes);
-				}
-			}
-		
-		return imageBytes;
-	}
 
 	
 

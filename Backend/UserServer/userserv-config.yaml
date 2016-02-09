@@ -5,12 +5,19 @@ server:
   applicationConnectors:
     - type: http
       port: 10004
-
+      idleTimeout: 120 seconds
+      keyStorePath: webapp.keystore
+      keyStorePassword: webapp_p
   adminContextPath: /admin
   adminConnectors:
     - type: http
       bindHost: 127.0.0.1 # only bind to loopback
       port: 10005
+
+iconSvcConn:
+  iconHost: http://127.0.0.1
+  port: 10001
+  newIconPath: /api/v0/icongen/newicon
 
 UserCouch:
   host: 162.243.234.243
@@ -22,19 +29,32 @@ LocationCouch:
   bucketName: nostalgia
   bucketPassword: nostalgia12
   
-iconSvcConn:
-  iconHost: http://127.0.0.1
-  port: 10001
-  newIconPath: /api/v0/icongen/newicon
   
 VideoCouch:
   host: 162.243.234.243
   bucketName: nostalgia
   bucketPassword: nostalgia12
-  
+
+MediaCollectionCouch:
+  host: 162.243.234.243
+  bucketName: nostalgia
+  bucketPassword: nostalgia12
+
+AtomicsCouch:
+  host: 162.243.234.243
+  bucketName: atomic
+  bucketPassword: at0mics
+
+
 SyncServer:
   host: 162.243.234.243
   port: 4985
+
+jerseyClient:
+  minThreads: 1
+  maxThreads: 128
+  timeout: 1000ms
+  connectionTimeout: 1000ms
 
 # Logging settings.
 logging:
@@ -47,6 +67,8 @@ logging:
 
     # Sets the level for 'com.apmasphere.billproto' to DEBUG.
     com.apmasphere.billproto: DEBUG
+    
+    com.couchbase.client.core: INFO
 
     org.hibernate.SQL: ALL
 

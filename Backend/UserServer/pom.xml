@@ -48,6 +48,11 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+	<groupId>com.nostalgia</groupId>
+	<artifactId>Identicon</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+		<dependency>
 			<groupId>org.cache2k</groupId>
 			<artifactId>cache2k-core</artifactId>
 			<version>0.21.1</version>
