@@ -20,49 +20,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilderException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.glassfish.jersey.client.ClientConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.io.Resources;
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.nostalgia.contentserver.config.DataConfig;
-import com.nostalgia.contentserver.model.dash.jaxb.AdaptationSetType;
-import com.nostalgia.contentserver.model.dash.jaxb.MPDtype;
-import com.nostalgia.contentserver.model.dash.jaxb.RepresentationType;
-import com.nostalgia.contentserver.repository.VideoRepository;
 import com.nostalgia.contentserver.runnable.BaselineTranscoder;
 import com.nostalgia.contentserver.runnable.HLSer;
 import com.nostalgia.contentserver.runnable.MPDMaker;
 import com.nostalgia.contentserver.runnable.PipelineScrubber;
-import com.nostalgia.contentserver.utils.Marshal;
-import com.nostalgia.persistence.model.Video;
-
-import io.dropwizard.lifecycle.Managed;
 
 
 public class AsyncHLSerThread extends Thread {
@@ -91,7 +59,12 @@ public class AsyncHLSerThread extends Thread {
 
 		baselineRunner.start();
 
-		baselineRunner.join();
+		try {
+			baselineRunner.join();
+		} catch (InterruptedException e) {
+			
+			e.printStackTrace();
+		}
 
 
 		ArrayList<String> reses = new ArrayList<String>();
@@ -100,8 +73,18 @@ public class AsyncHLSerThread extends Thread {
 		Thread hlsExec = new Thread(dash);
 		hlsExec.start();
 
-		baselineRunner.join();
-		hlsExec.join();
+		try {
+			baselineRunner.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			hlsExec.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		//delete baseline file, we are done with it
 		FileUtils.deleteQuietly(transcoder.getOutputFile());

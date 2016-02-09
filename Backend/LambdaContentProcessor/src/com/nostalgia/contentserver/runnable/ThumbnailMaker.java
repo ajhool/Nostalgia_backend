@@ -7,20 +7,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.castlabs.dash.dashfragmenter.ExitCodeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nostalgia.contentserver.FFMPEGController;
-import com.nostalgia.contentserver.ShellCallback;
-import com.nostalgia.contentserver.StdoutCallback;
-import com.nostalgia.contentserver.dash.ManualDashFileSet;
-import com.nostalgia.contentserver.resource.AsyncHLSerResource;
+import com.nostalgia.FFMPEGController;
+import com.nostalgia.ShellCallback;
+import com.nostalgia.StdoutCallback;
+
 
 public class ThumbnailMaker implements Runnable{
 
-	public static final Logger logger = LoggerFactory.getLogger(ThumbnailMaker.class);
 	private final File sourceFile;
 	private final File thumbnailParent; 
 	private final ArrayList<File> output = new ArrayList<File>();
@@ -51,14 +45,14 @@ public class ThumbnailMaker implements Runnable{
 		long end = System.currentTimeMillis();
 
 		Duration thisRun = Duration.ofMillis(end -start);
-		logger.info("created thumbnails for video: " + sourceFile.getName() + " in " + thisRun.toString());
+		System.out.println("created thumbnails for video: " + sourceFile.getName() + " in " + thisRun.toString());
 
 		loadCreatedFiles();
 
 
 
 		complete = true;
-		logger.info("baseline transcoder complete, ready for next stage of pipeline");
+		System.out.println("baseline transcoder complete, ready for next stage of pipeline");
 		return;
 	}
 
@@ -70,7 +64,7 @@ public class ThumbnailMaker implements Runnable{
 
 	public ArrayList<File> getOutputFiles(){
 		if(!complete){
-			logger.warn("tried to fetch thumbnails that werent finished yet!");
+			System.out.println("tried to fetch thumbnails that werent finished yet!");
 			return null;
 		}
 
