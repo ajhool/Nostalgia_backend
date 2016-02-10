@@ -34,6 +34,8 @@ public class ContentProcessFunction implements RequestHandler<Object, Object> {
 			System.err.println("Error - can not find file: " + targetFile.getAbsolutePath() + " downloaded from s3 pending folder");
 			return null; 
 		}
+		
+		
 
 
 		//call HLSer

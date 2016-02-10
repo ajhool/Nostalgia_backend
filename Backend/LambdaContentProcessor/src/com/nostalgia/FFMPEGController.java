@@ -2,9 +2,12 @@ package com.nostalgia;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,8 +27,74 @@ import java.util.Locale;
 
 public class FFMPEGController {
 
+	public void installBinaries(boolean overwrite)
+	{
+		String classpath = System.getProperty("java.class.path");
+		String[] classpathEntries = classpath.split(File.pathSeparator);
+        for(String str : classpathEntries){
+        	System.out.println(str);
+        }
+		final URL packagedFFMPEGURL  = getClass().getClassLoader().getResource("/resources/ffmpeg"); 
+		mffmpegBin = installBinary(packagedFFMPEGURL, "ffmpeg", overwrite);
+	}
+
+	public String getBinaryPath ()
+	{
+		return mffmpegBin;
+	}
+
+	private static String installBinary(URL resourceURL, String filename, boolean upgrade) {
+		try {
+			File f = new File(new File("/tmp"), filename);
+
+			boolean exists = false; 
+			if (f.exists()) {
+				exists = true;
+				if(upgrade){
+					f.delete();
+				}
+			}
+
+			if(!exists || upgrade){
+				copyRawFile(resourceURL, f, "0755");
+			}
+			return f.getCanonicalPath();
+		} catch (Exception e) {
+			System.err.println( "installBinary failed: " + e.getLocalizedMessage());
+			return null;
+		}
+	}
+
+	/**
+	 * Copies a raw resource file, given its ID to the given location
+	 * @param ctx context
+	 * @param resid resource id
+	 * @param file destination file
+	 * @param mode file permissions (E.g.: "755")
+	 * @throws IOException on error
+	 * @throws InterruptedException when interrupted
+	 */
+	private static void copyRawFile(URL sourceFileURL, File file, String mode) throws IOException, InterruptedException
+	{
+		final String abspath = file.getAbsolutePath();
+
+		final FileOutputStream out = new FileOutputStream(file);
+		final InputStream is = sourceFileURL.openStream();  
+		byte buf[] = new byte[1024];
+		int len;
+		while ((len = is.read(buf)) > 0) {
+			out.write(buf, 0, len);
+		}
+		out.close();
+		is.close();
+		// Change the permissions
+		Runtime.getRuntime().exec("chmod "+mode+" "+abspath).waitFor();
+	}
+
+
+
 	//public static final String mffmpegBin = "bin/ffmpeg";
-	public static final String mffmpegBin = "ffmpeg";
+	public static String mffmpegBin;
 
 	public class Argument
 	{
@@ -71,7 +140,7 @@ public class FFMPEGController {
 		public static final String STRICT = "-strict";
 		public static final String HLS_OPT_TIME = "-hls_time";
 		public static final String HLS_OPT_LIST_SIZE = "-hls_list_size";
-		
+
 
 	}
 
@@ -89,9 +158,9 @@ public class FFMPEGController {
 		//cmd.add(Argument.DISABLE_AUDIO);
 		cmd.add(Argument.AUDIOCODEC);
 		cmd.add("libfdk_aac");
-		
-//		cmd.add(Argument.STRICT);
-//		cmd.add("experimental");
+
+		//		cmd.add(Argument.STRICT);
+		//		cmd.add("experimental");
 
 		cmd.add(Argument.CHANNELS_AUDIO);
 		cmd.add("2");
@@ -126,13 +195,13 @@ public class FFMPEGController {
 
 		cmd.add(Argument.FORMAT);
 		cmd.add("hls");
-		
+
 		cmd.add(Argument.HLS_OPT_LIST_SIZE);
 		cmd.add("0");
-		
+
 		cmd.add(Argument.SIZE);
 		cmd.add(targetResolution);
-		
+
 		cmd.add( outputParent.getAbsolutePath() + "/" + targetResolution + ".m3u8");
 
 		return cmd;
@@ -296,16 +365,16 @@ public class FFMPEGController {
 
 	public ArrayList<String> generateFFMPEGThumbnailCommand(String vidName, File sourceFile, File thumbnailParent) {
 		//ffmpeg -ss 3 -i sample.mp4 -vf "select=gt(scene\,0.4)" -frames:v 5 -vsync vfr  out%02d.jpg
-		
+
 		ArrayList<String> cmd = new ArrayList<String>();
 
 		cmd.add(mffmpegBin);
-	
+
 		cmd.add(Argument.ENABLE_OUTFILE_OVERWRITE);
 
 		//add streaming input
 		cmd.add(Argument.FILE_INPUT);
-		
+
 
 		cmd.add(sourceFile.getName());
 

@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.parsers.ParserConfigurationException;
 
-
+import org.apache.commons.io.FileUtils;
 import org.xml.sax.SAXException;
 
 import com.amazonaws.AmazonClientException;
@@ -79,7 +79,9 @@ public class S3UlDlClient {
 	}
 
 	public File getDirFromPending(String dirName, File parentDirToSaveIn){
-
+		File saved = new File(parentDirToSaveIn, dirName); 
+		if(saved.exists()) return saved; 
+		
 		MultipleFileDownload myDownload = tx.downloadDirectory(bucketName, config.parentPendingFolder+ "/" + dirName , parentDirToSaveIn);
 
 		
@@ -91,7 +93,15 @@ public class S3UlDlClient {
 
 		}
 		
-		File saved = new File(parentDirToSaveIn, dirName); 
+		File rawSaved = new File(parentDirToSaveIn, "pending/" + dirName); 
+		
+		
+		try {
+			FileUtils.moveDirectory(rawSaved, saved);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		if(!saved.exists()){
 			System.err.println("dir not saved in: " + saved.getAbsolutePath());

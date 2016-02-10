@@ -7,6 +7,10 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 
+import com.nostalgia.FFMPEGController;
+import com.nostalgia.ShellCallback;
+import com.nostalgia.StdoutCallback;
+
 public class BaselineTranscoder implements Runnable{
 
 	private final File sourceFile;
@@ -47,14 +51,14 @@ public class BaselineTranscoder implements Runnable{
 		long end = System.currentTimeMillis();
 
 		Duration thisRun = Duration.ofMillis(end -start);
-		logger.info("baseline for for file: " + this.output.getName() + " took " + thisRun.toString() + " to encode");
+		System.out.println("baseline for for file: " + this.output.getName() + " took " + thisRun.toString() + " to encode");
 
 
 
 
 
 		complete = true;
-		logger.info("baseline transcoder complete, ready for next stage of pipeline");
+		System.out.println("baseline transcoder complete, ready for next stage of pipeline");
 		return;
 	}
 
@@ -66,7 +70,7 @@ public class BaselineTranscoder implements Runnable{
 
 	public File getOutputFile(){
 		if(!complete){
-			logger.warn("tried to fetch transcoded file that wasn't finished yet!");
+			System.out.println("tried to fetch transcoded file that wasn't finished yet!");
 			return null;
 		}
 
@@ -76,6 +80,12 @@ public class BaselineTranscoder implements Runnable{
 	private File baselineEncodeWithFFMPEG() {
 		FFMPEGController controller = new FFMPEGController();
 
+		File ffmpegBin = new File("/tmp/ffmpeg");
+		if(!ffmpegBin.exists()){
+			System.out.println("no binaries found, installing...");
+			controller.installBinaries(true);
+		}
+		
 		ArrayList<String> cmds = controller.generateFFMPEGBaselineCommand(sourceFile, output);
 
 		ShellCallback sc = null;

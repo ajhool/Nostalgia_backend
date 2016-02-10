@@ -17,14 +17,14 @@ public class ContentProcessFunctionTest {
     @BeforeClass
     public static void createInput() throws IOException {
         // TODO: set up your sample input object here.
-        input = null;
+        input = "3caa568c-be73-4f17-a589-6c6365d127bb";
     }
 
     private Context createContext() {
         TestContext ctx = new TestContext();
 
         // TODO: customize your context here if needed.
-        ctx.setFunctionName("Your Function Name");
+        ctx.setFunctionName("ContentProcessFunction");
 
         return ctx;
     }

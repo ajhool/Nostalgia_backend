@@ -8,6 +8,10 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import com.nostalgia.FFMPEGController;
+import com.nostalgia.ShellCallback;
+import com.nostalgia.StdoutCallback;
+
 
 public class HLSer implements Runnable{
 
@@ -59,18 +63,18 @@ public class HLSer implements Runnable{
 			String fullpath = existing.getAbsolutePath();
 			boolean exists = existing.exists();
 			if(!exists){
-				logger.info("File: " + existing.getPath() + " does not exist, encoding...");
+				System.out.println("File: " + existing.getPath() + " does not exist, encoding...");
 				File encoded = this.encodeWithFFMPEG(resolution, sourceFile);
 				encodedFiles.add(encoded);
 			} else {
 				encodedFiles.add(existing);
-				logger.info("File: " + existing.getPath() + "exists. Skipping encoding");
+				System.out.println("File: " + existing.getPath() + "exists. Skipping encoding");
 			}
 
 			long end = System.currentTimeMillis();
 
 			Duration thisRun = Duration.ofMillis(end -start);
-			logger.info("File for representation: " + resolution + " took " + thisRun.toString() + " to encode to pre-dashing birate");
+			System.out.println("File for representation: " + resolution + " took " + thisRun.toString() + " to encode to pre-dashing birate");
 
 		}
 
@@ -90,9 +94,9 @@ public class HLSer implements Runnable{
 		//			e.printStackTrace();
 		//		}
 		complete = true;
-		logger.info("dashing complete. Representations dashed:" );
+		System.out.println("dashing complete. Representations dashed:" );
 		for(String rep : targets){
-			logger.info(rep);
+			System.out.println(rep);
 		}
 
 		return;
@@ -106,7 +110,12 @@ public class HLSer implements Runnable{
 	//size looks like: 320x180
 	private synchronized File encodeWithFFMPEG(String size, File sourceFile2) {
 		FFMPEGController controller = new FFMPEGController();
-
+		File ffmpegBin = new File("/tmp/ffmpeg");
+		if(!ffmpegBin.exists()){
+			System.out.println("no binaries found, installing...");
+			controller.installBinaries(true);
+		}
+		
 		ArrayList<String> cmds = controller.generateFFMPEGCommand(size, sourceFile2, output);
 
 		ShellCallback sc = null;
