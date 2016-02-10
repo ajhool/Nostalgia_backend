@@ -9,15 +9,18 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nostalgia.persistence.model.ProcessContentRequestPojo;
+import com.nostalgia.persistence.model.ProcessContentResponsePojo;
 
-public class ContentProcessFunction implements RequestHandler<Object, Object> {
+public class ContentProcessFunction implements RequestHandler<ProcessContentRequestPojo, ProcessContentResponsePojo> {
 
 	@Override
-	public Object handleRequest(Object input, Context context) {
+	public ProcessContentResponsePojo handleRequest(ProcessContentRequestPojo input, Context context) {
 		long start = System.currentTimeMillis(); 
 		context.getLogger().log("Input: " + input);
 
-		String contentId = input.toString(); 
+		
+		String contentId = input.id;  
 		S3UlDlClient s3Cli = null;
 		File parentSaveDir = new File("/tmp");
 		ObjectMapper mapper = new ObjectMapper(); 
@@ -27,6 +30,10 @@ public class ContentProcessFunction implements RequestHandler<Object, Object> {
 			System.err.println("failed instantiation of s3 client\n" + e);
 		} 
 
+		FFMPEGController installer = new FFMPEGController();
+
+		installer.installBinaries(false);
+		
 		//get corresponding file from pending folder
 		File tempDir = s3Cli.getDirFromPending(contentId, parentSaveDir); 
 		File targetFile = new File(tempDir, contentId);
@@ -74,7 +81,12 @@ public class ContentProcessFunction implements RequestHandler<Object, Object> {
 		}
 		System.out.println("Created thumbs being returned to caller :\n" + retVal);
 		System.out.println("function measured executon time as: " + ((double)(System.currentTimeMillis() - start) / (double) 1000) + "seconds");
-		return retVal; 
+		
+		ProcessContentResponsePojo resp = new ProcessContentResponsePojo();
+		resp.generated_files = createdThumbs;
+		
+		
+		return resp; 
 	}
 
 }

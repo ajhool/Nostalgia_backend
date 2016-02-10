@@ -6,6 +6,7 @@ import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
 import javax.ws.rs.client.Client;
 
+import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.AtomicOpsClient;
 import com.nostalgia.client.IconService;
+import com.nostalgia.client.LambdaClient;
 import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.resource.AtomicOpsResource;
@@ -29,6 +31,7 @@ import com.nostalgia.resource.VideoResource;
 import com.nostalgia.resource.VideoUploadResource;
 
 import io.dropwizard.Application;
+import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -102,6 +105,14 @@ public class UserServerApp extends Application<UserAppConfig>{
 		SynchClient comms = new SynchClient(config.getSyncConfig(), jClient);
 
 		return comms;
+	}
+	
+	public LambdaClient createLambdaClient(UserAppConfig config, Environment environment) throws Exception{
+		logger.info("creating aws lambda client...");
+		final HttpClient httpClient = new HttpClientBuilder(environment).using(config.getHttpClientConfiguration()).build("lambda-client");
+		LambdaClient lCli = new LambdaClient(new LambdaAPIConfig(), httpClient);
+
+		return lCli;
 	}
 
 	@Override

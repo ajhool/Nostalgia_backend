@@ -110,7 +110,7 @@ public class HLSer implements Runnable{
 	//size looks like: 320x180
 	private synchronized File encodeWithFFMPEG(String size, File sourceFile2) {
 		FFMPEGController controller = new FFMPEGController();
-		controller.installBinaries(false);
+		//controller.installBinaries(false);
 		ArrayList<String> cmds = controller.generateFFMPEGCommand(size, sourceFile2, output);
 
 		ShellCallback sc = null;
@@ -123,12 +123,10 @@ public class HLSer implements Runnable{
 
 		try {
 			int exit = controller.execProcess(cmds, sc, sourceFile.getParentFile());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e){
+			System.err.println("error in hlser: " + e);
+			System.err.println("quitting to save $$...");
+			System.exit(1);
 		}
 		return new File(output, size + ".m3u8");
 	}

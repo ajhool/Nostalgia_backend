@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.dropwizard.Configuration;
+import io.dropwizard.client.HttpClientConfiguration;
 import io.dropwizard.client.JerseyClientConfiguration;
 
 public class UserAppConfig extends Configuration{
@@ -84,5 +85,15 @@ public class UserAppConfig extends Configuration{
 	public CouchbaseConfig getAtomicsServerConfig() {
 		return atomicsServConfig;
 	}
+
+	@Valid
+    @NotNull
+    private HttpClientConfiguration httpClient = new HttpClientConfiguration();
+
+    @JsonProperty("httpClient")
+    public HttpClientConfiguration getHttpClientConfiguration() {
+        return httpClient;
+    }
+
 	
 }

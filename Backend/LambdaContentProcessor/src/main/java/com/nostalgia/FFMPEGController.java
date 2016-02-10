@@ -78,7 +78,7 @@ public class FFMPEGController {
 			}
 
 			if(!exists || upgrade){
-				copyRawFile(resourceURL, f, "0755");
+				copyRawFile(resourceURL, f, "555");
 			}
 			return f.getCanonicalPath();
 		} catch (Exception e) {
@@ -254,7 +254,10 @@ public class FFMPEGController {
 		//	}
 
 		ProcessBuilder pb = new ProcessBuilder(cmds);
+		
 		pb.directory(fileExec);
+		System.out.println("path to ffmpeg: " + mffmpegBin);
+		System.out.println("file working directory: " + pb.directory().getAbsolutePath());
 
 		StringBuffer cmdlog = new StringBuffer();
 
@@ -267,7 +270,7 @@ public class FFMPEGController {
 		sc.shellOut(cmdlog.toString());
 
 		Map<String, String> env = pb.environment();
-		env.put("LD_LIBRARY_PATH", "/tmp/lib");
+//		env.put("FFREPORT", "file=/tmp/ffmpeg-.log");
 		//pb.redirectErrorStream(true);
 
 		Process process = pb.start();    

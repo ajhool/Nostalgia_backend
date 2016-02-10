@@ -80,7 +80,7 @@ public class BaselineTranscoder implements Runnable{
 	private File baselineEncodeWithFFMPEG() {
 		FFMPEGController controller = new FFMPEGController();
 
-		controller.installBinaries(false);
+		//controller.installBinaries(false);
 		
 		
 		ArrayList<String> cmds = controller.generateFFMPEGBaselineCommand(sourceFile, output);
@@ -95,13 +95,11 @@ public class BaselineTranscoder implements Runnable{
 
 		try {
 			int exit = controller.execProcess(cmds, sc, sourceFile.getParentFile());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (Exception e) {
+			System.err.println("error in baseline transcode: " + e);
+			System.err.println("quitting to save $$...");
+			System.exit(1);
+		} 
 		return output;
 	}
 

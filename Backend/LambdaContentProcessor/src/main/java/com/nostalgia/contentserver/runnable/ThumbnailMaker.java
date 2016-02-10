@@ -89,7 +89,7 @@ public class ThumbnailMaker implements Runnable{
 
 	private void makeThumbnailsWithFFMPEG(String vidId) {
 		FFMPEGController controller = new FFMPEGController();
-		controller.installBinaries(false);
+		//controller.installBinaries(false);
 		ArrayList<String> cmds = controller.generateFFMPEGThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
 
 		ShellCallback sc = null;
@@ -102,12 +102,10 @@ public class ThumbnailMaker implements Runnable{
 
 		try {
 			int exit = controller.execProcess(cmds, sc, sourceFile.getParentFile());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e){
+			System.err.println("error in thumb maker: " + e);
+			System.err.println("quitting to save $$...");
+			System.exit(1);
 		}
 		
 		
