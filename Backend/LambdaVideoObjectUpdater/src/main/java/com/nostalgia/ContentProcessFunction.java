@@ -70,12 +70,12 @@ public class ContentProcessFunction implements RequestHandler<ProcessContentRequ
 
 		ArrayList<String> createdThumbs = thumbnailer.getThumbs();
 
-		VideoTranscodedCallbackThread updatr = new VideoTranscodedCallbackThread(createdThumbs, contentId + "/320x180.m3u8", contentId); 
-		
+		VideoObjectUpdaterThread updatr = new VideoObjectUpdaterThread(createdThumbs, contentId + "/320x180.m3u8", contentId); 
+		updatr.start();
 		//upload to data folder
 		s3Cli.uploadDirToData(tempDir); 
 		
-		updatr.start();
+
 		//on successful upload, delete corresponding folder in pending
 		s3Cli.deletePendingFile(contentId); 
 
