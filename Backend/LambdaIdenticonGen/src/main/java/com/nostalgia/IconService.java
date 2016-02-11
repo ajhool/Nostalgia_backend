@@ -1,4 +1,4 @@
-package com.nostalgia.client;
+package com.nostalgia;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,13 +23,13 @@ import com.nostalgia.persistence.model.icon.IconReply;
 public class IconService {
 
 	private final IconServiceConfig conf;
-	private final Client icComm; 
+
 	private static final ObjectMapper mapper = new ObjectMapper();
 	IdenticonUtil generator = new IdenticonUtil();
 	
-	public IconService(IconServiceConfig conf, Client icClient){
+	public IconService(IconServiceConfig conf){
 		this.conf = conf;
-		this.icComm = icClient;
+	
 	}
 	
 	private static Logger logger = LoggerFactory.getLogger(IconService.class);

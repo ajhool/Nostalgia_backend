@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.AtomicOpsClient;
-import com.nostalgia.client.IconService;
+import com.nostalgia.client.IconClient;
 import com.nostalgia.client.LambdaClient;
 import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.client.SynchClient;
@@ -88,14 +88,17 @@ public class UserServerApp extends Application<UserAppConfig>{
 	}
 
 
-	public IconService getIconService(UserAppConfig config, Environment environment){
+	public IconClient getIconService(UserAppConfig config, Environment environment){
 		logger.info("creating icon server client...");
-		final Client jClient = new JerseyClientBuilder(environment).using(
-				config.getJerseyClientConfiguration()).build("Icon Client");
+		final HttpClient httpClient = new HttpClientBuilder(environment).using(config.getHttpClientConfiguration()).build("icon-client");
+		IconClient iCli = null;
+		try {
+			iCli = new IconClient(new LambdaAPIConfig(), httpClient);
+		} catch (Exception e) {
+			logger.error("ERROR creating icon client", e);
+		}
 
-		IconService icSvc = new IconService(config.getIconServiceConfig(), jClient);
-
-		return icSvc;
+		return iCli;
 	}
 	
 	public SynchClient createSynchClient(UserAppConfig config, Environment environment){
@@ -126,7 +129,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 	
 		SynchClient sCli = this.createSynchClient(config, environment);
 		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
-		IconService icSvc = this.getIconService(config, environment);
+		IconClient icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		S3UploadClient s3Cli = new S3UploadClient(new S3Config()); 
 		environment.lifecycle().manage(s3Cli);

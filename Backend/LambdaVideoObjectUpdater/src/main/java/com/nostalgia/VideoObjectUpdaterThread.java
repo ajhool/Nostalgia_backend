@@ -29,8 +29,6 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nostalgia.contentserver.runnable.BaselineTranscoder;
-import com.nostalgia.contentserver.runnable.HLSer;
 import com.nostalgia.persistence.model.Video;
 
 
@@ -39,7 +37,8 @@ public class VideoObjectUpdaterThread extends Thread {
 	private static final String CDN_PREFIX = "https://d1natzk16yc4os.cloudfront.net/";
 	private final List<String> thumbsSuffix;
 	private final String mpdSuffix;
-	private String vidId; 
+	private String vidId;
+	private String status = "FAILURE"; 
 
 	public VideoObjectUpdaterThread(List<String>thumbsSuffix, String mpdSuffix, String vidId) {
 		super();
@@ -101,9 +100,14 @@ public class VideoObjectUpdaterThread extends Thread {
 		
 			e.printStackTrace();
 		}
-		
+		status = "SUCCESS";
 		return; 
 
+	}
+
+
+	public String getStatus() {
+		return status; 
 	}
 
 

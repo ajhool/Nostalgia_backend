@@ -32,7 +32,6 @@ import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
-import com.nostalgia.client.IconService;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;

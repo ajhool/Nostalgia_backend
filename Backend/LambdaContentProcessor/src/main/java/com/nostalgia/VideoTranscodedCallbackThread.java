@@ -66,6 +66,7 @@ public class VideoTranscodedCallbackThread extends Thread {
     	VideoTranscodeCallbackPojo pojo = new VideoTranscodeCallbackPojo();
     	pojo.thumbSuffix = thumbsSuffix;
     	pojo.urlSuffix = mpdSuffix;
+    	pojo.targetId = vidId; 
     	
     	boolean success = false; 
     	try {

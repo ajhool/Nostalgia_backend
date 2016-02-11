@@ -48,7 +48,7 @@ import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
-import com.nostalgia.client.IconService;
+import com.nostalgia.client.IconClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
@@ -87,16 +87,16 @@ public class UserResource {
 
 	private SynchClient syncClient;
 	private UserLocationResource userLocRes;
-	private final IconService icSvc; 
+	private final IconClient icCli; 
 	private final SignedCookieCreator creator;
 	private final MediaCollectionRepository collRepo; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconService icSvc, SignedCookieCreator create, MediaCollectionRepository collRepo) {
+	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
-		this.icSvc = icSvc;
+		this.icCli = icCli;
 		this.creator = create;
 		this.collRepo = collRepo;
 	}
@@ -510,7 +510,7 @@ public class UserResource {
 		if(loggedInUser.getIcon() == null){
 			String image = null;
 			try {
-				image = icSvc.getBase64Icon(loggedInUser.getName());
+				image = icCli.getIcon(loggedInUser.getName());
 			} catch (Exception e){
 				logger.error("error getting icon", e);
 			}

@@ -14,5 +14,7 @@ public class VideoTranscodeCallbackPojo implements Serializable{
 	public List<String> thumbSuffix; 
 	
 	public String urlSuffix; 
+	
+	public String targetId; 
 
 }

@@ -38,7 +38,7 @@ public class ContentProcessFunctionTest {
 
     @Test
     public void testContentProcessFunction() throws Exception {
-        VideoUpdateFunction handler = new VideoUpdateFunction();
+        IdenticonGenFunction handler = new IdenticonGenFunction();
         Context ctx = createContext();
 
 //        Object output = handler.handleRequest(input, ctx);
