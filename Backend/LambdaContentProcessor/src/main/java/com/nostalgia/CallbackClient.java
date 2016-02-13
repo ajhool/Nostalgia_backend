@@ -56,7 +56,7 @@ import com.nostalgia.persistence.model.VideoTranscodeCallbackPojo;
 
 public class CallbackClient {
 
-	String URL = "https://d215uwglt7.execute-api.us-east-1.amazonaws.com/prod/LambdaContentProcessor"; 
+	String URL = "https://d215uwglt7.execute-api.us-east-1.amazonaws.com/prod/LambdaVideoObjectUpdater"; 
 	final private String lambdaAPIKey = "04kxnTSFC12GyeGZAma6J3dLdzHfXEZ57YEpp6dJ";
 	private static final ObjectMapper mapper = new ObjectMapper(); 
 	

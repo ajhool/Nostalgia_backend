@@ -26,9 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.nostalgia.VideoRepository;
+import com.nostalgia.client.LambdaClient;
 import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.persistence.model.Video;
-
+@Path("/api/v0/video/upload")
 public class VideoUploadResource {
 	
 	@Context HttpServletResponse resp; 
@@ -39,9 +40,12 @@ public class VideoUploadResource {
 	private final VideoRepository vidRepo;
 
 	private final S3UploadClient s3Cli;
+
+	private final LambdaClient lCli;
 	
-	public VideoUploadResource(VideoRepository vidRepo, S3UploadClient s3Cli) {
+	public VideoUploadResource(VideoRepository vidRepo, S3UploadClient s3Cli, LambdaClient lCli) {
 		this.vidRepo = vidRepo;
+		this.lCli = lCli; 
 		this.s3Cli = s3Cli; 
 
 	}
@@ -151,8 +155,25 @@ public class VideoUploadResource {
 			}
 
 			matching.setStatus("PENDING_PROCESSING");
-
+			boolean isNative = false;
+			String source = matching.getProperties().get("vidsource");
+			if(source != null && source.equalsIgnoreCase("NATIVE")){
+				isNative = true;
+			}
+			
+			if(source == null){
+				matching.getProperties().put("vidsource", "NOT_SPECIFIED"); 
+			}
+			
 			vidRepo.save(matching);
+			//start the transcoding process
+			logger.info("firing transcode request off to content processor");
+			
+			
+			
+			
+			lCli.processVideo(matching.get_id(), isNative);
+			
 			return Response.ok("Upload successful").build();
 
 		}

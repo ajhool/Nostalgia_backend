@@ -10,13 +10,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.nostalgia.client.LambdaClient;
 import com.nostalgia.persistence.model.ProcessContentRequestPojo;
 
 /**
  * A simple test harness for locally invoking your Lambda function handler.
  */
-public class ContentProcessFunctionTest {
+public class IdenticonGenTest {
 
     private static ProcessContentRequestPojo input;
 

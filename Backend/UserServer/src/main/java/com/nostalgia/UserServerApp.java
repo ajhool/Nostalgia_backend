@@ -132,6 +132,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		IconClient icSvc = this.getIconService(config, environment);
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		S3UploadClient s3Cli = new S3UploadClient(new S3Config()); 
+		LambdaClient lCli = this.createLambdaClient(config, environment); 
 		environment.lifecycle().manage(s3Cli);
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
@@ -143,7 +144,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		FriendsResource friendRes = new FriendsResource(userRepo, sCli);
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
 		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli,  collRepo, vidRepo,  locRepo);
-		VideoUploadResource ulRes = new VideoUploadResource(vidRepo, s3Cli);
+		VideoUploadResource ulRes = new VideoUploadResource(vidRepo, s3Cli, lCli);
 		
 		environment.jersey().register(ulRes);
 		environment.jersey().register(aOps);

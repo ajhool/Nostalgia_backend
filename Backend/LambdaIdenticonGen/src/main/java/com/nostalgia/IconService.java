@@ -4,16 +4,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.UriBuilder;
+
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+
 import com.nostalgia.IconServiceConfig;
 import com.nostalgia.identicon.IdenticonUtil;
 import com.nostalgia.persistence.model.icon.IconReply;
@@ -31,8 +28,6 @@ public class IconService {
 		this.conf = conf;
 	
 	}
-	
-	private static Logger logger = LoggerFactory.getLogger(IconService.class);
 	
 	
 	

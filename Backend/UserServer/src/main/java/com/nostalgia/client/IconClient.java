@@ -100,7 +100,7 @@ public class IconClient {
 	}
 
 	public String getIcon(String seedVal) throws Exception {
-		String URL = "https://d215uwglt7.execute-api.us-east-1.amazonaws.com/prod/LambdaContentProcessor"; 
+		String URL = "https://d215uwglt7.execute-api.us-east-1.amazonaws.com/prod/LambdaIdenticonGen"; 
 		IdenticonResult respObj = null; 
 		HttpPost httpPost = null;
 

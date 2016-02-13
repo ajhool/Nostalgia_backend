@@ -93,7 +93,7 @@ public class S3UploadClient implements Managed {
 
 		this.config = s3Config; 
 		
-		createAmazonS3Bucket();
+		
 	}
 
 	private void createAmazonS3Bucket() {
@@ -109,7 +109,7 @@ public class S3UploadClient implements Managed {
 	@Override
 	public void start() throws Exception {
 		tx = new TransferManager(credentials);
-
+		createAmazonS3Bucket();
 	}
 
 	@Override

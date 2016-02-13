@@ -10,7 +10,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.nostalgia.client.LambdaClient;
 import com.nostalgia.persistence.model.ProcessContentRequestPojo;
 
 /**
