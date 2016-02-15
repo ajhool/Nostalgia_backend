@@ -78,9 +78,10 @@ public class UserAppConfig extends Configuration{
 
 	@Valid
     @NotNull
+    @JsonProperty("httpClient")
     private HttpClientConfiguration httpClient = new HttpClientConfiguration();
 
-    @JsonProperty("httpClient")
+   
     public HttpClientConfiguration getHttpClientConfiguration() {
         return httpClient;
     }

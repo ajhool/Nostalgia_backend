@@ -4,15 +4,16 @@ package com.nostalgia.persistence.model;
 import java.io.Serializable;
 
 import org.geojson.GeoJsonObject;
+import org.geojson.Point;
 
 /**
  * Created by alex on 11/8/15.
  */
 public class LocationUpdate implements Serializable {
-    private GeoJsonObject location;
+    private Point location;
     private String userId;
 
-    public LocationUpdate( GeoJsonObject location, String userId) {
+    public LocationUpdate( Point location, String userId) {
         this.location = location;
         this.userId = userId;
     }
@@ -20,11 +21,11 @@ public class LocationUpdate implements Serializable {
     public LocationUpdate(){}
 
 
-    public  GeoJsonObject getLocation() {
+    public  Point getLocation() {
         return location;
     }
 
-    public void setLocation( GeoJsonObject location) {
+    public void setLocation( Point location) {
         this.location = location;
     }
 

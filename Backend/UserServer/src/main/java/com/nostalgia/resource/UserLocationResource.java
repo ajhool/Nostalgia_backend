@@ -96,7 +96,7 @@ private final SynchClient sync;
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/update")
 	@Timed
-	public void userLocationUpdate(Point newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
+	public void userLocationUpdate(LocationUpdate newLoc, @QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
 
 		if(newLoc == null){
 			throw new BadRequestException();
@@ -105,7 +105,7 @@ private final SynchClient sync;
 		User matching = userRepo.findOneById(userId);
 		if(matching == null) return;
 
-		matching.setLastKnownLoc(newLoc);
+		matching.setLastKnownLoc(newLoc.getLocation());
 		matching.setLastLocationUpdate(System.currentTimeMillis());
 
 		matching = this.updateSubscriptions(matching);
