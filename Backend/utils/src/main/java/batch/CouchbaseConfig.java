@@ -3,7 +3,7 @@ package batch;
 
 public class CouchbaseConfig {
 
-	public String host = "162.243.234.243";
+	public String host = "db.vuescape.io";
 	
 	public String bucketName = "nostalgia";
 

@@ -21,21 +21,26 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.geojson.Feature;
 import org.geojson.Point;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.bucket.BucketManager;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.view.ViewQuery;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nostalgia.persistence.model.KnownLocation;
 import com.nostalgia.persistence.model.LoginResponse;
+import com.nostalgia.persistence.model.MediaCollection;
 import com.nostalgia.persistence.model.User;
 import com.nostalgia.persistence.model.Video;
 
@@ -204,7 +209,15 @@ public class UserAdder {
 			}
 			System.out.println();
 
+			System.out.print("add user collections (y/n)? " );
+			tagAns = scanner.nextLine();
 
+			if(tagAns.contains("y") || tagAns.contains("Y")){
+				addUserColls(toAdd);
+			} else {
+				System.out.println("Not adding any user colls");
+			}
+			System.out.println();
 
 			FileWriter writer = new FileWriter(new File(userJsonDir, toAdd.get_id() + ".json"));
 
@@ -229,6 +242,45 @@ public class UserAdder {
 			}
 		}
 		scanner.close();
+	}
+
+	private static void addUserColls(User toAdd) throws Exception {
+		setupDB();
+		for(String key:toAdd.getCollections().keySet()){
+			if(key.contains(toAdd.get_id())){
+				continue; 
+			}
+			JSONArray obj = new JSONArray(key);
+			System.out.println("user collection: " + obj);
+			JSONObject vis = obj.getJSONObject(0);
+			JSONObject name = obj.getJSONObject(1);
+			String id = toAdd.getCollections().get(key);
+			
+			MediaCollection coll = new MediaCollection();
+			coll.set_id(id);
+			coll.setName(name.getString("key"));
+			coll.setVisibility(vis.getString("visibility"));
+			
+			String json = null;
+			try {
+				json = mapper.writeValueAsString(coll);
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			JsonObject jsonObj = JsonObject.fromJson(json);
+			JsonDocument  doc = JsonDocument.create(coll.get_id(), jsonObj);
+			
+			if(jsonObj.get("_id") == null){
+				throw new Exception("error - _id field required ");
+			}
+
+			JsonDocument inserted = bucket.upsert(doc);
+			System.out.println("inserted collection with id: " + inserted.id() + " and key: " + key);
+			
+		}
+		
 	}
 
 	private static void addUserCreatedVideos(User toAdd) {
@@ -256,11 +308,12 @@ public class UserAdder {
 	private static BucketManager bucketManager;
 
 	private static void setupDB() {
+		if(bucket == null){
 		config = new CouchbaseConfig();
 		cluster = CouchbaseCluster.create(config.host);
 		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
 		bucketManager = bucket.bucketManager();
-
+		}
 	}
 
 	final static ObjectMapper mapper = new ObjectMapper();

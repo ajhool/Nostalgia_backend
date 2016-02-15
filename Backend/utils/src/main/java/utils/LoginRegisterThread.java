@@ -31,7 +31,7 @@ public class LoginRegisterThread extends Thread {
 	private String mPassword;
 	private String oAuth;
 	private final boolean isRegister;
-	String server = "http://104.131.81.78";
+	String server = "https://www.api.vuescape.io";
 	int port = 10004;
 
 	private final Point location;
