@@ -127,20 +127,19 @@ public class LambdaClient {
 		HttpResponse resp = null;
 		try {
 			resp = client.execute(httpPost);
-		} catch (ClientProtocolException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		} catch (Exception e1) {
+			logger.error("error executing client request");
+		} 
 
-		if(resp.getEntity()!= null) {
+		if(resp != null && resp.getEntity()!= null) {
 			String contents = IOUtils.toString(resp.getEntity().getContent(), "UTF-8");
 			respObj = mapper.readValue(contents, ProcessContentResponsePojo.class);
 		}
 
+		logger.info("LAMBDA CLIENT FINISHED");
+		if(respObj != null){
 		return respObj.generated_files; 
+		} else return null;
 
 	}
 

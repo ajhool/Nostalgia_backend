@@ -119,7 +119,7 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/login")
 	@Timed
-	public LoginResponse userLogin(User loggingIn, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
+	public LoginResponse userLogin(final User loggingIn, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
 
 
 		if(loggingIn == null){
@@ -132,6 +132,7 @@ public class UserResource {
 			throw new ForbiddenException();
 		}
 
+		long time1 = System.currentTimeMillis(); 
 		User loggedIn; 
 		if(type == null || type.equalsIgnoreCase("app")){
 			//lookup via uname/pass
@@ -158,6 +159,9 @@ public class UserResource {
 			resp.sendError(404, "no user found");
 			return null;
 		}
+		
+		final long loginTime = System.currentTimeMillis() - time1;
+		final long time2 = System.currentTimeMillis(); 
 
 		//open session for user's mobile db
 		SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedIn);
@@ -203,7 +207,8 @@ public class UserResource {
 
 
 		long time = 1451066974000L; 
-
+		final long syncTokTime = System.currentTimeMillis() - time2; 
+		
 		//		//refresh tokens if necessary
 		//		if(loggedIn.getStreamTokens() != null){
 		//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
@@ -215,18 +220,40 @@ public class UserResource {
 		//		} else {
 		//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 		//		}
-		this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+
+//		final User streamUser = loggedIn; 
+//		Thread streamer = new Thread(){
+//
+//			@Override
+//			public void run(){
+//				try {
+//					
+//					
+//				} catch (Exception e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
+//		};
+//		
+		long time3 = System.currentTimeMillis(); 
+		setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
+
 		if(loggingIn.getLastKnownLoc() != null){
 			loggedIn.setLastKnownLoc(loggingIn.getLastKnownLoc());
 			loggedIn = userLocRes.updateSubscriptions(loggedIn);
 		}
-
 		//make sure all video collection is subscribed 
 		checkAndSetDefaultCollections(loggedIn, false);
+		
 		syncClient.setSyncChannels(loggedIn);
 
 
 		userRepo.save(loggedIn);
+		
+		long collectionsTime = System.currentTimeMillis() - time3; 
+		
+		response.setUser(loggedIn);
 		return response;
 
 	}

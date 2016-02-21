@@ -12,6 +12,7 @@ public class LoginResponse implements Serializable {
 	private static final long serialVersionUID = 4730448086571677596L;
 	private String sessionTok;
 	private String region; 
+	private User user;
 
 	public LoginResponse(){}
 	
@@ -29,6 +30,14 @@ public class LoginResponse implements Serializable {
 
 	public void setRegion(String region) {
 		this.region = region;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
 	} 
 	
 
