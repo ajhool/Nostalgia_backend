@@ -134,6 +134,19 @@ public class VideoResource {
 
 	}
 	
+	@SuppressWarnings("unused")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/id")
+	@Timed
+	public Video findOne(@QueryParam("vidId") String vidId, @Context HttpServletRequest req) throws Exception{
+		
+		Video matching = vidRepo.findOneById(vidId);
+		
+		return matching; 
+	}
+	
 	
 	@SuppressWarnings("unused")
 	@POST
