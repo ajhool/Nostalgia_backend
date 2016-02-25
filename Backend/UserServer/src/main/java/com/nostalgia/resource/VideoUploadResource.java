@@ -10,7 +10,9 @@ import java.time.Duration;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -56,7 +58,7 @@ public class VideoUploadResource {
 	@Consumes("*/*")
 	@Path("/data")
 	@Timed
-	public Response uploadVideoData(final InputStream fileInputStream,
+	public String uploadVideoData(final InputStream fileInputStream,
 			@Context HttpServletRequest a_request,
 			@QueryParam("vidId") String contentKey,
 			@QueryParam("checksum") String checksum) throws Exception{
@@ -73,11 +75,11 @@ public class VideoUploadResource {
 
 		//Save video
 		if(matching == null){
-			return Response.status(404).entity("no metadata found for uploaded file ID").build();
+			throw new NotFoundException("null matching video!"); 
 		}
 
 		if(checksum == null || checksum.equalsIgnoreCase("")){
-			return Response.status(412).entity("Must provide MD5 for uploaded file").build();
+			throw new BadRequestException("checksum is required"); 
 		}
 
 
@@ -131,7 +133,7 @@ public class VideoUploadResource {
 
 		if(original == null || !original.exists()){
 			logger.error("no file saved!");
-			return Response.status(500).build();
+			return null;
 		}
 
 
@@ -143,7 +145,7 @@ public class VideoUploadResource {
 			//MD5 failure
 			logger.error("file upload failed MD5 verification");
 			FileUtils.forceDelete(original);
-			return Response.status(400).build();
+			return null; 
 		}
 
 
@@ -186,7 +188,7 @@ public class VideoUploadResource {
 
 		
 		
-		return Response.ok("Upload successful").build();
+		return savedmd5;
 
 	}
 
