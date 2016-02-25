@@ -213,6 +213,15 @@ public class VideoResource {
 			matchingLocs = locRepo.findKnownLocationsCoveringPoint(adding.getLocation());
 		}
 
+
+		
+		String allVidsString = uploader.findCollection(MediaCollection.PRIVATE, "All My Videos"); 
+		
+		if(allVidsString != null){
+			MediaCollection all =  collRepo.findOneById(allVidsString);
+			all.getMatchingVideos().put(adding.get_id(), Long.toString(System.currentTimeMillis()));
+			collRepo.save(all);
+		}
 		
 		List<MediaCollection> matchingColls = new ArrayList<MediaCollection>();
 		List<String> taggedIds = new ArrayList<String>(); 
