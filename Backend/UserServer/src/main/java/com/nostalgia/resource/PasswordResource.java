@@ -25,6 +25,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -45,11 +46,16 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
+import com.nostalgia.MediaCollectionRepository;
+import com.nostalgia.PasswordRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
+import com.nostalgia.client.IconClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
+import com.nostalgia.persistence.model.MediaCollection;
+import com.nostalgia.persistence.model.Password;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
 import com.nostalgia.persistence.model.User;
 
@@ -60,8 +66,8 @@ import facebook4j.Reading;
 import facebook4j.conf.Configuration;
 import facebook4j.conf.ConfigurationBuilder;
 
-@Path("/api/v0/friends")
-public class FriendsResource {
+@Path("/api/v0/user/password")
+public class PasswordResource {
 
 	public static final String WHO_PRIVATE = "PRIVATE";
 	public static final String WHO_FRIENDS = "FRIENDS";
@@ -78,107 +84,75 @@ public class FriendsResource {
 
 	@Context HttpServletResponse resp; 
 
-	private static final Logger logger = LoggerFactory.getLogger(FriendsResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(PasswordResource.class);
 
 	private final UserRepository userRepo;
+	private final PasswordRepository passRepo; 
 
-	private SynchClient syncClient;
 
-
-	public FriendsResource( UserRepository userRepo, SynchClient syncClient) {
+	public PasswordResource( UserRepository userRepo, PasswordRepository passRepo) {
 		this.userRepo = userRepo;
-		this.syncClient = syncClient;
-
-	}
-
-	
-	@SuppressWarnings("unused")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/add")
-	@Timed
-	public User addFriend(String userAddingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
-
-
-		if(userAddingFriendId == null){
-			throw new BadRequestException();
-		}
-
-		User addingFriend = userRepo.findOneById(userAddingFriendId);
-		User friendToAdd = userRepo.findOneById(friendId); 
-
-		if(addingFriend.getFriends().keySet().contains(friendToAdd.get_id())){
-			//we are already friends or pending
-			return null;
-		}
-		
-		//otherwise, we aren't friends, so add it in
-		
-		addingFriend.subscribeToFriend(friendToAdd);
-		syncClient.setSyncChannels(addingFriend);
-		userRepo.save(addingFriend);
-		return addingFriend;
-
+		this.passRepo = passRepo;
 	}
 
 	@SuppressWarnings("unused")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/search")
+	@Path("/forgot")
 	@Timed
-	public List<User> findFriend(@QueryParam("friendName") String friendName, @Context HttpServletRequest req) throws Exception{
-
-
-		List<User> results = userRepo.searchByName(friendName);
+	public String userLogin(@QueryParam("email") String email, @Context HttpServletRequest req) throws Exception{
+		User matching = userRepo.findOneByEmail(email); 
 		
-		//scrub user info
-		for(User cur : results){
-			cur.setPasswordPtr(null);
-			cur.setAccounts(null);
-			cur.setAuthorizedDevices(null);
-			cur.setEmail(null);
-			cur.setToken(null);
-			cur.setSettings(null);
-			cur.setStreamTokens(null);
-			cur.setToken(null);
+		if(matching == null){
+			resp.setStatus(404);
+			return "no user found with email: " + email; 
 		}
 		
-		return results; 
+		
+		resp.setStatus(501);
+		return "not yet implemented";
 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/remove")
+	@Path("/change")
 	@Timed
-	public User removeFriend(String userRemovingFriendId, @QueryParam("friendId") String friendIdtoRemove, @Context HttpServletRequest req) throws Exception{
-
-
-		if(userRemovingFriendId == null){
-			throw new BadRequestException();
-		}
-
-		User removingFriend = userRepo.findOneById(userRemovingFriendId);
-		User friendToRemove = userRepo.findOneById(friendIdtoRemove); 
+	public String userLogin(String newPassword, @QueryParam("orig") String origPass, @QueryParam("userId")String userId, @Context HttpServletRequest req) throws Exception{
+		User matching = userRepo.findOneById(userId); 
 		
-		if(!removingFriend.getFriends().keySet().contains(friendToRemove.get_id())){
-			//we dont have the friend we are trying to remove
-			return null;
+		if(matching == null){
+			resp.setStatus(404);
+			return "no user found with id: " + userId; 
 		}
 		
 		
-		removingFriend.unsubscribeFromFriend(friendToRemove);
-		syncClient.setSyncChannels(removingFriend);
-		userRepo.save(removingFriend);
-		return removingFriend; 
+		Password current = passRepo.findOneById(matching.getPasswordPtr());
+		
+		if(current == null){
+			throw new Exception("password not found!");
+		}
+		
+		if(!current.getPassword().equalsIgnoreCase(origPass)){
+			throw new NotAuthorizedException("original password doews not match!"); 
+		}
+		
+		String oldDate = current.getDateChanged(); 
+		//if we are here, password has passed muster
+		current.setDateChanged((new Date(System.currentTimeMillis())).toString());
+		current.setPassword(newPassword);
+		
+		passRepo.save(current); 
+		
+		
+		resp.setStatus(200);
+		return "password from: " + oldDate + " changed successfully";
 
 	}
-
-
+	
 
 
 }

@@ -87,7 +87,7 @@ public class IconClient {
 
 	final static Logger logger = LoggerFactory.getLogger(IconClient.class);
 
-	final private String lambdaAPIKey = "04kxnTSFC12GyeGZAma6J3dLdzHfXEZ57YEpp6dJ";
+	final private String lambdaAPIKey = "rKQA6dnUMLBcpwJb3pvM7u9Q3hqHb8A6o3jLjmce";
 	private static final ObjectMapper mapper = new ObjectMapper(); 
 	private LambdaAPIConfig config;
 
@@ -100,7 +100,7 @@ public class IconClient {
 	}
 
 	public String getIcon(String seedVal) throws Exception {
-		String URL = "https://d215uwglt7.execute-api.us-east-1.amazonaws.com/prod/LambdaIdenticonGen"; 
+		String URL = "https://x51utemo2g.execute-api.us-east-1.amazonaws.com/prod/IdenticonGenerator"; 
 		IdenticonResult respObj = null; 
 		HttpPost httpPost = null;
 

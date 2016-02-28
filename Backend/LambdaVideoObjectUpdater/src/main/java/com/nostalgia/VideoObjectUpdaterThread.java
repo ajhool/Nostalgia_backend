@@ -34,7 +34,7 @@ import com.nostalgia.persistence.model.Video;
 
 public class VideoObjectUpdaterThread extends Thread {
 
-	private static final String CDN_PREFIX = "https://d1natzk16yc4os.cloudfront.net/";
+	private static final String CDN_PREFIX = "https://d1ccbccm6luhyz.cloudfront.net/";
 	private final List<String> thumbsSuffix;
 	private final String mpdSuffix;
 	private String vidId;

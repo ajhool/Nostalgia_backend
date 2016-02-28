@@ -186,8 +186,8 @@ public class UserRepository {
 
 	}
 	
-	public User findOneByEmail(User newUser) throws Exception {
-		ViewResult result = bucket.query(ViewQuery.from("user", "by_email").startKey(newUser.getEmail()).endKey(newUser.getEmail()).limit(10));
+	public User findOneByEmail(String email) throws Exception {
+		ViewResult result = bucket.query(ViewQuery.from("user", "by_email").startKey(email).endKey(email).limit(10));
 
 		if (result == null || result.totalRows() < 1){
 			return null;

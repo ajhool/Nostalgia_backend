@@ -87,7 +87,7 @@ public class S3UploadClient implements Managed {
 //
 //		String accessKeyId = properties.getProperty( "accessKey" );
 //		String secretKey = properties.getProperty( "secretKey" );
-		credentials = new BasicAWSCredentials( "AKIAJDDH56F4J3S7ROQA", "vkw9ts47X5Wql+1wxKTfeqj7tUnCsydmCLrw4yxJ");
+		credentials = new BasicAWSCredentials(s3Config.accessKeyId, s3Config.secretAccessKey);
 		
 		bucketName = s3Config.bucketName; 
 

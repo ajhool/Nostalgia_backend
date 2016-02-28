@@ -72,6 +72,11 @@ public class UserAppConfig extends Configuration{
 	@JsonProperty("AtomicsCouch")
 	private CouchbaseConfig atomicsServConfig = new  CouchbaseConfig();
 
+	@Valid
+	@NotNull
+	@JsonProperty("PassCouch")
+	private CouchbaseConfig passServConfig = new  CouchbaseConfig();
+	
 	public CouchbaseConfig getAtomicsServerConfig() {
 		return atomicsServConfig;
 	}
@@ -85,6 +90,11 @@ public class UserAppConfig extends Configuration{
     public HttpClientConfiguration getHttpClientConfiguration() {
         return httpClient;
     }
+
+
+	public CouchbaseConfig getPasswordServerConfig() {
+		return passServConfig; 
+	}
 
 	
 }

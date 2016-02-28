@@ -229,7 +229,9 @@ public class UserAdder {
 
 
 			System.out.println("Beginning user registration");
-			LoginRegisterThread task = new LoginRegisterThread(toAdd, true, "app");
+			System.out.print("enter password: " );
+			String pass = scanner.nextLine();
+			LoginRegisterThread task = new LoginRegisterThread(toAdd, pass, true, "app");
 			task.start();
 			task.join();
 
@@ -335,9 +337,6 @@ public class UserAdder {
 		User example = new User();
 		example.set_id("example_id");
 		example.setName("Example User");
-		example.setPassword("insert sha512 hash here");
-
-		example.setPasswordChangeDate(-1);
 		example.setEmail("example@example.com");
 		example.setSettings(new HashMap<String, String>());
 		example.getSettings().put("sync", "always");

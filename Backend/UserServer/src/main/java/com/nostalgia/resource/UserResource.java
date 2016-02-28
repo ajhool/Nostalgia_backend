@@ -46,6 +46,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.MediaCollectionRepository;
+import com.nostalgia.PasswordRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconClient;
@@ -53,6 +54,7 @@ import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
 import com.nostalgia.persistence.model.MediaCollection;
+import com.nostalgia.persistence.model.Password;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
 import com.nostalgia.persistence.model.User;
 
@@ -89,16 +91,18 @@ public class UserResource {
 	private UserLocationResource userLocRes;
 	private final IconClient icCli; 
 	private final SignedCookieCreator creator;
-	private final MediaCollectionRepository collRepo; 
+	private final MediaCollectionRepository collRepo;
+	private final PasswordRepository passRepo; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo) {
+	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo, PasswordRepository passRepo) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
 		this.icCli = icCli;
 		this.creator = create;
 		this.collRepo = collRepo;
+		this.passRepo = passRepo;
 	}
 
 	private void setNewStreamingTokens(User needsTokens, long tokenExpiryDate) throws Exception{
@@ -107,7 +111,7 @@ public class UserResource {
 		}
 
 		//call to aws here if needed for new tokens
-		Map<String, String> generated = creator.generateCookies("https://d1natzk16yc4os.cloudfront.net/*", tokenExpiryDate);
+		Map<String, String> generated = creator.generateCookies("https://d1ccbccm6luhyz.cloudfront.net/*", tokenExpiryDate);
 
 		needsTokens.getStreamTokens().putAll(generated);
 
@@ -119,7 +123,7 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/login")
 	@Timed
-	public LoginResponse userLogin(final User loggingIn, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
+	public LoginResponse userLogin(final User loggingIn, @QueryParam("password") String pass, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
 
 
 		if(loggingIn == null){
@@ -136,7 +140,7 @@ public class UserResource {
 		User loggedIn; 
 		if(type == null || type.equalsIgnoreCase("app")){
 			//lookup via uname/pass
-			loggedIn = loginWithPass(loggingIn);
+			loggedIn = loginWithPass(loggingIn, pass);
 
 		} else {
 			//lookup via token
@@ -422,7 +426,7 @@ public class UserResource {
 
 	}
 
-	private User loginWithPass(User loggingIn) {
+	private User loginWithPass(User loggingIn, String provided) throws Exception {
 		User result = null;
 		List<User> withName = null;
 		try {
@@ -439,7 +443,13 @@ public class UserResource {
 
 		//check pw
 		for(User match:withName){
-			if(match.getPassword().equalsIgnoreCase(loggingIn.getPassword())){
+			
+			String ptr = match.getPasswordPtr(); 
+			
+			Password matching = passRepo.findOneByOwnerId(match.get_id());
+			
+			
+			if(matching.getPassword().equalsIgnoreCase(provided)){
 				//then we have a match
 				result = match;
 				break;
@@ -458,7 +468,7 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/register")
 	@Timed
-	public LoginResponse userRegister(User registering, @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
+	public LoginResponse userRegister(User registering, @QueryParam("password") String pass,  @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
 
 
 		if(registering == null){
@@ -477,7 +487,7 @@ public class UserResource {
 
 		} else {
 
-			existing = userRepo.findOneByEmail(registering);
+			existing = userRepo.findOneByEmail(registering.getEmail());
 
 		}
 
@@ -496,7 +506,7 @@ public class UserResource {
 		JsonDocument loggedIn; 
 		if(type == null || type.equalsIgnoreCase("app")){
 			//lookup via uname/pass
-			loggedIn = registerNewUserApp(registering);
+			loggedIn = registerNewUserApp(registering, pass);
 
 		} else {
 			//lookup via token
@@ -557,7 +567,6 @@ public class UserResource {
 
 		loggedInUser.setDateJoined(System.currentTimeMillis());
 		loggedInUser.setLastSeen(System.currentTimeMillis());
-		loggedInUser.setPasswordChangeDate(System.currentTimeMillis());
 		loggedInUser.subscribeToUserChannel(userChannel);
 		SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedInUser);
 
@@ -613,7 +622,13 @@ public class UserResource {
 
 	}
 
-	private JsonDocument registerNewUserApp(User registering) throws Exception{
+	private JsonDocument registerNewUserApp(User registering, String pass) throws Exception{
+		
+		Password newPass = new Password(pass, null, registering.get_id(), new Date(System.currentTimeMillis()).toString());
+		
+		JsonDocument saved = passRepo.save(newPass);
+		
+		registering.setPasswordPtr(saved.id());
 		return userRepo.save(registering);
 	}
 
@@ -651,7 +666,7 @@ public class UserResource {
 		added.setEmail(email);
 		added.setName(name.replaceAll("\\s+",""));
 		//added.setUserName(userName);
-		added.setPassword("null");
+
 
 		//create google account
 		added.getAccounts().put(payload.getSubject(), "google");

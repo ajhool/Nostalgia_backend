@@ -37,8 +37,7 @@ public class User implements Serializable {
 	private Map<String, String> seenVideos; 
 	private String name;
 
-	private String password;
-	private long passwordChangeDate; 
+	private String passwordPtr;
 
 	private String homeRegion = "us_east";
 
@@ -457,12 +456,12 @@ public class User implements Serializable {
 		this.admin_channels = admin_channels;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getPasswordPtr() {
+		return passwordPtr;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPasswordPtr(String password) {
+		this.passwordPtr = password;
 	}
 
 	public List<String> getChannels() {
@@ -617,17 +616,6 @@ public class User implements Serializable {
 	public void setCollections(Map<String, String> collections) {
 		this.collections = collections;
 	}
-
-
-	public long getPasswordChangeDate() {
-		return passwordChangeDate;
-	}
-
-
-	public void setPasswordChangeDate(long passwordChangeDate) {
-		this.passwordChangeDate = passwordChangeDate;
-	}
-
 
 	public List<Account> getAccountsList() {
 		return accountsList;

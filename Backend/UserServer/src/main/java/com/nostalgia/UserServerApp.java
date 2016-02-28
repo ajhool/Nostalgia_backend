@@ -24,6 +24,7 @@ import com.nostalgia.resource.LocationAdminResource;
 import com.nostalgia.resource.LocationQueryResource;
 import com.nostalgia.resource.SubscriptionResource;
 import com.nostalgia.resource.MediaCollectionResource;
+import com.nostalgia.resource.PasswordResource;
 import com.nostalgia.resource.UserLocationResource;
 //import com.nostalgia.resource.LocationResource;
 import com.nostalgia.resource.UserResource;
@@ -75,6 +76,12 @@ public class UserServerApp extends Application<UserAppConfig>{
 		return repo;
 	}
 
+	private PasswordRepository getPasswordRepo(UserAppConfig config, Environment environment){
+		PasswordRepository repo = new PasswordRepository(config.getPasswordServerConfig());
+
+		return repo;
+	}
+	
 	private LocationRepository getLocationRepo(UserAppConfig config, Environment environment){
 		LocationRepository repo = new LocationRepository(config.getLocationServerConfig());
 
@@ -126,6 +133,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		LocationRepository locRepo = this.getLocationRepo(config, environment);
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		MediaCollectionRepository collRepo =this.getCollectionRepo(config, environment);
+		PasswordRepository passRepo = this.getPasswordRepo(config, environment);
 	
 		SynchClient sCli = this.createSynchClient(config, environment);
 		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
@@ -136,7 +144,8 @@ public class UserServerApp extends Application<UserAppConfig>{
 		environment.lifecycle().manage(s3Cli);
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
-		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo);
+		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo, passRepo);
+		PasswordResource passRes = new PasswordResource(userRepo, passRepo);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo, collRepo);
 		LocationQueryResource queryRes = new LocationQueryResource(locRepo);
@@ -146,6 +155,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli,  collRepo, vidRepo,  locRepo);
 		VideoUploadResource ulRes = new VideoUploadResource(vidRepo, s3Cli, lCli);
 		
+		environment.jersey().register(passRes);
 		environment.jersey().register(ulRes);
 		environment.jersey().register(aOps);
 		environment.jersey().register(collRes);
