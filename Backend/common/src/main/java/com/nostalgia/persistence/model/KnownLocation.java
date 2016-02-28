@@ -67,6 +67,9 @@ public class KnownLocation implements Serializable {
 		if(locationCollections == null){
 			locationCollections = new HashMap<String, String>();
 		}
+		if(properties == null){
+            properties = new HashMap<String, String>(); 
+        }
 	}
 
 

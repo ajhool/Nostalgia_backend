@@ -70,7 +70,7 @@ private final SynchClient sync;
 		if(nearbys != null && nearbys.keySet().size() > 0){
 			Set<String> clone = new HashSet<String>();
 			clone.addAll(nearbys.keySet());
-			hasNewLoc.updateLocationChannels(nearbys);
+			
 			HashSet<String> vidChannels = new HashSet<String>();
 			for(KnownLocation loc: nearbys.values()){
 				
@@ -84,7 +84,7 @@ private final SynchClient sync;
 			
 			hasNewLoc.updateVideoChannels(vidChannels);
 		}
-		
+		hasNewLoc.updateLocationChannels(nearbys);
 		sync.setSyncChannels(hasNewLoc);
 		
 		userRepo.save(hasNewLoc);

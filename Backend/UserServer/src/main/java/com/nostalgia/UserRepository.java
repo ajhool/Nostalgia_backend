@@ -100,6 +100,11 @@ public class UserRepository {
 		}
 
 		JsonDocument inserted = bucket.upsert(doc);
+		
+		if(!inserted.content().containsKey("_id")){
+			logger.error("user object saved without id key!!", new Exception("caught user being added without key!"));
+			System.exit(1);
+		}
 		return inserted;
 	}
 
