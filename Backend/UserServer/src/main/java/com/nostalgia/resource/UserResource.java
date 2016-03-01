@@ -25,8 +25,10 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -117,6 +119,91 @@ public class UserResource {
 
 		return;
 	}
+
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/update/{fieldName}")
+	@Timed
+	public User userAttrUpdate(final Map<String, String> toChange, @QueryParam("userId") String userId, @PathParam("fieldName") String type, @Context HttpServletRequest req) throws Exception{
+		//ICON, HOME, EMAIL, NAME, SETTING
+		User matching;
+		switch(type){
+		case "ICON":
+
+			matching = userRepo.findOneById(userId); 
+
+			if(matching == null) throw new NotFoundException("Nos user with id: " + userId + " found");
+
+			String icNew = toChange.get("icon"); 
+			if(icNew == null) throw new BadRequestException("no field named icon found"); 
+
+			matching.setIcon(icNew);
+
+			userRepo.save(matching);
+			return matching; 
+
+		case "HOME":
+			matching = userRepo.findOneById(userId); 
+
+			if(matching == null) throw new NotFoundException("Nos user with id: " + userId + " found");
+
+			String newLocale = toChange.get("home"); 
+			if(newLocale == null) throw new BadRequestException("no field named home found"); 
+
+			matching.setHomeRegion(newLocale);
+
+			userRepo.save(matching);
+			return matching; 
+
+		case "EMAIL":
+			matching = userRepo.findOneById(userId); 
+
+			if(matching == null) throw new NotFoundException("Nos user with id: " + userId + " found");
+
+			String email = toChange.get("email"); 
+			if(email == null) throw new BadRequestException("no field named email found"); 
+
+			matching.setEmail(email);
+
+			userRepo.save(matching);
+			return matching; 
+
+		case "NAME":
+			matching = userRepo.findOneById(userId); 
+
+			if(matching == null) throw new NotFoundException("Nos user with id: " + userId + " found");
+
+			String name = toChange.get("name"); 
+			if(name == null) throw new BadRequestException("no field named name found"); 
+
+			matching.setName(name);
+
+			userRepo.save(matching);
+			return matching; 
+
+		case "SETTING":
+			matching = userRepo.findOneById(userId); 
+
+			if(matching == null) throw new NotFoundException("Nos user with id: " + userId + " found");
+
+			if(toChange == null) throw new BadRequestException("no changes found"); 
+
+			matching.getSettings().putAll(toChange);
+
+			userRepo.save(matching);
+			return matching; 
+
+		default:
+			throw new BadRequestException("invalid field name");
+
+
+		}
+
+
+	} 
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -163,7 +250,7 @@ public class UserResource {
 			resp.sendError(404, "no user found");
 			return null;
 		}
-		
+
 		final long loginTime = System.currentTimeMillis() - time1;
 		final long time2 = System.currentTimeMillis(); 
 
@@ -212,7 +299,7 @@ public class UserResource {
 
 		long time = 1451066974000L; 
 		final long syncTokTime = System.currentTimeMillis() - time2; 
-		
+
 		//		//refresh tokens if necessary
 		//		if(loggedIn.getStreamTokens() != null){
 		//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
@@ -225,21 +312,21 @@ public class UserResource {
 		//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 		//		}
 
-//		final User streamUser = loggedIn; 
-//		Thread streamer = new Thread(){
-//
-//			@Override
-//			public void run(){
-//				try {
-//					
-//					
-//				} catch (Exception e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//		};
-//		
+		//		final User streamUser = loggedIn; 
+		//		Thread streamer = new Thread(){
+		//
+		//			@Override
+		//			public void run(){
+		//				try {
+		//					
+		//					
+		//				} catch (Exception e) {
+		//					// TODO Auto-generated catch block
+		//					e.printStackTrace();
+		//				}
+		//			}
+		//		};
+		//		
 		long time3 = System.currentTimeMillis(); 
 		setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 
@@ -249,14 +336,14 @@ public class UserResource {
 		}
 		//make sure all video collection is subscribed 
 		checkAndSetDefaultCollections(loggedIn, false);
-		
+
 		syncClient.setSyncChannels(loggedIn);
 
 
 		userRepo.save(loggedIn);
-		
+
 		long collectionsTime = System.currentTimeMillis() - time3; 
-		
+
 		response.setUser(loggedIn);
 		return response;
 
@@ -443,12 +530,12 @@ public class UserResource {
 
 		//check pw
 		for(User match:withName){
-			
+
 			String ptr = match.getPasswordPtr(); 
-			
+
 			Password matching = passRepo.findOneByOwnerId(match.get_id());
-			
-			
+
+
 			if(matching.getPassword().equalsIgnoreCase(provided)){
 				//then we have a match
 				result = match;
@@ -623,11 +710,11 @@ public class UserResource {
 	}
 
 	private JsonDocument registerNewUserApp(User registering, String pass) throws Exception{
-		
+
 		Password newPass = new Password(pass, null, registering.get_id(), new Date(System.currentTimeMillis()).toString());
-		
+
 		JsonDocument saved = passRepo.save(newPass);
-		
+
 		registering.setPasswordPtr(saved.id());
 		return userRepo.save(registering);
 	}
