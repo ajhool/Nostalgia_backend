@@ -1,24 +1,13 @@
 package com.nostalgia.resource;
 
 
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
@@ -59,6 +48,7 @@ import com.nostalgia.persistence.model.MediaCollection;
 import com.nostalgia.persistence.model.Password;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
 import com.nostalgia.persistence.model.User;
+import com.nostalgia.util.PasswordUtils;
 
 import facebook4j.Facebook;
 import facebook4j.FacebookException;
@@ -399,6 +389,7 @@ public class UserResource {
 					}
 					MediaCollection matching = collRepo.findOneById(nostalgiaOfficial.getCollections().get(key));
 					if(matching == null){
+						logger.error("no collection found, must create this default collection!", new NullPointerException());
 						continue;
 					}
 
@@ -531,15 +522,29 @@ public class UserResource {
 		//check pw
 		for(User match:withName){
 
+			if(result != null) break;
 			String ptr = match.getPasswordPtr(); 
 
 			Password matching = passRepo.findOneByOwnerId(match.get_id());
 
 
+			switch(matching.getVersion()){
+			case 2:{
+				//salted
+				if(PasswordUtils.check(provided, matching.getPassword())){
+					result = match;
+					break;
+				}
+			}
+			break; 
+			
+			default:
 			if(matching.getPassword().equalsIgnoreCase(provided)){
 				//then we have a match
 				result = match;
 				break;
+			}
+			break;
 			}
 		}
 
@@ -556,170 +561,185 @@ public class UserResource {
 	@Path("/register")
 	@Timed
 	public LoginResponse userRegister(User registering, @QueryParam("password") String pass,  @QueryParam("type") String type, @Context HttpServletRequest req) throws Exception{
-
-
+		boolean success = false;
+		User loggedInUser = null;
+		LoginResponse response = new LoginResponse();
 		if(registering == null){
 			throw new BadRequestException();
 		}
 
-		LoginResponse response = new LoginResponse();
 		//TODO move to service
 		if(false /*!mpdReq.getApiKey().equalsIgnoreCase("foo")*/){
 			throw new ForbiddenException();
 		}
-		User existing = null;
-		if(registering.getToken() != null){
+		
+		try {
+			
+			User existing = null;
+			if(registering.getToken() != null){
 
-			existing = userRepo.findOneByAccountToken(registering.getToken(), type);
+				existing = userRepo.findOneByAccountToken(registering.getToken(), type);
 
-		} else {
+			} else {
 
-			existing = userRepo.findOneByEmail(registering.getEmail());
+				existing = userRepo.findOneByEmail(registering.getEmail());
 
-		}
+			}
 
-		if(existing != null){
-			resp.sendError(503, "user already exists, please log in");
-			return null;
-		}
-
-		//user always subscrbes to itself
-		ArrayList<String> channels = new ArrayList<String>();
-		String userChannel = registering.getChannelName();
-		channels.add(userChannel);
-
-		registering.setChannels(channels);
-
-		JsonDocument loggedIn; 
-		if(type == null || type.equalsIgnoreCase("app")){
-			//lookup via uname/pass
-			loggedIn = registerNewUserApp(registering, pass);
-
-		} else {
-			//lookup via token
-
-			switch(type){
-			case("facebook"):
-				try {
-					loggedIn = registerNewUserFacebook(registering);
-				} catch (RegistrationException e){
-					logger.error("error registering user", e);
-					resp.sendError(403, e.getMessage());
-					return null;
-				}
-			break;
-			case("google"):
-				loggedIn = registerNewUserGoogle(registering);
-			break;
-			default:
-				logger.error("unable to infer type to login");
-				resp.sendError(400, "must specify login type!");
+			if(existing != null){
+				resp.sendError(503, "user already exists, please log in");
 				return null;
 			}
-		}
 
-		if(loggedIn == null){
-			resp.sendError(404, "no user found");
-			return null;
-		}
+			//user always subscrbes to itself
+			ArrayList<String> channels = new ArrayList<String>();
+			String userChannel = registering.getChannelName();
+			channels.add(userChannel);
 
-		//open session for user's mobile db
-		User loggedInUser = userRepo.docToUser(loggedIn);
+			registering.setChannels(channels);
 
-		if(loggedInUser == null){
-			throw new Exception("unable to parse user");
-		}
+			User loggedIn; 
+			if(type == null || type.equalsIgnoreCase("app")){
+				//lookup via uname/pass
+				loggedIn = registerNewUserApp(registering, pass);
 
-		//Set image
-		if(loggedInUser.getIcon() == null){
-			String image = null;
-			try {
-				image = icCli.getIcon(loggedInUser.getName());
-			} catch (Exception e){
-				logger.error("error getting icon", e);
+			} else {
+				//lookup via token
+
+				switch(type){
+				case("facebook"):
+					try {
+						loggedIn = registerNewUserFacebook(registering);
+					} catch (RegistrationException e){
+						logger.error("error registering user", e);
+						resp.sendError(403, e.getMessage());
+						return null;
+					}
+				break;
+				case("google"):
+					loggedIn = registerNewUserGoogle(registering);
+				break;
+				default:
+					logger.error("unable to infer type to login");
+					resp.sendError(400, "must specify login type!");
+					return null;
+				}
 			}
 
-			loggedInUser.setIcon(image);
-		} else {
-			logger.info("User already had set icon, skipping icon generation. Icon: " + loggedInUser.getIcon());
-		}
-		//set default settings
-		Map<String, String> settings = new HashMap<String, String>();
-		settings.put("sharing_who", WHO_EVERYONE);
-		settings.put("sharing_when", WHEN_WIFI);
-		settings.put("sharing_where", WHERE_EVERYWHERE);
-		settings.put("video_sound", SOUND_MUTE);
-		this.setNewStreamingTokens(loggedInUser, System.currentTimeMillis() + MONTH_IN_MILLIS);
-		loggedInUser.setSettings(settings);
+			if(loggedIn == null){
+				resp.sendError(404, "no user found");
+				return null;
+			}
 
-		loggedInUser.setDateJoined(System.currentTimeMillis());
-		loggedInUser.setLastSeen(System.currentTimeMillis());
-		loggedInUser.subscribeToUserChannel(userChannel);
-		SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedInUser);
+			//open session for user's mobile db
+			 loggedInUser = loggedIn; 
 
-		if(syncResp == null){
-			//register user and try again
-			syncClient.registerUser(loggedInUser); 
-			syncResp = syncClient.createSyncSessionFor(loggedInUser);
+			if(loggedInUser == null){
+				throw new Exception("unable to parse user");
+			}
+
+			//Set image
+			if(loggedInUser.getIcon() == null){
+				String image = null;
+				try {
+					image = icCli.getIcon(loggedInUser.getName());
+				} catch (Exception e){
+					logger.error("error getting icon", e);
+				}
+
+				loggedInUser.setIcon(image);
+			} else {
+				logger.info("User already had set icon, skipping icon generation. Icon: " + loggedInUser.getIcon());
+			}
+			//set default settings
+			Map<String, String> settings = new HashMap<String, String>();
+			settings.put("sharing_who", WHO_EVERYONE);
+			settings.put("sharing_when", WHEN_WIFI);
+			settings.put("sharing_where", WHERE_EVERYWHERE);
+			settings.put("video_sound", SOUND_MUTE);
+			this.setNewStreamingTokens(loggedInUser, System.currentTimeMillis() + MONTH_IN_MILLIS);
+			loggedInUser.setSettings(settings);
+
+			loggedInUser.setDateJoined(System.currentTimeMillis());
+			loggedInUser.setLastSeen(System.currentTimeMillis());
+			loggedInUser.subscribeToUserChannel(userChannel);
+			SyncSessionCreateResponse syncResp = syncClient.createSyncSessionFor(loggedInUser);
+
 			if(syncResp == null){
-				throw new Exception("sync registration failed!");
+				//register user and try again
+				syncClient.registerUser(loggedInUser); 
+				syncResp = syncClient.createSyncSessionFor(loggedInUser);
+				if(syncResp == null){
+					throw new Exception("sync registration failed!");
 
+				}
 			}
-		}
 
-		loggedInUser.setSyncToken(syncResp.getSession_id());
-
-
-		response.setSessionTok(syncResp.getSession_id());
+			loggedInUser.setSyncToken(syncResp.getSession_id());
 
 
-		if(loggedInUser.getAuthorizedDevices() == null){
-			loggedInUser.setAuthorizedDevices(new ArrayList<String>());
-			loggedInUser.getAuthorizedDevices().addAll(registering.getAuthorizedDevices());
-		} else {
+			response.setSessionTok(syncResp.getSession_id());
 
-			//merge in the device ID(s)
-			for(int i = 0; i < registering.getAuthorizedDevices().size(); i++){
-				boolean exists = false;
-				for(int j = 0; j < loggedInUser.getAuthorizedDevices().size(); j ++){
-					if(registering.getAuthorizedDevices().get(i).equalsIgnoreCase(loggedInUser.getAuthorizedDevices().get(j))){
-						exists = true;
-						break;
+
+			if(loggedInUser.getAuthorizedDevices() == null){
+				loggedInUser.setAuthorizedDevices(new ArrayList<String>());
+				loggedInUser.getAuthorizedDevices().addAll(registering.getAuthorizedDevices());
+			} else {
+
+				//merge in the device ID(s)
+				for(int i = 0; i < registering.getAuthorizedDevices().size(); i++){
+					boolean exists = false;
+					for(int j = 0; j < loggedInUser.getAuthorizedDevices().size(); j ++){
+						if(registering.getAuthorizedDevices().get(i).equalsIgnoreCase(loggedInUser.getAuthorizedDevices().get(j))){
+							exists = true;
+							break;
+						}
+					}
+
+					if(!exists){
+						loggedInUser.getAuthorizedDevices().add(registering.getAuthorizedDevices().get(i));
 					}
 				}
 
-				if(!exists){
-					loggedInUser.getAuthorizedDevices().add(registering.getAuthorizedDevices().get(i));
-				}
+
 			}
 
+			if(registering.getLastKnownLoc() != null){
+				loggedInUser.setLastLocationUpdate(System.currentTimeMillis());
+				loggedInUser.setLastKnownLoc(registering.getLastKnownLoc());
+				loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
+			}
+			checkAndSetDefaultCollections(loggedInUser, true);
 
+
+			success = true;
+		} catch (Exception e){
+			logger.error("registration error caught", e);
+			success = false;
+		} finally {
+
+			if(success && loggedInUser != null){
+				syncClient.setSyncChannels(loggedInUser);
+				userRepo.save(loggedInUser);
+			}
 		}
-
-		if(registering.getLastKnownLoc() != null){
-			loggedInUser.setLastLocationUpdate(System.currentTimeMillis());
-			loggedInUser.setLastKnownLoc(registering.getLastKnownLoc());
-			loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
-		}
-		checkAndSetDefaultCollections(loggedInUser, true);
-		syncClient.setSyncChannels(loggedInUser);
-		userRepo.save(loggedInUser);
-
 		return response;
 
 	}
 
-	private JsonDocument registerNewUserApp(User registering, String pass) throws Exception{
-
-		Password newPass = new Password(pass, null, registering.get_id(), new Date(System.currentTimeMillis()).toString());
-
+	private User registerNewUserApp(User registering, String pass) throws Exception{
+String salted = PasswordUtils.getSaltedHash(pass);
+		Password newPass = new Password(salted, null, registering.get_id(), new Date(System.currentTimeMillis()).toString());
+		newPass.setVersion(2);
+		
 		JsonDocument saved = passRepo.save(newPass);
 
 		registering.setPasswordPtr(saved.id());
-		return userRepo.save(registering);
+		
+		return registering; 
 	}
 
-	private JsonDocument registerNewUserGoogle(User toRegister) throws Exception {
+	private User registerNewUserGoogle(User toRegister) throws Exception {
 		GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(TRANSPORT, JSON_FACTORY).setAudience(Arrays.asList(CLIENT_ID)).build();
 
 		// (Receive idTokenString by HTTPS POST)
@@ -757,12 +777,12 @@ public class UserResource {
 
 		//create google account
 		added.getAccounts().put(payload.getSubject(), "google");
-		JsonDocument regd = userRepo.save(added); 
+	
 
-		return regd; 
+		return added; 
 	}
 
-	private JsonDocument registerNewUserFacebook(User user) throws Exception {
+	private User registerNewUserFacebook(User user) throws Exception {
 
 		ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 		configurationBuilder.setDebugEnabled(true);
@@ -845,9 +865,7 @@ public class UserResource {
 
 		}
 
-		JsonDocument regd = userRepo.save(vueUser); 
-
-		return regd; 
+		return vueUser; 
 	}
 
 

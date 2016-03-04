@@ -34,8 +34,18 @@ public class KnownLocation implements Serializable {
 
 	private String creatorId; 
 	
+	private List<String> categories; 
 	
-    //these are updated using atomic prepend
+	
+    public List<String> getCategories() {
+		return categories;
+	}
+
+
+	public void setCategories(List<String> categories) {
+		this.categories = categories;
+	}
+	//these are updated using atomic prepend
     private String upvoteTrackerId= UUID.randomUUID().toString();
     private String downvoteTrackerId= UUID.randomUUID().toString();
 
@@ -70,6 +80,10 @@ public class KnownLocation implements Serializable {
 		if(properties == null){
             properties = new HashMap<String, String>(); 
         }
+		
+		if(categories == null){
+			categories = new ArrayList<String>();
+		}
 	}
 
 

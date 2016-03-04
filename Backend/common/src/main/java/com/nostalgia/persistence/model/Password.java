@@ -15,6 +15,8 @@ public class Password implements Serializable{
 	private String dateChanged;
 	private String password; 
 
+	private int version; 
+	
 	public Password() {
 		super();
 
@@ -60,6 +62,14 @@ public class Password implements Serializable{
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public void setVersion(int version) {
+		this.version = version;
 	} 
 
 

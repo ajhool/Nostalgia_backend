@@ -105,9 +105,9 @@ public class LoginRegisterThread extends Thread {
 
         URL httpPost = null;
         if (isRegister) {
-            httpPost = new URL("https://api.vuescape.io" + ":" + 10004 + "/api/v0/user/register?type=" + type + "&password=" + mPassword);
+            httpPost = new URL("https://www.api.vuescape.io" + ":" + 10004 + "/api/v0/user/register?type=" + type + "&password=" + mPassword);
         } else {
-            httpPost = new URL("https://api.vuescape.io" + ":" + 10004 + "/api/v0/user/login?type=" + type + "&password=" + mPassword);
+            httpPost = new URL("https://www.api.vuescape.io" + ":" + 10004 + "/api/v0/user/login?type=" + type + "&password=" + mPassword);
 
         }
 
