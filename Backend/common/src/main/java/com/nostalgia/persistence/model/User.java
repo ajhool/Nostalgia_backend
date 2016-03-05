@@ -34,7 +34,7 @@ public class User implements Serializable {
 	private long versionNumber;
 	private String _id = UUID.randomUUID().toString();
 
-	private Map<String, String> seenVideos; 
+	private String seenVideosPtr = UUID.randomUUID().toString(); 
 	private String name;
 
 	private String passwordPtr;
@@ -339,9 +339,7 @@ public class User implements Serializable {
 		if(pendingFriends == null){
 			pendingFriends = new HashMap<String, String>();
 		}
-		if(seenVideos == null){
-			seenVideos = new HashMap<String, String>();
-		}
+
 		if (this.silentSubscriptions == null) {
             this.silentSubscriptions = new HashSet<String>();
         }
@@ -655,13 +653,36 @@ public class User implements Serializable {
 	}
 
 	@JsonIgnore
+	public Map<String, String> subscribeToPendingFriend(User friendToAdd, boolean incomingRequest) {
+		if(incomingRequest){
+		pendingFriends.put(friendToAdd.get_id(), "Received_" + Long.toString(System.currentTimeMillis()));
+		} else {
+			pendingFriends.put(friendToAdd.get_id(), "Sent_" + Long.toString(System.currentTimeMillis()));
+		}
+		return pendingFriends;
+	}
+	
+	@JsonIgnore
 	public Map<String, String> subscribeToFriend(User friendToAdd) {
 		// TODO Auto-generated method stub
 		friends.put(friendToAdd.get_id(), Long.toString(System.currentTimeMillis()));
+		pendingFriends.remove(friendToAdd.get_id());
+		
+		if(!admin_channels.contains(friendToAdd.getChannelName())){
 		admin_channels.add(friendToAdd.getChannelName());
+		}
 		return friends;
 	}
 
+	@JsonIgnore
+	public Map<String, String> denyFriend(User friendToRemove) {
+		// TODO Auto-generated method stub
+		String removed = pendingFriends.remove(friendToRemove.get_id());
+
+		admin_channels.remove(friendToRemove.getChannelName());
+		return pendingFriends;
+	}
+	
 	@JsonIgnore
 	public Map<String, String> unsubscribeFromFriend(User friendToRemove) {
 		// TODO Auto-generated method stub
@@ -816,35 +837,6 @@ public class User implements Serializable {
 		return results; 
 	}
 
-
-	public Map<String, String> getSeenVideos() {
-		return seenVideos;
-	}
-
-
-	public void setSeenVideos(Map<String, String> seenVideos) {
-		this.seenVideos = seenVideos;
-	}
-
-	@JsonIgnore
-	public boolean addSeenVideo(String viewedVideoId){
-		String existing = seenVideos.get(viewedVideoId);
-
-		if(existing != null) return false;
-
-		seenVideos.put(viewedVideoId, Long.toString(System.currentTimeMillis()));
-		return true;
-	}
-
-	@JsonIgnore
-	public boolean hasSeenVideo(String videoIdToCheck){
-		String existing = seenVideos.get(videoIdToCheck);
-
-		if(existing != null) return true;
-		else return false; 
-	}
-
-
 	public String getUpvoteTrackerId() {
 		return upvoteTrackerId;
 	}
@@ -852,6 +844,16 @@ public class User implements Serializable {
 
 	public void setUpvoteTrackerId(String upvoteTrackerId) {
 		this.upvoteTrackerId = upvoteTrackerId;
+	}
+
+
+	public String getSeenVideosPtr() {
+		return seenVideosPtr;
+	}
+
+
+	public void setSeenVideosPtr(String seenVideosPtr) {
+		this.seenVideosPtr = seenVideosPtr;
 	}
 
 }

@@ -1,5 +1,8 @@
 package com.nostalgia.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,6 +12,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -59,7 +63,89 @@ public class MediaCollectionResource {
 
 	}
 
-	
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/shared/userops")
+	@Timed
+	public MediaCollection addCollection(List<String> users, @QueryParam("adderId") String adderId, @QueryParam("collId") String collId, @QueryParam("privelige") String privelige, @Context HttpServletRequest req) throws Exception{
+
+		User adder = userRepo.findOneById(adderId); 
+
+		if(adder == null){
+			throw new NotFoundException("user id: " + adderId + " not found"); 
+		}
+
+
+		MediaCollection coll = collRepo.findOneById(collId);
+
+		if(!coll.getCreatorId().equals(adderId) && !coll.getWriters().contains(adderId)){
+			throw new ForbiddenException("you do not have sufficient privelidges to add new users to this collection"); 
+		}
+
+		if(coll == null){
+			throw new BadRequestException("no collection with id: " + collId + " found");
+		}
+
+		if(!coll.getVisibility().equalsIgnoreCase("SHARED")){
+			throw new BadRequestException("The specified collection: " + coll.getName() + " must be shared in order to modify users");
+		}
+
+		//otherwise, we know it is good and is shared
+
+		//for each user provided, add/remove them from the list depending on the privelidge
+		ArrayList<User> changedUsers = new ArrayList<User>();
+		for(String userId : users){
+			User adjusting = userRepo.findOneById(userId);
+
+			if(!adder.getFriends().keySet().contains(adjusting.get_id()) || !adjusting.getFriends().keySet().contains(adder.get_id())){
+				throw new ForbiddenException("you can only add your friends to collections");
+			}
+
+			boolean changed = false; 
+			//level 1: add/subtract
+			if(privelige.contains("+r")){
+				changed = true;
+
+				coll.getReaders().add(userId); 
+
+
+
+			} else if(privelige.contains("-r")){
+				changed = true;
+				coll.getReaders().remove(userId);
+			}
+
+			if(privelige.contains("+w")){
+				changed = true;
+				coll.getWriters().add(userId);
+
+
+			} else if(privelige.contains("-w")){
+				changed = true;
+				coll.getWriters().remove(userId); 
+			} 
+
+			if(!changed) throw new BadRequestException("privelidge field badly formed");
+			adjusting.addCollection(coll);
+			changedUsers.add(adjusting);
+
+		}
+
+		//finally, update the other user objects themselves
+		for (User changed: changedUsers){
+			syncClient.setSyncChannels(changed); 
+			userRepo.save(changed); 
+		}
+
+		collRepo.save(coll);
+
+		return coll;
+
+	}
+
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -74,7 +160,7 @@ public class MediaCollectionResource {
 		}
 
 		User creator = userRepo.findOneById(creating.getCreatorId());
-		
+
 		MediaCollection existing = collRepo.findOneById(creating.get_id());
 		if(existing != null){
 			throw new NotAllowedException("collection already exists");
@@ -82,14 +168,14 @@ public class MediaCollectionResource {
 
 		//point user to new collection (subscription also happens in this step)
 		creator.addCollection(creating);
-	
+
 		//update sync channels
 		syncClient.setSyncChannels(creator);
-		
+
 		//save both user + collection
 		userRepo.save(creator);
 		collRepo.save(creating); 
-		
+
 		return creating;
 
 	}
@@ -102,13 +188,43 @@ public class MediaCollectionResource {
 	@Timed
 	public MediaCollection updateCollection(MediaCollection updated, @QueryParam("updaterToken") String updaterTok, @Context HttpServletRequest req) throws Exception{
 
+		MediaCollection original = collRepo.findOneById(updated.get_id());
+
+
+
+		if(original == null){
+			throw new BadRequestException("no exisiting collection found! no action taken");
+		}
+
+		//check no change of ownership
+		if(!original.getCreatorId().equals(updated.getCreatorId()) && !updaterTok.equals(original.getCreatorId())){
+			throw new ForbiddenException("only owner can change collection ownership");
+
+
+		} 
+
+
+		if(!original.getCreatorId().equals(updated.getCreatorId()) && !original.getWriters().contains(updated.getCreatorId())){
+			throw new BadRequestException("can only change owner to an exisitng writer");
+		}
+
+
+
+		if(!original.getReaders().equals(updated.getReaders()) || !original.getWriters().equals(updated.getWriters()) ){
+			throw new ForbiddenException("cannot change access control this way");
+		}
+
+		//check privelgiges
+		if(!original.getCreatorId().equalsIgnoreCase(updaterTok) && !original.getWriters().contains(updaterTok)){
+			throw new ForbiddenException("insufficient update privelidges"); 
+		}
 
 		collRepo.save(updated); 
-		
+
 		return updated; 
 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
@@ -120,17 +236,26 @@ public class MediaCollectionResource {
 
 		MediaCollection toRemove = collRepo.findOneById(idToDel);
 		User remover = userRepo.findOneById(removerTok);
+
+		if(toRemove == null){
+			throw new BadRequestException("no collection with id: " + idToDel + "found");
+		}
+
+		if(!toRemove.getCreatorId().equalsIgnoreCase(removerTok)){
+			throw new ForbiddenException("only a collection owner can delete it");
+		}
+
 		//unsubscribe user
 		remover.removeCollection(toRemove);
-		
+
 		//delete from repo
 		collRepo.remove(toRemove);
-		
+
 		userRepo.save(remover);
 		return toRemove; 
 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -141,7 +266,7 @@ public class MediaCollectionResource {
 
 
 		MediaCollection found = collRepo.findOneById(targetId);
-		
+
 		return found; 
 
 	}

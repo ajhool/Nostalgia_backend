@@ -47,6 +47,44 @@ public class AtomicOpsResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/checkviewed")
+	@Timed
+	public String checkViewed(@QueryParam("userId") String userId, @QueryParam("target")String targetId) throws Exception{
+		//save to user's saved collection 
+		User adding = userRepo.findOneById(userId);
+
+		logger.info("searching for id: " + targetId + " in viewed videos");
+		if(adding == null){
+			throw new NotFoundException("user not found");
+		}
+		
+		Object viewed = atomicCli.getContents(adding.getSeenVideosPtr());
+		String contents = viewed.toString();
+		
+		int index = contents.indexOf(targetId); 
+		logger.info("video id " + targetId + "found at index: " + index);
+		
+		if(index < 0){
+			return Integer.toString(index); 
+		}
+		
+		//otherwise, try nad parse out the time viewed
+		String ofInterest = contents.substring(index);
+		logger.info("ofinterest string: " + ofInterest);
+		int sentinelEnd = ofInterest.indexOf("}");
+		int sentinelStart = ofInterest.indexOf(",");
+		
+		String cutOutObject = ofInterest.substring(sentinelStart + 1, sentinelEnd);
+		logger.info("cut out viewed time: " + cutOutObject);
+		
+		return cutOutObject; 
+		
+		
+	}
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/favorite")
 	@Timed
 	public String favoriteVideo(String videoId, @QueryParam("userid")String userid) throws Exception{
@@ -135,7 +173,8 @@ public class AtomicOpsResource {
 		if(hasCounter == null){
 			throw new NotFoundException("video not found");
 		}
-		adding.addSeenVideo(videoId);
+		
+		atomicCli.addPrependedItem(adding.getSeenVideosPtr(), videoId, System.currentTimeMillis());
 
 		//increment counter
 		atomicCli.incrementCounter(hasCounter.getViewCounterId()); 
@@ -263,6 +302,8 @@ public class AtomicOpsResource {
 			case("UPVOTES"):
 				idOfTracker = toGet.getUpvoteTrackerId();
 			break;
+			
+			
 			default:
 				throw new BadRequestException("invlaid field type");
 			}

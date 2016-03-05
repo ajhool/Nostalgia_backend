@@ -91,14 +91,80 @@ public class FriendsResource {
 
 	}
 
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/accept")
+	@Timed
+	public User acceptFriend(String userAcceptingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
+		
+		if(userAcceptingFriendId == null){
+			throw new BadRequestException();
+		}
+
+		User acceptingFriend = userRepo.findOneById(userAcceptingFriendId);
+		User friendToAccept = userRepo.findOneById(friendId); 
+
+		if(!friendToAccept.getPendingFriends().keySet().contains(acceptingFriend.get_id())){
+			
+			//then this person never had a request 
+			throw new BadRequestException("friend you were accepting did not request to be friends!"); 
+		}
+		
+		//accept the friend yourself
+		
+		acceptingFriend.subscribeToFriend(friendToAccept);
+		syncClient.setSyncChannels(acceptingFriend);
+		userRepo.save(acceptingFriend);
+		
+		//subscribe other friend
+		friendToAccept.subscribeToFriend(acceptingFriend); 
+		syncClient.setSyncChannels(friendToAccept);
+		userRepo.save(friendToAccept);
+		return acceptingFriend; 
+	}
 	
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/add")
+	@Path("/deny")
 	@Timed
-	public User addFriend(String userAddingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
+	public User denyFriend(String userDenyingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
+		
+		if(userDenyingFriendId == null){
+			throw new BadRequestException();
+		}
+
+		User denyingFriend = userRepo.findOneById(userDenyingFriendId);
+		User friendToDeny = userRepo.findOneById(friendId); 
+
+		if(!friendToDeny.getPendingFriends().keySet().contains(denyingFriend.get_id())){
+			
+			//then this person never had a request 
+			throw new BadRequestException("friend you were denying did not request to be friends!"); 
+		}
+		
+		//deny the friend 
+		
+		denyingFriend.denyFriend(friendToDeny); 
+		userRepo.save(denyingFriend);
+		
+		//remove yourself from their request
+		friendToDeny.getPendingFriends().remove(denyingFriend.get_id()); 
+		userRepo.save(friendToDeny);
+		return denyingFriend; 
+		
+	}
+	
+	@SuppressWarnings("unused")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/request")
+	@Timed
+	public User requestFriend(String userAddingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
 
 
 		if(userAddingFriendId == null){
@@ -115,9 +181,12 @@ public class FriendsResource {
 		
 		//otherwise, we aren't friends, so add it in
 		
-		addingFriend.subscribeToFriend(friendToAdd);
-		syncClient.setSyncChannels(addingFriend);
+		addingFriend.subscribeToPendingFriend(friendToAdd, false);
 		userRepo.save(addingFriend);
+		
+		//request from other friend
+		friendToAdd.subscribeToPendingFriend(addingFriend, true);
+		userRepo.save(friendToAdd);
 		return addingFriend;
 
 	}
