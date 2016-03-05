@@ -105,30 +105,44 @@ public class MediaCollectionResource {
 
 			boolean changed = false; 
 			//level 1: add/subtract
-			if(privelige.contains("+r")){
+			if(privelige.contains("ADD_AS_READER")){
 				changed = true;
 
 				coll.getReaders().add(userId); 
 
 
 
-			} else if(privelige.contains("-r")){
+			} else if(privelige.contains("REMOVE_AS_READER")){
 				changed = true;
 				coll.getReaders().remove(userId);
 			}
 
-			if(privelige.contains("+w")){
+			if(privelige.contains("ADD_AS_WRITER")){
 				changed = true;
 				coll.getWriters().add(userId);
 
 
-			} else if(privelige.contains("-w")){
+			} else if(privelige.contains("REMOVE_AS_WRITER")){
 				changed = true;
 				coll.getWriters().remove(userId); 
 			} 
 
+			if(privelige.contains("REMOVE_ALL_ACCESS")){
+				changed = true; 
+				coll.getReaders().remove(adjusting.get_id());
+				coll.getWriters().remove(adjusting.get_id()); 
+			}
+
 			if(!changed) throw new BadRequestException("privelidge field badly formed");
-			adjusting.addCollection(coll);
+
+			if(coll.getReaders().contains(adjusting.get_id()) && coll.getWriters().contains(adjusting.get_id()) && coll.getCreatorId().contains(adjusting.get_id())){
+				//then this person has no access privelidges, so remove it from their account
+				adjusting.removeCollection(coll);
+			} else {
+				//otherwise add it
+				adjusting.addCollection(coll);
+			}
+
 			changedUsers.add(adjusting);
 
 		}

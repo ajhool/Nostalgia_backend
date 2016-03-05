@@ -95,10 +95,10 @@ public class FriendsResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/accept")
+	@Path("/ACCEPT")
 	@Timed
 	public User acceptFriend(String userAcceptingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
-		
+
 		if(userAcceptingFriendId == null){
 			throw new BadRequestException();
 		}
@@ -107,32 +107,32 @@ public class FriendsResource {
 		User friendToAccept = userRepo.findOneById(friendId); 
 
 		if(!friendToAccept.getPendingFriends().keySet().contains(acceptingFriend.get_id())){
-			
+
 			//then this person never had a request 
 			throw new BadRequestException("friend you were accepting did not request to be friends!"); 
 		}
-		
+
 		//accept the friend yourself
-		
+
 		acceptingFriend.subscribeToFriend(friendToAccept);
 		syncClient.setSyncChannels(acceptingFriend);
 		userRepo.save(acceptingFriend);
-		
+
 		//subscribe other friend
 		friendToAccept.subscribeToFriend(acceptingFriend); 
 		syncClient.setSyncChannels(friendToAccept);
 		userRepo.save(friendToAccept);
 		return acceptingFriend; 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/deny")
+	@Path("/DENY")
 	@Timed
 	public User denyFriend(String userDenyingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
-		
+
 		if(userDenyingFriendId == null){
 			throw new BadRequestException();
 		}
@@ -141,28 +141,28 @@ public class FriendsResource {
 		User friendToDeny = userRepo.findOneById(friendId); 
 
 		if(!friendToDeny.getPendingFriends().keySet().contains(denyingFriend.get_id())){
-			
+
 			//then this person never had a request 
 			throw new BadRequestException("friend you were denying did not request to be friends!"); 
 		}
-		
+
 		//deny the friend 
-		
+
 		denyingFriend.denyFriend(friendToDeny); 
 		userRepo.save(denyingFriend);
-		
+
 		//remove yourself from their request
 		friendToDeny.getPendingFriends().remove(denyingFriend.get_id()); 
 		userRepo.save(friendToDeny);
 		return denyingFriend; 
-		
+
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/request")
+	@Path("/REQUEST")
 	@Timed
 	public User requestFriend(String userAddingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
 
@@ -178,12 +178,12 @@ public class FriendsResource {
 			//we are already friends or pending
 			return null;
 		}
-		
+
 		//otherwise, we aren't friends, so add it in
-		
+
 		addingFriend.subscribeToPendingFriend(friendToAdd, false);
 		userRepo.save(addingFriend);
-		
+
 		//request from other friend
 		friendToAdd.subscribeToPendingFriend(addingFriend, true);
 		userRepo.save(friendToAdd);
@@ -201,7 +201,7 @@ public class FriendsResource {
 
 
 		List<User> results = userRepo.searchByName(friendName);
-		
+
 		//scrub user info
 		for(User cur : results){
 			cur.setPasswordPtr(null);
@@ -213,16 +213,16 @@ public class FriendsResource {
 			cur.setStreamTokens(null);
 			cur.setToken(null);
 		}
-		
+
 		return results; 
 
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/remove")
+	@Path("/REMOVE")
 	@Timed
 	public User removeFriend(String userRemovingFriendId, @QueryParam("friendId") String friendIdtoRemove, @Context HttpServletRequest req) throws Exception{
 
@@ -233,15 +233,27 @@ public class FriendsResource {
 
 		User removingFriend = userRepo.findOneById(userRemovingFriendId);
 		User friendToRemove = userRepo.findOneById(friendIdtoRemove); 
-		
+
+		boolean friendsChanged = false; 
 		if(!removingFriend.getFriends().keySet().contains(friendToRemove.get_id())){
 			//we dont have the friend we are trying to remove
-			return null;
+			friendsChanged = true; 
 		}
-		
-		
+
+
 		removingFriend.unsubscribeFromFriend(friendToRemove);
-		syncClient.setSyncChannels(removingFriend);
+		friendToRemove.unsubscribeFromFriend(removingFriend);
+
+		//also remove from pending if it exists
+		removingFriend.getPendingFriends().remove(friendToRemove.get_id()); 
+		friendToRemove.getPendingFriends().remove(removingFriend.get_id());
+
+		if(friendsChanged){
+			syncClient.setSyncChannels(removingFriend);
+			syncClient.setSyncChannels(friendToRemove);
+		}
+
+		userRepo.save(friendToRemove); 
 		userRepo.save(removingFriend);
 		return removingFriend; 
 
