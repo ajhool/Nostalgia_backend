@@ -111,6 +111,16 @@ public class UserResource {
 	}
 
 	@SuppressWarnings("unused")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/id")
+	@Timed
+	public User getUser(@QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
+		return userRepo.findOneById(userId);
+	}
+	
+	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)

@@ -9,11 +9,9 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.castlabs.dash.dashfragmenter.ExitCodeException;
 import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
-import com.nostalgia.contentserver.dash.ManualDashFileSet;
 
 
 public class PipelineScrubber implements Runnable{

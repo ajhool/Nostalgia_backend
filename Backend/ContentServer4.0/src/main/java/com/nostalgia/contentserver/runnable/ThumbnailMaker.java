@@ -10,12 +10,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.castlabs.dash.dashfragmenter.ExitCodeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.contentserver.FFMPEGController;
 import com.nostalgia.contentserver.ShellCallback;
 import com.nostalgia.contentserver.StdoutCallback;
-import com.nostalgia.contentserver.dash.ManualDashFileSet;
 import com.nostalgia.contentserver.resource.AsyncHLSerResource;
 
 public class ThumbnailMaker implements Runnable{
