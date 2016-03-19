@@ -94,7 +94,7 @@ public class FriendsResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/ACCEPT")
 	@Timed
 	public User acceptFriend(String userAcceptingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
@@ -128,7 +128,7 @@ public class FriendsResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/DENY")
 	@Timed
 	public User denyFriend(String userDenyingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
@@ -161,7 +161,7 @@ public class FriendsResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/REQUEST")
 	@Timed
 	public User requestFriend(String userAddingFriendId, @QueryParam("friendId") String friendId, @Context HttpServletRequest req) throws Exception{
@@ -221,7 +221,7 @@ public class FriendsResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/REMOVE")
 	@Timed
 	public User removeFriend(String userRemovingFriendId, @QueryParam("friendId") String friendIdtoRemove, @Context HttpServletRequest req) throws Exception{
@@ -234,10 +234,10 @@ public class FriendsResource {
 		User removingFriend = userRepo.findOneById(userRemovingFriendId);
 		User friendToRemove = userRepo.findOneById(friendIdtoRemove); 
 
-		boolean friendsChanged = false; 
-		if(!removingFriend.getFriends().keySet().contains(friendToRemove.get_id())){
+		boolean friendsChanged = true; 
+		if(removingFriend.getFriends().keySet().contains(friendToRemove.get_id())){
 			//we dont have the friend we are trying to remove
-			friendsChanged = true; 
+			friendsChanged = false; 
 		}
 
 
