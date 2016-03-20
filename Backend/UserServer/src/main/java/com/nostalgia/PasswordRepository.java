@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.Password;
 import com.nostalgia.persistence.model.User;
+import com.nostalgia.util.PasswordUtils;
 
 public class PasswordRepository {
 
@@ -40,23 +41,23 @@ public class PasswordRepository {
 	private final CouchbaseConfig config;
 	private final BucketManager bucketManager;
 	private static final ObjectMapper mapper = new ObjectMapper();
-	
+
 
 	private static final Logger logger = LoggerFactory.getLogger(PasswordRepository.class);
-	
 
-	
+
+
 	// Initialize design document
 	DesignDocument passwordDoc = DesignDocument.create(
-		"password",
-		Arrays.asList(
-			DefaultView.create("by_id",
-				"function (doc, meta) { emit(doc._id, null); }"),
-			DefaultView.create("by_owner_id",
-				"function (doc, meta) { emit(doc.ownerId, null); }")
-		)
-	);
-	
+			"password",
+			Arrays.asList(
+					DefaultView.create("by_id",
+							"function (doc, meta) { emit(doc._id, null); }"),
+					DefaultView.create("by_owner_id",
+							"function (doc, meta) { emit(doc.ownerId, null); }")
+					)
+			);
+
 
 	public PasswordRepository(CouchbaseConfig passwordCouchConfig) {
 		config = passwordCouchConfig;
@@ -85,7 +86,7 @@ public class PasswordRepository {
 		JsonObject jsonObj = JsonObject.fromJson(json);
 
 		JsonDocument  doc = JsonDocument.create(pass.get_id(), jsonObj);
-		
+
 		if(jsonObj.get("_id") == null){
 			throw new Exception("error - _id field required ");
 		}
@@ -96,10 +97,10 @@ public class PasswordRepository {
 
 	public Password docToPassword(JsonDocument document) {
 		if(document == null) return null;
-		
+
 		JsonObject obj = document.content();
 		String objString = obj.toString();
-		
+
 		//User newUser = new JSONDeserializer<User>().deserialize( objString , User.class );
 		//User result = mapper.convertValue(objString, User.class);
 		Password newPass = null;
@@ -109,7 +110,7 @@ public class PasswordRepository {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		if(!newPass.get_id().equals(document.id())){
 			logger.error("ERROR - PASS ID FIELD DROPPED");
 			logger.info("repairing...");
@@ -129,17 +130,17 @@ public class PasswordRepository {
 			String error = result.error().toString();
 			logger.error("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.totalRows() < 1){
 			return null;
 		}
-		
+
 		ArrayList<Password> passes = new ArrayList<Password>();
 		for (ViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    
-		    passes.add(docToPassword(matching));
+			JsonDocument matching = row.document();
+
+			passes.add(docToPassword(matching));
 		}
 
 		if(passes.size() > 1){
@@ -157,17 +158,17 @@ public class PasswordRepository {
 			String error = result.error().toString();
 			logger.error("error from view query:" + error);
 		}
-	
+
 
 		if (result == null || result.totalRows() < 1){
 			return null;
 		}
-		
+
 		ArrayList<Password> passes = new ArrayList<Password>();
 		for (ViewRow row : result) {
-		    JsonDocument matching = row.document();
-		    
-		    passes.add(docToPassword(matching));
+			JsonDocument matching = row.document();
+
+			passes.add(docToPassword(matching));
 		}
 
 		if(passes.size() > 1){
@@ -178,4 +179,33 @@ public class PasswordRepository {
 
 	}
 
+	public boolean checkPassword(User user, String password) throws Exception {
+		Password matching = findOneByOwnerId(user.get_id());
+
+		User result = null; 
+
+		switch(matching.getVersion()){
+		case 2:{
+			//salted
+			if(PasswordUtils.check(password, matching.getPassword())){
+				result = user;
+				break;
+			}
+		}
+		break; 
+
+		default:
+			if(matching.getPassword().equalsIgnoreCase(password)){
+				//then we have a match
+				result = user; 
+				break;
+			}
+			break;
+		}
+
+
+
+		return result != null; 
+
+	}
 }

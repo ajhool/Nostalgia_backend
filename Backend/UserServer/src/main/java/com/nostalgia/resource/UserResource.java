@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -20,11 +21,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +38,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.common.collect.ImmutableList;
 import com.nostalgia.ImageDownloaderBase64;
 import com.nostalgia.MediaCollectionRepository;
 import com.nostalgia.PasswordRepository;
@@ -56,6 +60,8 @@ import facebook4j.FacebookFactory;
 import facebook4j.Reading;
 import facebook4j.conf.Configuration;
 import facebook4j.conf.ConfigurationBuilder;
+import oauth.AccessToken;
+import oauth.AccessTokenRepository;
 
 @Path("/api/v0/user")
 public class UserResource {
@@ -84,15 +90,17 @@ public class UserResource {
 	private final IconClient icCli; 
 	private final SignedCookieCreator creator;
 	private final MediaCollectionRepository collRepo;
-	private final PasswordRepository passRepo; 
+	private final PasswordRepository passRepo;
+	private AccessTokenRepository tokenRepo; 
 
 
-	public UserResource( UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo, PasswordRepository passRepo) {
+	public UserResource(AccessTokenRepository tokenRepo, UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo, PasswordRepository passRepo) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
 		this.icCli = icCli;
 		this.creator = create;
+		this.tokenRepo = tokenRepo;
 		this.collRepo = collRepo;
 		this.passRepo = passRepo;
 	}
@@ -300,33 +308,7 @@ public class UserResource {
 		long time = 1451066974000L; 
 		final long syncTokTime = System.currentTimeMillis() - time2; 
 
-		//		//refresh tokens if necessary
-		//		if(loggedIn.getStreamTokens() != null){
-		//			long expiry = Long.parseLong(loggedIn.getStreamTokens().get("CloudFront-Expires"));
-		//			if(expiry < System.currentTimeMillis()){
-		//				//need new set of tokens
-		//				this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-		//			}
-		//			
-		//		} else {
-		//			this.setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
-		//		}
 
-		//		final User streamUser = loggedIn; 
-		//		Thread streamer = new Thread(){
-		//
-		//			@Override
-		//			public void run(){
-		//				try {
-		//					
-		//					
-		//				} catch (Exception e) {
-		//					// TODO Auto-generated catch block
-		//					e.printStackTrace();
-		//				}
-		//			}
-		//		};
-		//		
 		long time3 = System.currentTimeMillis(); 
 		setNewStreamingTokens(loggedIn, System.currentTimeMillis() + MONTH_IN_MILLIS);
 
@@ -338,8 +320,8 @@ public class UserResource {
 		checkAndSetDefaultCollections(loggedIn, false);
 
 		syncClient.setSyncChannels(loggedIn);
-
-
+		getToken("USER", pass, loggedIn);
+		
 		userRepo.save(loggedIn);
 
 		long collectionsTime = System.currentTimeMillis() - time3; 
@@ -561,7 +543,31 @@ public class UserResource {
 
 		return result;
 	}
+	private static List<String> allowedGrantTypes = new ArrayList<String>();
+	static {
+	allowedGrantTypes.add("USER"); 
+	}
+	
+	public String getToken(String grantType, String password, User gettingToken) throws Exception {
+		// Check if the grant type is allowed
+		if (!allowedGrantTypes.contains(grantType)) {
+			Response response = Response.status(415).build();
+			throw new WebApplicationException(response);
+		}
 
+		
+		boolean correct = passRepo.checkPassword(gettingToken, password); 
+		
+		if (gettingToken == null || !correct) {
+			throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+		}
+
+		// User was found, generate a token and return it.
+		AccessToken accessToken = tokenRepo.generateNewAccessToken(gettingToken, new DateTime());
+		gettingToken.setToken(accessToken.getAccess_token_id().toString()); 
+		
+		return accessToken.getAccess_token_id().toString();
+	}
 
 
 	@SuppressWarnings("unused")
@@ -720,7 +726,7 @@ public class UserResource {
 				loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
 			}
 			checkAndSetDefaultCollections(loggedInUser, true);
-
+			getToken("USER", pass, loggedIn);
 
 			success = true;
 		} catch (Exception e){

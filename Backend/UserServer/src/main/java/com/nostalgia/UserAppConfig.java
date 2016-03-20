@@ -96,5 +96,15 @@ public class UserAppConfig extends Configuration{
 		return passServConfig; 
 	}
 
+	@Valid
+	@NotNull
+	@JsonProperty("TokenRepo")
+	private CouchbaseConfig tokenServConfig = new  CouchbaseConfig();
+
+	public CouchbaseConfig getTokenRepoConfig() {
+		
+		return tokenServConfig;
+	}
+
 	
 }

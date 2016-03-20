@@ -102,7 +102,7 @@ public class AtomicOpsResource {
 			throw new NotFoundException("video not found");
 		}
 
-		String saved = adding.findCollection(MediaCollection.PRIVATE, "Saved");
+		String saved = adding.findCollection(MediaCollection.PRIVATE, "Favorites");
 		MediaCollection savedColl = collRepo.findOneById(saved);
 
 		savedColl.getMatchingVideos().put(videoId, Long.toString(System.currentTimeMillis())); 
@@ -112,6 +112,10 @@ public class AtomicOpsResource {
 
 		//increment counter on video
 		atomicCli.incrementCounter(hasCounter.getFavoriteCounterId());
+		
+		//a favorite is an upvote
+		upvote(videoId, "VIDEO", userid);
+		
 		return videoId; 
 
 	}

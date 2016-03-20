@@ -55,6 +55,8 @@ public class UserRepository {
 				"function (doc, meta) { if (doc.type == 'User') { emit(doc.email, null); } }"),
 			DefaultView.create("by_name",
 				"function (doc, meta) { if (doc.type == 'User') { emit(doc.name, null); } }"),
+			DefaultView.create("by_token",
+					"function (doc, meta) { if (doc.type == 'User') { emit(doc.token, null); } }"),
 			DefaultView.create("by_account_token",
 					"function (doc, meta) { "
 					+ "if (doc.type == 'User') { "
@@ -254,6 +256,33 @@ public class UserRepository {
 		
 		
 		return users;
+	}
+
+	public User findOneByOAuthToken(String access_token_id) {
+		ViewQuery query = ViewQuery.from("user", "by_token").inclusiveEnd(true).key(access_token_id);//.stale(Stale.FALSE);
+		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
+		if(!result.success()){
+			String error = result.error().toString();
+			logger.error("error from view query:" + error);
+		}
+	
+
+		if (result == null || result.totalRows() < 1){
+			return null;
+		}
+		
+		ArrayList<User> users = new ArrayList<User>();
+		for (ViewRow row : result) {
+		    JsonDocument matching = row.document();
+		    
+		    users.add(docToUser(matching));
+		}
+
+		if(users.size() > 1){
+			logger.error("TOO MANY USERS MATCHING id");
+		}
+		if(users.size() < 1) return null; 
+		return users.get(0);
 	}
 
 }

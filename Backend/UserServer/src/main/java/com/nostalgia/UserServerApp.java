@@ -8,9 +8,11 @@ import javax.ws.rs.client.Client;
 
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.cache.CacheBuilderSpec;
 import com.nostalgia.aws.AWSConfig;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.AtomicOpsClient;
@@ -18,6 +20,7 @@ import com.nostalgia.client.IconClient;
 import com.nostalgia.client.LambdaClient;
 import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.client.SynchClient;
+import com.nostalgia.persistence.model.User;
 import com.nostalgia.resource.AtomicOpsResource;
 import com.nostalgia.resource.FriendsResource;
 import com.nostalgia.resource.LocationAdminResource;
@@ -32,10 +35,19 @@ import com.nostalgia.resource.VideoResource;
 import com.nostalgia.resource.VideoUploadResource;
 
 import io.dropwizard.Application;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.CachingAuthenticator;
+import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter;
 import io.dropwizard.client.HttpClientBuilder;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import oauth.AccessToken;
+import oauth.AccessTokenRepository;
+import oauth.AuthResource;
+import oauth.SimpleAuthenticator;
+import oauth.SimpleAuthorizer;
 
 
 
@@ -76,6 +88,12 @@ public class UserServerApp extends Application<UserAppConfig>{
 		return repo;
 	}
 
+	private AccessTokenRepository getTokenRepo(UserAppConfig config, Environment environment){
+		AccessTokenRepository repo = new AccessTokenRepository(config.getTokenRepoConfig());
+
+		return repo;
+	}
+	
 	private PasswordRepository getPasswordRepo(UserAppConfig config, Environment environment){
 		PasswordRepository repo = new PasswordRepository(config.getPasswordServerConfig());
 
@@ -134,6 +152,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		VideoRepository vidRepo = this.getVideoRepository(config, environment);
 		MediaCollectionRepository collRepo =this.getCollectionRepo(config, environment);
 		PasswordRepository passRepo = this.getPasswordRepo(config, environment);
+		AccessTokenRepository tokenRepo = this.getTokenRepo(config, environment); 
 	
 		SynchClient sCli = this.createSynchClient(config, environment);
 		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
@@ -144,7 +163,7 @@ public class UserServerApp extends Application<UserAppConfig>{
 		environment.lifecycle().manage(s3Cli);
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
-		UserResource userResource = new UserResource(userRepo, sCli, locRes, icSvc, create, collRepo, passRepo);
+		UserResource userResource = new UserResource(tokenRepo, userRepo, sCli, locRes, icSvc, create, collRepo, passRepo);
 		PasswordResource passRes = new PasswordResource(userRepo, passRepo);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo, collRepo);
@@ -154,6 +173,19 @@ public class UserServerApp extends Application<UserAppConfig>{
 		MediaCollectionResource collRes = new MediaCollectionResource(userRepo, sCli, collRepo);
 		AtomicOpsResource aOps = new AtomicOpsResource(userRepo, atomicCli,  collRepo, vidRepo,  locRepo);
 		VideoUploadResource ulRes = new VideoUploadResource(vidRepo, s3Cli, lCli);
+		SimpleAuthenticator authr = new SimpleAuthenticator(tokenRepo); 
+		CachingAuthenticator<String, AccessToken> cachingAuthenticator = new CachingAuthenticator<>(
+                environment.metrics(), authr,
+                CacheBuilderSpec.parse("maximumSize=10000, expireAfterAccess=100m"));
+		
+		environment.jersey().register(new AuthDynamicFeature(new OAuthCredentialAuthFilter.Builder<AccessToken>()
+                .setAuthenticator(cachingAuthenticator)
+                .setAuthorizer(new SimpleAuthorizer())
+                .setPrefix("Bearer")
+                .setRealm("Nostalgia")
+                .buildAuthFilter()));
+        environment.jersey().register(new AuthValueFactoryProvider.Binder<AccessToken>(AccessToken.class));
+        environment.jersey().register(RolesAllowedDynamicFeature.class);
 		
 		environment.jersey().register(passRes);
 		environment.jersey().register(ulRes);
@@ -166,9 +198,12 @@ public class UserServerApp extends Application<UserAppConfig>{
 		environment.jersey().register(vidRes);
 		environment.jersey().register(locRes);
 		environment.jersey().register(userResource);
+		environment.jersey().register(new AuthResource(userRepo));
 
 	}
 
+	
+	
 	private VideoRepository getVideoRepository(UserAppConfig config, Environment environment) {
 		VideoRepository repo = new VideoRepository(config.getVideoCouchConfig());
 		return repo;

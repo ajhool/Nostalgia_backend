@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.security.Principal;
 
 /**
  * Created by alex on 11/4/15.
