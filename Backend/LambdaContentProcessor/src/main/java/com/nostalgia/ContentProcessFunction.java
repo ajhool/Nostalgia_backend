@@ -69,6 +69,7 @@ public class ContentProcessFunction implements RequestHandler<ProcessContentRequ
 		}
 
 		ArrayList<String> createdThumbs = thumbnailer.getThumbs();
+		System.out.println("created thumbs: " + createdThumbs); 
 
 		VideoTranscodedCallbackThread updatr = new VideoTranscodedCallbackThread(createdThumbs, contentId + "/320x180.m3u8", contentId); 
 		

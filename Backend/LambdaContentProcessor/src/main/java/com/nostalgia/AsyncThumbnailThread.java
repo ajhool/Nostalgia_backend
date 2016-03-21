@@ -80,13 +80,17 @@ public class AsyncThumbnailThread extends Thread {
 				List<File> result = null;
 				try {
 					result = processFile(sourceFile.getName(), sourceFile, thumbnailParentDir);
+					System.out.println("Async: files being returned from processfile: " + result);
 				} catch (Exception e) {
 					System.err.println("Error processing thumbs: " + e);
 					return; 
 				}
 
+				System.out.println("Async: working dir: " + workingDir);
+				
 				for(File thumb : result){
-					thumbs.add( workingDir.getName() + "/" + thumbnailParentDir.getName() + "/" + thumb.getName());
+					String relative = new File("/tmp").toURI().relativize(thumb.toURI()).getPath();
+					thumbs.add(relative);
 				}
 
 

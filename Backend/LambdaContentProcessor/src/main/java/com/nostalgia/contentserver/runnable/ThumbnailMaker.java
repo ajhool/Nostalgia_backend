@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,7 +72,7 @@ public class ThumbnailMaker implements Runnable{
 
 		return this.output;
 	}
-	
+
 	private void loadCreatedFiles(){
 		//iterate through all files with thumbnail in their name in the thumbnail dir 
 		String[] extensions = new String[]{"jpg"};
@@ -80,17 +82,37 @@ public class ThumbnailMaker implements Runnable{
 
 		while(iter.hasNext()){
 			File toProcess= iter.next();
+			System.out.println("Iter: checking file: " + toProcess);
 			if(toProcess.getName().contains("thumbnail")){
-					this.output.add(toProcess);
+				this.output.add(toProcess);
 			}
 		}
-		
+
 	}
 
 	private void makeThumbnailsWithFFMPEG(String vidId) {
 		FFMPEGController controller = new FFMPEGController();
 		//controller.installBinaries(false);
-		ArrayList<String> cmds = controller.generateFFMPEGThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
+		Set<ArrayList<String>> thumbCommands = new HashSet<ArrayList<String>>();
+
+		File dir = new File(thumbnailParent, "large");
+		dir.mkdirs(); 
+
+		ArrayList<String> cmds1 = controller.generateFFMPEGFullSizeThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
+
+		thumbCommands.add(cmds1);
+
+		File dir2 = new File(thumbnailParent, "medium");
+		dir2.mkdirs(); 
+		ArrayList<String> cmds2 = controller.generateFFMPEGMediumSizeThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
+
+		thumbCommands.add(cmds2);
+
+		File dir3 = new File(thumbnailParent, "small");
+		dir3.mkdirs(); 
+		ArrayList<String> cmds3 = controller.generateFFMPEGSmallSizeThumbnailCommand(vidId, sourceFile, this.thumbnailParent);
+
+		thumbCommands.add(cmds3);
 
 		ShellCallback sc = null;
 		try {
@@ -100,16 +122,21 @@ public class ThumbnailMaker implements Runnable{
 			e1.printStackTrace();
 		}
 
-		try {
-			int exit = controller.execProcess(cmds, sc, sourceFile.getParentFile());
-		} catch (Exception e){
-			System.err.println("error in thumb maker: " + e);
-			System.err.println("quitting to save $$...");
-			System.exit(1);
+		for(ArrayList<String> curCmd : thumbCommands){
+			System.out.println("running command: " + curCmd.toString());
+			try {
+				int exit = controller.execProcess(curCmd, sc, sourceFile.getParentFile());
+				System.out.println("ran command: " + curCmd.toString() + " with exit code: " + exit);
+			} catch (Exception e){
+				System.err.println("error in thumb maker: " + e);
+				System.err.println("quitting to save $$...");
+				System.exit(1);
+			}
+
 		}
-		
-		
-		
+
+
+
 	}
 
 }
