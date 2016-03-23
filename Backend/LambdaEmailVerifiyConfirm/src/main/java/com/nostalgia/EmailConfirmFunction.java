@@ -6,13 +6,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.persistence.model.ProcessContentRequestPojo;
@@ -41,21 +47,25 @@ public class EmailConfirmFunction {
 		IOUtils.copy(inputStream, writer, "UTF-8");
 		String theString = writer.toString();
 
-		try {
-			context.getLogger().log("Input: " + mapper.writeValueAsString(theString));
-		} catch (Exception e){
-			e.printStackTrace();
-		}
+		JSONObject totalInput = new JSONObject(theString);
 
+		System.out.println("totalinput json object" + totalInput.toString());
+
+		String queryParam = totalInput.getString("query-params"); 
+
+		System.out.println("query params: " + queryParam);
+
+
+		Map<String, String> parsed = parse(queryParam); 
+
+
+		System.out.println("parsed map is: " + parsed.toString());
+		
+		String code = parsed.get("code");
+		
 		User user = null; 
 
-		//simulate lookup work
-		try {
-			Thread.sleep(300);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		//lookup user by param token
 
 
 		String response = null;
@@ -86,6 +96,21 @@ public class EmailConfirmFunction {
 		System.out.println("quitting...");
 		System.out.println("function measured executon time as: " + ((double)(System.currentTimeMillis() - start) / (double) 1000) + "seconds");
 		return; 
+	}
+
+
+	private static  Map<String, String> parse(String foo) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		String foo2 = foo.substring(1, foo.length() - 1);  // hack off braces
+		StringTokenizer st = new StringTokenizer(foo2, ",");
+		while (st.hasMoreTokens()) {
+			String thisToken = st.nextToken();
+			StringTokenizer st2 = new StringTokenizer(thisToken, "=");
+
+			map.put(st2.nextToken(), st2.nextToken());
+		}
+
+		return map; 
 	}
 
 }
