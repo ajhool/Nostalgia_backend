@@ -1,13 +1,7 @@
 package com.nostalgia;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import org.geojson.GeoJsonObject;
-import org.geojson.Polygon;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -44,15 +38,41 @@ public class LambdaUserRepository {
 	private final BucketManager bucketManager;
 	private static final ObjectMapper mapper = new ObjectMapper();
 
+	// Initialize design document
+		DesignDocument userEmailDoc = DesignDocument.create(
+			"user_email",
+			Arrays.asList(
+				DefaultView.create("by_token",
+					"function (doc, meta) { if (doc.type == 'User') { emit(doc._id, null); } }")//,
+//				DefaultView.create("by_email",
+//					"function (doc, meta) { if (doc.type == 'User') { emit(doc.email, null); } }"),
+//				DefaultView.create("by_name",
+//					"function (doc, meta) { if (doc.type == 'User') { emit(doc.name, null); } }"),
+//				DefaultView.create("by_token",
+//						"function (doc, meta) { if (doc.type == 'User') { emit(doc.token, null); } }"),
+//				DefaultView.create("by_account_token",
+//						"function (doc, meta) { "
+//						+ "if (doc.type == 'User') { "
+//						+ "for (i=0; i < doc.accounts.length; i++) {"
+//						+ "emit(doc.accounts[i].value, doc.accounts[i].key); "
+//						+ "} "
+//						+ "} "
+//						+ "}")
+			)
+		);
 	public LambdaUserRepository(CouchbaseConfig lambdaCouchConfig) {
 		config = lambdaCouchConfig;
 		cluster = CouchbaseCluster.create(config.host);
 		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
 		bucketManager = bucket.bucketManager();
-
+		DesignDocument existing = bucketManager.getDesignDocument("user_email");
+		if(existing == null){
+			// Insert design document into the bucket
+			bucketManager.insertDesignDocument(userEmailDoc);
+		}
 	}
 
-	public JsonDocument save(Video adding) throws Exception {
+	public JsonDocument save(User adding) throws Exception {
 
 	if(adding.get_id() == null) throw new Exception("non-null id required");
 		
@@ -83,8 +103,8 @@ public class LambdaUserRepository {
 		return inserted;  
 	}
 
-	public Video findOneById(String id) {
-		ViewQuery query = ViewQuery.from("video_standard", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
+	public User findOneByEmailToken(String token) {
+		ViewQuery query = ViewQuery.from("user_email", "by_token").inclusiveEnd(true).key(token);//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
@@ -96,31 +116,32 @@ public class LambdaUserRepository {
 			return null;
 		}
 		
-		ArrayList<Video> vids = new ArrayList<Video>();
+		ArrayList<User> users = new ArrayList<User>();
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
 		    
-		    vids.add(docToVideo(matching));
+		    users.add(docToUser(matching));
 		}
 
-		if(vids.size() > 1){
-			System.err.println("TOO MANY vids MATCHING id");
+		if(users.size() > 1){
+			System.err.println("TOO MANY users MATCHING token: " + token);
 		}
-		if(vids.size() < 1) return null; 
-		return vids.get(0);
+		if(users.size() < 1) return null; 
+		return users.get(0);
 	}
-	public static Video docToVideo(JsonDocument document) {
+	
+	public static User docToUser(JsonDocument document) {
 		JsonObject obj = document.content();
 		String objString = obj.toString();
 
-		Video newVid = null;
+		User newUser = null;
 		try {
-			newVid = mapper.readValue( objString , Video.class );
+			newUser = mapper.readValue( objString , User.class );
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//User result = mapper.convertValue(objString, User.class);
-		return newVid; 
+		return newUser; 
 	}
 }

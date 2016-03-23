@@ -28,19 +28,7 @@ import com.nostalgia.persistence.model.VideoTranscodeCallbackPojo;
 
 public class EmailConfirmFunction {
 
-	private static class Waiter extends Thread {
-		@Override
-		public void run(){
-			try {
-				Thread.sleep(80 * 1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public static void handler(InputStream inputStream, OutputStream outputStream, Context context) throws IOException{
+	public static void handler(InputStream inputStream, OutputStream outputStream, Context context) throws Exception{
 		ObjectMapper mapper = new ObjectMapper(); 
 		long start = System.currentTimeMillis(); 
 		StringWriter writer = new StringWriter();
@@ -60,20 +48,27 @@ public class EmailConfirmFunction {
 
 
 		System.out.println("parsed map is: " + parsed.toString());
-		
+
 		String code = parsed.get("code");
-		
+
 		User user = null; 
+		//init couchbase
+		LambdaUserRepository vidRepo = null;
+		String response = "";
+		
+		if(code != null){
+			vidRepo = new LambdaUserRepository(new CouchbaseConfig()); 
+			//lookup user by param token
+			user = vidRepo.findOneByEmailToken(code); 
+		} else {
+			response += "(no token supplied) "; 
+		}
 
-		//lookup user by param token
-
-
-		String response = null;
 
 		if(user == null){
-			response = "Error - invalid expired confirmation link!";
+			response += "Error - invalid expired confirmation link!";
 		} else {
-			response = "Success - thanks for validating your email"; 
+			response += "Success - thanks for validating your email"; 
 		}
 
 		System.out.println("Writing output to outputStream at relative time: " + (System.currentTimeMillis() - start) + " ms into function");
@@ -82,18 +77,13 @@ public class EmailConfirmFunction {
 		outputStream.flush();
 		outputStream.close();
 
-		System.out.println("waiting 80 sec while thread runs");
-		Waiter wait = new Waiter();
-		wait.start();
-		try {
-			wait.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println("waiter joined successfully at relative time: " + (System.currentTimeMillis() - start) + " ms into function");
-		System.out.println("quitting...");
+	
+		//modify user fields
+		user.getSettings().put("EMAIL_STATUS", "CONFIRMED_" + System.currentTimeMillis()); 
+		
+		vidRepo.save(user); 
+		
+		
 		System.out.println("function measured executon time as: " + ((double)(System.currentTimeMillis() - start) / (double) 1000) + "seconds");
 		return; 
 	}
