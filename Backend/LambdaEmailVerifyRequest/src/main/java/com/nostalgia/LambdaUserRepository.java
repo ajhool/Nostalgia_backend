@@ -1,7 +1,13 @@
 package com.nostalgia;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import org.geojson.GeoJsonObject;
+import org.geojson.Polygon;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -38,38 +44,12 @@ public class LambdaUserRepository {
 	private final BucketManager bucketManager;
 	private static final ObjectMapper mapper = new ObjectMapper();
 
-	// Initialize design document
-		DesignDocument userEmailDoc = DesignDocument.create(
-			"user_email",
-			Arrays.asList(
-				DefaultView.create("by_token",
-					"function (doc, meta) { if (doc.type == 'User') { emit(doc.settings.EMAIL_CODE, null); } }")//,
-//				DefaultView.create("by_email",
-//					"function (doc, meta) { if (doc.type == 'User') { emit(doc.email, null); } }"),
-//				DefaultView.create("by_name",
-//					"function (doc, meta) { if (doc.type == 'User') { emit(doc.name, null); } }"),
-//				DefaultView.create("by_token",
-//						"function (doc, meta) { if (doc.type == 'User') { emit(doc.token, null); } }"),
-//				DefaultView.create("by_account_token",
-//						"function (doc, meta) { "
-//						+ "if (doc.type == 'User') { "
-//						+ "for (i=0; i < doc.accounts.length; i++) {"
-//						+ "emit(doc.accounts[i].value, doc.accounts[i].key); "
-//						+ "} "
-//						+ "} "
-//						+ "}")
-			)
-		);
 	public LambdaUserRepository(CouchbaseConfig lambdaCouchConfig) {
 		config = lambdaCouchConfig;
 		cluster = CouchbaseCluster.create(config.host);
 		bucket = cluster.openBucket(config.bucketName, config.bucketPassword);
 		bucketManager = bucket.bucketManager();
-		DesignDocument existing = bucketManager.getDesignDocument("user_email");
-		if(existing == null){
-			// Insert design document into the bucket
-			bucketManager.insertDesignDocument(userEmailDoc);
-		}
+
 	}
 
 	public JsonDocument save(User adding) throws Exception {
@@ -103,8 +83,8 @@ public class LambdaUserRepository {
 		return inserted;  
 	}
 
-	public User findOneByEmailToken(String token) {
-		ViewQuery query = ViewQuery.from("user_email", "by_token").inclusiveEnd(true).key(token);//.stale(Stale.FALSE);
+	public User findOneById(String id) {
+		ViewQuery query = ViewQuery.from("user", "by_id").inclusiveEnd(true).key(id);//.stale(Stale.FALSE);
 		ViewResult result = bucket.query(query/*.key(name).limit(10)*/);
 		if(!result.success()){
 			String error = result.error().toString();
@@ -124,7 +104,7 @@ public class LambdaUserRepository {
 		}
 
 		if(users.size() > 1){
-			System.err.println("TOO MANY users MATCHING token: " + token);
+			System.err.println("TOO MANY users MATCHING id");
 		}
 		if(users.size() < 1) return null; 
 		return users.get(0);
