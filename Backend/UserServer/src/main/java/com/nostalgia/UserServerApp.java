@@ -18,6 +18,7 @@ import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.AtomicOpsClient;
 import com.nostalgia.client.IconClient;
 import com.nostalgia.client.LambdaClient;
+import com.nostalgia.client.LambdaEmailRequestClient;
 import com.nostalgia.client.S3UploadClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.persistence.model.User;
@@ -126,6 +127,19 @@ public class UserServerApp extends Application<UserAppConfig>{
 		return iCli;
 	}
 	
+	public LambdaEmailRequestClient getEmailClient(UserAppConfig config, Environment environment){
+		logger.info("creating email request client...");
+		final HttpClient httpClient = new HttpClientBuilder(environment).using(config.getHttpClientConfiguration()).build("email-client");
+		LambdaEmailRequestClient iCli = null;
+		try {
+			iCli = new LambdaEmailRequestClient(new LambdaAPIConfig(), httpClient);
+		} catch (Exception e) {
+			logger.error("ERROR creating icon client", e);
+		}
+
+		return iCli;
+	}
+	
 	public SynchClient createSynchClient(UserAppConfig config, Environment environment){
 		logger.info("creating synch server client...");
 		final Client jClient = new JerseyClientBuilder(environment).using(
@@ -157,13 +171,14 @@ public class UserServerApp extends Application<UserAppConfig>{
 		SynchClient sCli = this.createSynchClient(config, environment);
 		AtomicOpsClient atomicCli = new AtomicOpsClient(config.getAtomicsServerConfig());
 		IconClient icSvc = this.getIconService(config, environment);
+		LambdaEmailRequestClient emailCli = this.getEmailClient(config, environment); 
 		SignedCookieCreator create = new SignedCookieCreator(new AWSConfig());
 		S3UploadClient s3Cli = new S3UploadClient(new S3Config()); 
 		LambdaClient lCli = this.createLambdaClient(config, environment); 
 		environment.lifecycle().manage(s3Cli);
 		
 		UserLocationResource locRes = new UserLocationResource(userRepo, locRepo, vidRepo, sCli, collRepo);
-		UserResource userResource = new UserResource(tokenRepo, userRepo, sCli, locRes, icSvc, create, collRepo, passRepo);
+		UserResource userResource = new UserResource(emailCli, tokenRepo, userRepo, sCli, locRes, icSvc, create, collRepo, passRepo);
 		PasswordResource passRes = new PasswordResource(userRepo, passRepo);
 		VideoResource vidRes = new VideoResource(userRepo, vidRepo, locRepo, collRepo);
 		LocationAdminResource locCRUD = new LocationAdminResource(  userRepo, locRepo, vidRepo, collRepo);

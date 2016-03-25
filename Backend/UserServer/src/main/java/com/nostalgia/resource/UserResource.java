@@ -45,6 +45,7 @@ import com.nostalgia.PasswordRepository;
 import com.nostalgia.UserRepository;
 import com.nostalgia.aws.SignedCookieCreator;
 import com.nostalgia.client.IconClient;
+import com.nostalgia.client.LambdaEmailRequestClient;
 import com.nostalgia.client.SynchClient;
 import com.nostalgia.exception.RegistrationException;
 import com.nostalgia.persistence.model.LoginResponse;
@@ -92,12 +93,14 @@ public class UserResource {
 	private final MediaCollectionRepository collRepo;
 	private final PasswordRepository passRepo;
 	private AccessTokenRepository tokenRepo; 
+	private final LambdaEmailRequestClient emailCli; 
 
 
-	public UserResource(AccessTokenRepository tokenRepo, UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo, PasswordRepository passRepo) {
+	public UserResource(LambdaEmailRequestClient emailCli, AccessTokenRepository tokenRepo, UserRepository userRepo, SynchClient syncClient, UserLocationResource userLoc, IconClient icCli, SignedCookieCreator create, MediaCollectionRepository collRepo, PasswordRepository passRepo) {
 		this.userRepo = userRepo;
 		this.syncClient = syncClient;
 		this.userLocRes = userLoc; 
+		this.emailCli = emailCli; 
 		this.icCli = icCli;
 		this.creator = create;
 		this.tokenRepo = tokenRepo;
@@ -735,6 +738,8 @@ public class UserResource {
 		} finally {
 
 			if(success && loggedInUser != null){
+				String code = emailCli.requestEmailVerify(loggedInUser);
+				logger.info("code emailed to user " + loggedInUser.get_id() + ": " + code);
 				syncClient.setSyncChannels(loggedInUser);
 				userRepo.save(loggedInUser);
 			}
