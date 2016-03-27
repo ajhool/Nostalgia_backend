@@ -21,7 +21,7 @@ public class EmailRequestFunction implements RequestHandler<EmailVerifyRequestPo
 
 	private static final String verifyPrefix = "https://x51utemo2g.execute-api.us-east-1.amazonaws.com/prod/emailVerifyConfirm";
 	LambdaUserRepository userRepo = new LambdaUserRepository(new CouchbaseConfig()); 
-	
+
 	@Override
 	public String handleRequest(EmailVerifyRequestPojo input, Context context) {
 		ObjectMapper mapper = new ObjectMapper(); 
@@ -33,26 +33,41 @@ public class EmailRequestFunction implements RequestHandler<EmailVerifyRequestPo
 		}
 		String code = DigestUtils.sha1Hex(UUID.randomUUID().toString()); 
 
-		
+
 		String verifyURL = verifyPrefix + "?code=" + code; 
-		
-	
-		
-		
+
+
+
+
 		//init couchbase
-		
-		User toEmail = userRepo.findOneById(input.idOfUserToEmail); 
-		
+
+		int tries = 0;
+		int maxTries = 10;
+		User toEmail = null;
+		while(tries < maxTries){
+			toEmail = userRepo.findOneById(input.idOfUserToEmail); 
+			if(toEmail == null){
+				try {
+					Thread.sleep(1000);
+					System.out.println("no user found on try: " + tries + ", waiting one second then trying again");
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else break;
+			tries++;
+		}
+
 		if(toEmail == null){
 			System.out.println("No user found matching id: " + input.idOfUserToEmail);
 			return null;
 		}
-		
+
 		System.out.println("About to email user: " + toEmail.getName() + " with url: " + verifyURL);
 
 		boolean success = verifyEmail(toEmail, verifyURL);
-		
-		
+
+
 		if(success){
 			//update user only if the email was send successfully
 			toEmail.getSettings().put("EMAIL_CODE", code); 
@@ -66,7 +81,7 @@ public class EmailRequestFunction implements RequestHandler<EmailVerifyRequestPo
 		} else {
 			System.out.println("email failed to send, not updating user");
 		}
-		
+
 		System.out.println("function measured executon time as: " + ((double)(System.currentTimeMillis() - start) / (double) 1000));
 
 
@@ -79,20 +94,20 @@ public class EmailRequestFunction implements RequestHandler<EmailVerifyRequestPo
 		String subject = "Nostalgia Email Verification";
 		String message = "Hello - please verify your Nostalgia email by clicking on the following link: " + verifyURL; 
 		return email(to, from, subject, message); 
-		
+
 	}
 
 	private boolean email(String to, String from, String subject, String message) {
 		AwsSESEmailer sender = new AwsSESEmailer(to, from, message, subject);
 		System.out.println("email object instantiated. sending...");
 		boolean result = false;
-		
+
 		try {
-		result = sender.sendEmail();
+			result = sender.sendEmail();
 		} catch (Exception e){
 			System.err.println("exception in emailer: " + e.toString());
 		}
-		
+
 		if(!result){
 			System.out.println("sending message failed!");
 		} else {

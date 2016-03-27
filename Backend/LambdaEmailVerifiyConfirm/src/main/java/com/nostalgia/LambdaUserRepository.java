@@ -119,14 +119,17 @@ public class LambdaUserRepository {
 		ArrayList<User> users = new ArrayList<User>();
 		for (ViewRow row : result) {
 		    JsonDocument matching = row.document();
-		    
+		    System.out.println("found matching document: " + matching.id());
 		    users.add(docToUser(matching));
 		}
 
 		if(users.size() > 1){
 			System.err.println("TOO MANY users MATCHING token: " + token);
 		}
-		if(users.size() < 1) return null; 
+		if(users.size() < 1){
+			System.out.println("no users found in repo findonebyemailtoen call");
+			return null; 
+		}
 		return users.get(0);
 	}
 	

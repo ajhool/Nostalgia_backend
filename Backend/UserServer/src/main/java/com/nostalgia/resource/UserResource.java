@@ -130,7 +130,7 @@ public class UserResource {
 	public User getUser(@QueryParam("userId") String userId, @Context HttpServletRequest req) throws Exception{
 		return userRepo.findOneById(userId);
 	}
-	
+
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -324,7 +324,7 @@ public class UserResource {
 
 		syncClient.setSyncChannels(loggedIn);
 		getToken("USER", pass, loggedIn);
-		
+
 		userRepo.save(loggedIn);
 
 		long collectionsTime = System.currentTimeMillis() - time3; 
@@ -383,8 +383,10 @@ public class UserResource {
 						continue;
 					}
 					MediaCollection matching = collRepo.findOneById(nostalgiaOfficial.getCollections().get(key));
+
+					//don't require private collections to exist
 					if(matching == null){
-						logger.error("no collection found, must create this default collection!", new NullPointerException());
+						logger.error("no collection with id: " + nostalgiaOfficial.getCollections().get(key) + " found, must create this default collection!", new NullPointerException());
 						continue;
 					}
 
@@ -532,14 +534,14 @@ public class UserResource {
 				}
 			}
 			break; 
-			
+
 			default:
-			if(matching.getPassword().equalsIgnoreCase(provided)){
-				//then we have a match
-				result = match;
+				if(matching.getPassword().equalsIgnoreCase(provided)){
+					//then we have a match
+					result = match;
+					break;
+				}
 				break;
-			}
-			break;
 			}
 		}
 
@@ -548,9 +550,9 @@ public class UserResource {
 	}
 	private static List<String> allowedGrantTypes = new ArrayList<String>();
 	static {
-	allowedGrantTypes.add("USER"); 
+		allowedGrantTypes.add("USER"); 
 	}
-	
+
 	public String getToken(String grantType, String password, User gettingToken) throws Exception {
 		// Check if the grant type is allowed
 		if (!allowedGrantTypes.contains(grantType)) {
@@ -558,9 +560,9 @@ public class UserResource {
 			throw new WebApplicationException(response);
 		}
 
-		
+
 		boolean correct = passRepo.checkPassword(gettingToken, password); 
-		
+
 		if (gettingToken == null || !correct) {
 			throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
 		}
@@ -568,7 +570,7 @@ public class UserResource {
 		// User was found, generate a token and return it.
 		AccessToken accessToken = tokenRepo.generateNewAccessToken(gettingToken, new DateTime());
 		gettingToken.setToken(accessToken.getAccess_token_id().toString()); 
-		
+
 		return accessToken.getAccess_token_id().toString();
 	}
 
@@ -591,9 +593,9 @@ public class UserResource {
 		if(false /*!mpdReq.getApiKey().equalsIgnoreCase("foo")*/){
 			throw new ForbiddenException();
 		}
-		
+
 		try {
-			
+
 			User existing = null;
 			if(registering.getToken() != null){
 
@@ -651,7 +653,7 @@ public class UserResource {
 			}
 
 			//open session for user's mobile db
-			 loggedInUser = loggedIn; 
+			loggedInUser = loggedIn; 
 
 			if(loggedInUser == null){
 				throw new Exception("unable to parse user");
@@ -729,7 +731,7 @@ public class UserResource {
 				loggedInUser = userLocRes.updateSubscriptions(loggedInUser);
 			}
 			checkAndSetDefaultCollections(loggedInUser, true);
-			getToken("USER", pass, loggedIn);
+
 
 			success = true;
 		} catch (Exception e){
@@ -738,10 +740,14 @@ public class UserResource {
 		} finally {
 
 			if(success && loggedInUser != null){
+
+
+				syncClient.setSyncChannels(loggedInUser);
+				getToken("USER", pass, loggedInUser);
+				userRepo.save(loggedInUser);
+				Thread.sleep(500);
 				String code = emailCli.requestEmailVerify(loggedInUser);
 				logger.info("code emailed to user " + loggedInUser.get_id() + ": " + code);
-				syncClient.setSyncChannels(loggedInUser);
-				userRepo.save(loggedInUser);
 			}
 		}
 		return response;
@@ -749,14 +755,14 @@ public class UserResource {
 	}
 
 	private User registerNewUserApp(User registering, String pass) throws Exception{
-String salted = PasswordUtils.getSaltedHash(pass);
+		String salted = PasswordUtils.getSaltedHash(pass);
 		Password newPass = new Password(salted, null, registering.get_id(), new Date(System.currentTimeMillis()).toString());
 		newPass.setVersion(2);
-		
+
 		JsonDocument saved = passRepo.save(newPass);
 
 		registering.setPasswordPtr(saved.id());
-		
+
 		return registering; 
 	}
 
@@ -798,7 +804,7 @@ String salted = PasswordUtils.getSaltedHash(pass);
 
 		//create google account
 		added.getAccounts().put(payload.getSubject(), "google");
-	
+
 
 		return added; 
 	}

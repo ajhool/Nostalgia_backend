@@ -20,8 +20,8 @@ public class AwsSESEmailer {
 	    final String SUBJECT;
 	    
 	    // Supply your SMTP credentials below. Note that your SMTP credentials are different from your AWS credentials.
-	    static final String SMTP_USERNAME = "YOUR_SMTP_USERNAME";  // Replace with your SMTP username.
-	    static final String SMTP_PASSWORD = "YOUR_SMTP_PASSWORD";  // Replace with your SMTP password.
+	    static final String SMTP_USERNAME = "AKIAIFHFOW3RRFZACKOQ";  // Replace with your SMTP username.
+	    static final String SMTP_PASSWORD = "Ak3hkCDBkHZaq3CczgPfkhyQKW4TbL0Ps9440+RwpvqN";  // Replace with your SMTP password.
 	    
 	    // Amazon SES SMTP host name. This example uses the US West (Oregon) region.
 	    static final String HOST = "email-smtp.us-east-1.amazonaws.com";    

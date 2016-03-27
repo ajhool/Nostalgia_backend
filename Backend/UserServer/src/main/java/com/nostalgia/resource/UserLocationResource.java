@@ -87,7 +87,7 @@ private final SynchClient sync;
 		hasNewLoc.updateLocationChannels(nearbys);
 		sync.setSyncChannels(hasNewLoc);
 		
-		userRepo.save(hasNewLoc);
+		
 		return hasNewLoc; 
 	}
 
@@ -112,7 +112,7 @@ private final SynchClient sync;
 		matching = this.updateSubscriptions(matching);
 
 		
-		
+		userRepo.save(matching);
 
 		return;
 

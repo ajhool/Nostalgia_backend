@@ -55,18 +55,36 @@ public class EmailConfirmFunction {
 		//init couchbase
 		LambdaUserRepository vidRepo = null;
 		String response = "";
-		
+
 		if(code != null){
 			vidRepo = new LambdaUserRepository(new CouchbaseConfig()); 
 			//lookup user by param token
-			user = vidRepo.findOneByEmailToken(code); 
+			System.out.println("trying to find user with code:" + code);
+
+			int tries = 0;
+			int maxTries = 10;
+			while(tries < maxTries){
+				user = vidRepo.findOneByEmailToken(code); 
+				if(user == null){
+					System.out.println("no user found on try: " + tries);
+					Thread.sleep(600);
+				} else {
+					System.out.println("user found on try: " + tries);
+					break;
+				}
+				tries++;
+			}
 		} else {
 			response += "(no token supplied) "; 
 		}
 
 
 		if(user == null){
-			response += "Error - invalid expired confirmation link!";
+			response += "Error - invalid or expired confirmation link!";
+			outputStream.write(response.getBytes("UTF-8"));
+			outputStream.flush();
+			outputStream.close();
+			return;
 		} else {
 			response += "Success - thanks for validating your email"; 
 		}
@@ -77,13 +95,13 @@ public class EmailConfirmFunction {
 		outputStream.flush();
 		outputStream.close();
 
-	
+
 		//modify user fields
 		user.getSettings().put("EMAIL_STATUS", "CONFIRMED_" + System.currentTimeMillis()); 
-		
+
 		vidRepo.save(user); 
-		
-		
+
+
 		System.out.println("function measured executon time as: " + ((double)(System.currentTimeMillis() - start) / (double) 1000) + "seconds");
 		return; 
 	}

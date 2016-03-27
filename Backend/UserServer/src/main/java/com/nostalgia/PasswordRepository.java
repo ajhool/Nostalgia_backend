@@ -180,9 +180,26 @@ public class PasswordRepository {
 	}
 
 	public boolean checkPassword(User user, String password) throws Exception {
-		Password matching = findOneByOwnerId(user.get_id());
+		
+		//check for up to 5 seconds
+		int tries = 0;
+		int maxTries = 10;
+		Password matching = null;
+		while(tries < maxTries){
+			matching = findOneByOwnerId(user.get_id());
+			
+			if(matching == null){
+				Thread.sleep(500);
+			} else break;
+			tries++;
+		}
+		
 
 		User result = null; 
+		
+		if(matching == null){
+			return false;
+		}
 
 		switch(matching.getVersion()){
 		case 2:{
