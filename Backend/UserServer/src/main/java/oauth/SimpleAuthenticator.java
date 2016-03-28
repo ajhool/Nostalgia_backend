@@ -48,13 +48,13 @@ public class SimpleAuthenticator implements Authenticator<String, AccessToken> {
 		}
 
 		// Check if the last access time is not too far in the past (the access token is expired)
-		Period period = new Period(accessToken.get().getLast_access_utc(), new DateTime());
+		Period period = new Period(accessToken.get().getLast_access_utc(), System.currentTimeMillis());
 		if (period.getMinutes() > ACCESS_TOKEN_EXPIRE_TIME_MIN) {
 			return Optional.absent();
 		}
 
 		// Update the access time for the token
-		accessTokenDAO.setLastAccessTime(accessTokenUUID, new DateTime());
+		accessTokenDAO.setLastAccessTime(accessTokenUUID, System.currentTimeMillis());
 		
 		return accessToken; 
 	}

@@ -98,7 +98,7 @@ public class EmailConfirmFunction {
 
 		//modify user fields
 		user.getSettings().put("EMAIL_STATUS", "CONFIRMED_" + System.currentTimeMillis()); 
-
+		user.setEmailVerified(true);
 		vidRepo.save(user); 
 
 

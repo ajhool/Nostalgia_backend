@@ -109,7 +109,7 @@ public class AccessTokenRepository {
 		return tokens.get(0);
 	}
 
-	public AccessToken generateNewAccessToken(final User user, final DateTime dateTime) {
+	public AccessToken generateNewAccessToken(final User user, final long dateTime) {
 		AccessToken accessToken = new AccessToken(UUID.randomUUID(), user.get_id(), dateTime);
 		try {
 		save(accessToken);
@@ -141,7 +141,7 @@ public class AccessTokenRepository {
 		return inserted;
 	}
 
-	public void setLastAccessTime(final UUID accessTokenUUID, final DateTime dateTime) {
+	public void setLastAccessTime(final UUID accessTokenUUID, final long dateTime) {
 		AccessToken accessToken = findAccessTokenById(accessTokenUUID).orNull(); 
 		AccessToken updatedAccessToken = accessToken.setLast_access_utc(dateTime);
 		try {

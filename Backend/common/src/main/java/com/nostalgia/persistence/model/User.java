@@ -122,7 +122,17 @@ public class User implements Serializable {
 	private HashMap<String, String> friends;
 	private HashMap<String, String> pendingFriends; 
 	private Map<String, String> settings;
+	
+	private boolean emailVerified; 
 
+	public boolean isEmailVerified() {
+		return emailVerified;
+	}
+
+
+	public void setEmailVerified(boolean emailVerified) {
+		this.emailVerified = emailVerified;
+	}
 	private Map<String, String> accounts;
 	private Map<Long, String> userLocations;
 	private String icon;

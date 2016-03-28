@@ -1,10 +1,12 @@
 package oauth;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Wither;
 import org.joda.time.DateTime;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @Getter
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode
 @Wither
 public class AccessToken implements Serializable, Principal {
@@ -33,13 +36,18 @@ public class AccessToken implements Serializable, Principal {
 	@NotNull
 	private String user_id;
 
-	public AccessToken(UUID access_token_id, String user_id, DateTime last_access_utc) {
+	public AccessToken(){
+		super();
+	}
+	
+	public AccessToken(UUID access_token_id, String user_id, long last_access_utc) {
 		super();
 		this.access_token_id = access_token_id;
 		this.user_id = user_id;
 		this.last_access_utc = last_access_utc;
 	}
 
+	
 	public UUID getAccess_token_id() {
 		return access_token_id;
 	}
@@ -56,18 +64,18 @@ public class AccessToken implements Serializable, Principal {
 		this.user_id = user_id;
 	}
 
-	public DateTime getLast_access_utc() {
+	public long getLast_access_utc() {
 		return last_access_utc;
 	}
 
-	public AccessToken setLast_access_utc(DateTime last_access_utc) {
+	public AccessToken setLast_access_utc(long last_access_utc) {
 		this.last_access_utc = last_access_utc;
 		return this; 
 	}
 
 	@JsonProperty("last_access_utc")
 	@NotNull
-	private DateTime last_access_utc;
+	private long last_access_utc;
 
 	@Override
 	public String getName() {

@@ -568,7 +568,7 @@ public class UserResource {
 		}
 
 		// User was found, generate a token and return it.
-		AccessToken accessToken = tokenRepo.generateNewAccessToken(gettingToken, new DateTime());
+		AccessToken accessToken = tokenRepo.generateNewAccessToken(gettingToken, System.currentTimeMillis());
 		gettingToken.setToken(accessToken.getAccess_token_id().toString()); 
 
 		return accessToken.getAccess_token_id().toString();
