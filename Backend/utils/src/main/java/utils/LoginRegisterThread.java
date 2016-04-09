@@ -86,7 +86,7 @@ public class LoginRegisterThread extends Thread {
         if (mNoob == null){
             mNoob = new User();
         mNoob.setEmail(mEmail);
-        mNoob.setName(mUsername);
+        mNoob.setUsername(mUsername);
         mNoob.setToken(oAuth);
         mNoob.setLastKnownLoc(location);
     }
@@ -97,7 +97,7 @@ public class LoginRegisterThread extends Thread {
         mPassword = new String(Hex.encodeHex(DigestUtils.sha512(mPassword)));
     }
 
-    System.out.println("prefs" +"registering new user: " + mNoob.getName());
+    System.out.println("prefs" +"registering new user: " + mNoob.getUsername());
 
     ObjectMapper mapper = new ObjectMapper();
     try {

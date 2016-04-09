@@ -1,5 +1,7 @@
 package com.nostalgia.resource;
 
+import java.util.UUID;
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -57,29 +59,29 @@ public class AtomicOpsResource {
 		if(adding == null){
 			throw new NotFoundException("user not found");
 		}
-		
+
 		Object viewed = atomicCli.getContents(adding.getSeenVideosPtr());
 		String contents = viewed.toString();
-		
+
 		int index = contents.indexOf(targetId); 
 		logger.info("video id " + targetId + "found at index: " + index);
-		
+
 		if(index < 0){
 			return Integer.toString(index); 
 		}
-		
+
 		//otherwise, try nad parse out the time viewed
 		String ofInterest = contents.substring(index);
 		logger.info("ofinterest string: " + ofInterest);
 		int sentinelEnd = ofInterest.indexOf("}");
 		int sentinelStart = ofInterest.indexOf(",");
-		
+
 		String cutOutObject = ofInterest.substring(sentinelStart + 1, sentinelEnd);
 		logger.info("cut out viewed time: " + cutOutObject);
-		
+
 		return cutOutObject; 
-		
-		
+
+
 	}
 	@SuppressWarnings("unused")
 	@POST
@@ -112,10 +114,10 @@ public class AtomicOpsResource {
 
 		//increment counter on video
 		atomicCli.incrementCounter(hasCounter.getFavoriteCounterId());
-		
+
 		//a favorite is an upvote
 		upvote(videoId, "VIDEO", userid);
-		
+
 		return videoId; 
 
 	}
@@ -177,7 +179,7 @@ public class AtomicOpsResource {
 		if(hasCounter == null){
 			throw new NotFoundException("video not found");
 		}
-		
+
 		atomicCli.addPrependedItem(adding.getSeenVideosPtr(), videoId, System.currentTimeMillis());
 
 		//increment counter
@@ -306,8 +308,8 @@ public class AtomicOpsResource {
 			case("UPVOTES"):
 				idOfTracker = toGet.getUpvoteTrackerId();
 			break;
-			
-			
+
+
 			default:
 				throw new BadRequestException("invlaid field type");
 			}
@@ -333,6 +335,7 @@ public class AtomicOpsResource {
 		case("VIDEO"):
 		{
 			Video toGet = vidRepo.findOneById(idOfTargetObject);
+			toGet = createMissingTrackerIds(toGet); 
 			if(toGet == null){
 				throw new NotFoundException("video not found");
 			}
@@ -386,9 +389,63 @@ public class AtomicOpsResource {
 
 		if(idOfTracker != null){
 			Object result = atomicCli.getContents(idOfTracker); 
+			
+			if(result == null){
+				return "0";
+			}
+			
 			return result.toString(); 
 		} else return null;
 
+	}
+
+	private Video createMissingTrackerIds(Video toUpdate) throws Exception{
+		boolean updated = false;
+		String id = null;
+		id = toUpdate.getUpvoteTrackerId();
+
+		if(id == null){
+			toUpdate.setUpvoteTrackerId(UUID.randomUUID().toString());
+			updated = true;
+		}
+
+
+		id = toUpdate.getDownvoteTrackerId();
+		if(id == null){
+			toUpdate.setDownvoteTrackerId(UUID.randomUUID().toString());
+			updated = true;
+		}
+		
+		id = toUpdate.getFlagTrackerId();
+		if(id == null){
+			toUpdate.setFlagTrackerId(UUID.randomUUID().toString());
+			updated = true;
+		}
+		
+		id = toUpdate.getFavoriteCounterId(); 
+		if(id == null){
+			toUpdate.setFavoriteCounterId(UUID.randomUUID().toString());
+			updated = true;
+		}
+		
+		id = toUpdate.getSkipCounterId();
+		if(id == null){
+			toUpdate.setSkipCounterId(UUID.randomUUID().toString());
+			updated = true;
+		}
+		
+		id = toUpdate.getViewCounterId(); 
+		if(id == null){
+			toUpdate.setViewCounterId(UUID.randomUUID().toString());
+			updated = true;
+		}
+
+		if(updated){
+			vidRepo.save(toUpdate); 
+			Thread.sleep(250);
+		}
+		
+		return toUpdate;
 	}
 
 

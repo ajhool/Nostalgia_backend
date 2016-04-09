@@ -87,9 +87,9 @@ public class UserAdder {
 
 					for(Iterator<User> iter = scannedUsers.iterator(); iter.hasNext();){
 						User scanned = iter.next(); 
-						System.out.println("Checking for existence of user: " + scanned.getName());
+						System.out.println("Checking for existence of user: " + scanned.getUsername());
 						if(bucket.get(scanned.get_id()) != null){
-							System.out.println("User: " + scanned.getName() + " exists, not re-adding...");
+							System.out.println("User: " + scanned.getUsername() + " exists, not re-adding...");
 							iter.remove();
 						}
 					}
@@ -102,7 +102,7 @@ public class UserAdder {
 				for(int i = 0; i < scannedUsers.size(); i++){
 					User cur = scannedUsers.get(i);
 
-					System.out.println(i + ": USer name: " + scannedUsers.get(i).getName());
+					System.out.println(i + ": USer name: " + scannedUsers.get(i).getUsername());
 					System.out.println("      with id: " + scannedUsers.get(i).get_id());
 					System.out.println("      created on: " + scannedUsers.get(i).getDateJoined());
 					System.out.println();
@@ -141,11 +141,11 @@ public class UserAdder {
 
 			User toAdd = scannedUsers.get(asNum);
 
-			System.out.println("Adding user: " + toAdd.getName());
+			System.out.println("Adding user: " + toAdd.getUsername());
 
 			if(toAdd.getIcon() == null || toAdd.getIcon().length() < 10){
 				toAdd.setIcon(null);
-				System.out.println("no encoded icon found in json for: " + toAdd.getName());
+				System.out.println("no encoded icon found in json for: " + toAdd.getUsername());
 				System.out.print("add local icon to user? (y/[n])(answering no will cause a default icon to be generated server side): ");
 
 				String answer = scanner.nextLine();
@@ -336,7 +336,7 @@ public class UserAdder {
 
 		User example = new User();
 		example.set_id("example_id");
-		example.setName("Example User");
+		example.setUsername("Example User");
 		example.setEmail("example@example.com");
 		example.setSettings(new HashMap<String, String>());
 		example.getSettings().put("sync", "always");

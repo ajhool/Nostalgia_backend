@@ -36,7 +36,7 @@ public class User implements Serializable {
 	private String _id = UUID.randomUUID().toString();
 
 	private String seenVideosPtr = UUID.randomUUID().toString(); 
-	private String name;
+	private String username;
 
 	private String passwordPtr;
 
@@ -364,12 +364,12 @@ public class User implements Serializable {
 		this._id = _id;
 	}
 
-	public String getName() {
-		return name;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setUsername(String name) {
+		this.username = name;
 	}
 
 	public long getDateJoined() {

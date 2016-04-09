@@ -33,7 +33,7 @@ public class AuthResource {
     @Path("admin")
     public String show(@Auth AccessToken principal) {
     	User matching = userRepo.findOneByOAuthToken(principal.getAccess_token_id().toString());
-        return "Hello. User '" + matching.getName() + "' has admin privileges";
+        return "Hello. User '" + matching.getUsername() + "' has admin privileges";
     }
 
     @PermitAll
@@ -41,7 +41,7 @@ public class AuthResource {
     @Path("profile")
     public String showForEveryUserPost(@Auth AccessToken principal, String body) {
     	User matching = userRepo.findOneByOAuthToken(principal.getAccess_token_id().toString());
-        return "Hello. User '" + matching.getName() +  "' posted wit user privileges. Post body sent: " + body;
+        return "Hello. User '" + matching.getUsername() +  "' posted wit user privileges. Post body sent: " + body;
     }
     
     @PermitAll
@@ -49,7 +49,7 @@ public class AuthResource {
     @Path("params/profile")
     public String showForEveryUserGet(@Auth AccessToken principal, @QueryParam("testval") String testVal) {
     	User matching = userRepo.findOneByOAuthToken(principal.getAccess_token_id().toString());
-        return "Hello. User '" + matching.getName() +  "' has did a get with privileges, sent query testVal: " + testVal;
+        return "Hello. User '" + matching.getUsername() +  "' has did a get with privileges, sent query testVal: " + testVal;
     }
     
     @PermitAll
@@ -57,14 +57,14 @@ public class AuthResource {
     @Path("profile")
     public String showForEveryUserGetEmpty(@Auth AccessToken principal) {
     	User matching = userRepo.findOneByOAuthToken(principal.getAccess_token_id().toString());
-        return "Hello. User '" + matching.getName() +  "' has did a get with privileges, empty get.";
+        return "Hello. User '" + matching.getUsername() +  "' has did a get with privileges, empty get.";
     }
 
     @GET
     @Path("implicit-permitall")
     public String implicitPermitAllAuthorization(@Auth AccessToken principal) {
     	User matching = userRepo.findOneByOAuthToken(principal.getAccess_token_id().toString());
-        return "Hello. User '" + matching.getName() + "' has user privileges";
+        return "Hello. User '" + matching.getUsername() + "' has user privileges";
     }
 
     @GET

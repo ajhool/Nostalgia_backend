@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostalgia.SyncConfig;
 import com.nostalgia.persistence.model.SyncSessionCreateRequest;
 import com.nostalgia.persistence.model.SyncSessionCreateResponse;
+import com.nostalgia.persistence.model.SyncUser;
 import com.nostalgia.persistence.model.User;
 
 public class SynchClient {
@@ -48,15 +49,12 @@ public class SynchClient {
 		//name to be last part of id
 		String name = loggedIn.get_id().substring(loggedIn.get_id().lastIndexOf("-"));
 
-		User copy = null;
+		SyncUser copy = new SyncUser(); 
 
-		try {
-			copy = mapper.readValue(mapper.writeValueAsString(loggedIn), User.class);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+	
 		copy.setName(name);
+		copy.setTtl(30 * 24 * 3600);
+		
 		Response resp = null; 
 		try {
 			resp = sComm.target(uribuild).request().post(Entity.json(copy));

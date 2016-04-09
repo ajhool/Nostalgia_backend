@@ -54,7 +54,7 @@ public class UserRepository {
 			DefaultView.create("by_email",
 				"function (doc, meta) { if (doc.type == 'User') { emit(doc.email, null); } }"),
 			DefaultView.create("by_name",
-				"function (doc, meta) { if (doc.type == 'User') { emit(doc.name, null); } }"),
+				"function (doc, meta) { if (doc.type == 'User') { emit(doc.username, null); } }"),
 			DefaultView.create("by_token",
 					"function (doc, meta) { if (doc.type == 'User') { emit(doc.token, null); } }"),
 			DefaultView.create("by_account_token",

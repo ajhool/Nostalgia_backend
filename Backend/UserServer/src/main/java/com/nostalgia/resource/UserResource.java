@@ -189,7 +189,7 @@ public class UserResource {
 			String name = toChange.get("name"); 
 			if(name == null) throw new BadRequestException("no field named name found"); 
 
-			matching.setName(name);
+			matching.setUsername(name);
 
 			userRepo.save(matching);
 			return matching; 
@@ -505,7 +505,7 @@ public class UserResource {
 		User result = null;
 		List<User> withName = null;
 		try {
-			withName = userRepo.findByName(loggingIn.getName());
+			withName = userRepo.findByName(loggingIn.getUsername());
 		} catch (Exception e) {
 			logger.error("error finding user by name", e);
 			e.printStackTrace();
@@ -663,7 +663,7 @@ public class UserResource {
 			if(loggedInUser.getIcon() == null){
 				String image = null;
 				try {
-					image = icCli.getIcon(loggedInUser.getName());
+					image = icCli.getIcon(loggedInUser.getUsername());
 				} catch (Exception e){
 					logger.error("error getting icon", e);
 				}
@@ -798,7 +798,7 @@ public class UserResource {
 
 		User added = new User();
 		added.setEmail(email);
-		added.setName(name.replaceAll("\\s+",""));
+		added.setUsername(name.replaceAll("\\s+",""));
 		//added.setUserName(userName);
 
 
@@ -861,7 +861,7 @@ public class UserResource {
 
 		//		if(email != null) {
 		vueUser.setEmail(toSave);
-		vueUser.setName(toSave.substring(0, email.indexOf('@')));
+		vueUser.setUsername(toSave.substring(0, email.indexOf('@')));
 		//		} else {
 		//			if(name != null){
 		//				vueUser.setName(name.replaceAll("\\s+",""));

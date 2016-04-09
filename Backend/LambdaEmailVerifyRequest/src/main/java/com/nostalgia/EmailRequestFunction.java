@@ -63,7 +63,7 @@ public class EmailRequestFunction implements RequestHandler<EmailVerifyRequestPo
 			return null;
 		}
 
-		System.out.println("About to email user: " + toEmail.getName() + " with url: " + verifyURL);
+		System.out.println("About to email user: " + toEmail.getUsername() + " with url: " + verifyURL);
 
 		boolean success = verifyEmail(toEmail, verifyURL);
 
