@@ -13,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -190,7 +191,7 @@ public class AtomicOpsResource {
 	@SuppressWarnings("unused")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Path("/upvote")
 	@Timed
 	public String upvote(String idOfObjectToUpvote, @QueryParam("type") String type, @QueryParam("userid")String userid) throws Exception{
@@ -294,7 +295,7 @@ public class AtomicOpsResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/getval/{objtype}")
 	@Timed
-	public String getInfo(@PathParam("objtype")String objType, @QueryParam("type")String typeToGet, @QueryParam("id") String idOfTargetObject) throws Exception{
+	public String getInfo(@QueryParam("userId")String userid/*replace with auth user later*/, @PathParam("objtype")String objType, @QueryParam("type")String typeToGet, @QueryParam("id") String idOfTargetObject) throws Exception{
 		//supports UPVOTES, DOWNVOTES, FLAGS, FAVORITES, VIEWS, SKIPS
 		String idOfTracker = null;
 		switch(objType){
@@ -391,14 +392,59 @@ public class AtomicOpsResource {
 			Object result = atomicCli.getContents(idOfTracker); 
 			
 			if(result == null){
-				return "0";
+				JSONObject toRet = new JSONObject();
+				toRet.put("numerical", 0);
+				return toRet.toString();
 			}
 			
-			return result.toString(); 
+			JSONObject toRet = new JSONObject();
+			//get users vote
+			String vote = getVoteFor(userid, result.toString());
+			if(vote != null){
+			toRet.put("vote", vote);
+			} 
+			//populate boolean field if voted
+			if(vote != null){
+				toRet.put("voted", true);
+			} else {
+				toRet.put("voted", false);
+			}
+			
+			//get total number of votes
+			long totalVotes = computeNumerical(result.toString()); 
+			toRet.put("numerical", totalVotes );
+			
+			return toRet.toString(); 
 		} else return null;
 
 	}
+	
+	private String getVoteFor(String userId, String overall){
+		int start = overall.indexOf("{" + userId); 
+		if (start < 0) return null; 
+		String extracted = overall.substring(start + 1, overall.indexOf("}", start));
+		return extracted; 
+	}
+	 private long countOccurencesOf(char c, String rawResult) {
+	        long result = 0;
+	        for(int i = 0 ; i < rawResult.length(); i++){
+	            if(rawResult.charAt(i) == c){
+	                result ++;
+	            }
+	        }
+	        return result;
+	    }
 
+	 private long computeNumerical(String rawResult) {
+		 long numerical =0;
+	        try {
+	            numerical = Long.parseLong(rawResult);
+	        } catch (NumberFormatException e){
+	            logger.info( "non numerical answer, populating using bracketrs", e);
+	            numerical = countOccurencesOf('{', rawResult);
+	        }
+	        return numerical; 
+	    }
 	private Video createMissingTrackerIds(Video toUpdate) throws Exception{
 		boolean updated = false;
 		String id = null;

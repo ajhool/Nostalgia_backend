@@ -45,21 +45,7 @@ public class User implements Serializable {
 	//list of channels user has access to
 	private List<String> admin_channels;
 	private List<String> admin_roles;
-	public Set<String> silentSubscribeToLocations(Collection<KnownLocation> values) {
-
-        for(KnownLocation toSubTo : values){
-            if(!silentSubscriptions.contains(toSubTo.get_id())){
-                //add to set
-                silentSubscriptions.add(toSubTo.get_id());
-
-                //add to admin chanells
-                admin_channels.add(toSubTo.getChannelName());
-
-            }
-        }
-
-        return silentSubscriptions;
-    }
+	
 	private HashMap<String, String> locationHistory; 
 
 	private Map<String, String> streamTokens; 
@@ -67,14 +53,7 @@ public class User implements Serializable {
 	//channel -> time 
 	private Map<String, String> video_channels; 
 
-	public Map<String, String> getVideo_channels() {
-		return video_channels;
-	}
 
-
-	public void setVideo_channels(Map<String, String> video_channels) {
-		this.video_channels = video_channels;
-	}
 	//channels that this document itself is in
 	private List<String> channels; 
 
@@ -98,6 +77,61 @@ public class User implements Serializable {
 
 	private List<Account> accountsList; 
 
+	
+	private HashSet<String> user_channels; 
+
+	private HashMap<String, String> friends;
+	private HashMap<String, String> pendingFriends; 
+	private Map<String, String> settings;
+	
+	private boolean emailVerified; 
+	
+	private Map<String, String> accounts;
+	
+	//          locId -> time
+	private Map<String, String> userLocations;
+	private String icon;
+
+	private List<String> authorizedDevices;
+	private String token;
+
+	private String syncToken;
+
+	private List<String> createdLocations;
+
+	private HashSet<String> silentSubscriptions;
+	
+	//these are updated using atomic prepend
+    private String upvoteTrackerId = UUID.randomUUID().toString();
+    
+	public Map<String, String> getVideo_channels() {
+		return video_channels;
+	}
+
+
+	public void setVideo_channels(Map<String, String> video_channels) {
+		this.video_channels = video_channels;
+	}
+	
+	@JsonIgnore
+	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
+		if( video_channels == null) return null;
+		HashSet<String> removed = new HashSet<String>();
+		for(String id : video_channels.keySet()){
+			if(Long.parseLong(video_channels.get(id)) < unixTimeStamp){
+				//purge
+				this.video_channels.remove(id);
+				admin_channels.remove(id);
+				removed.add(id);
+			}
+		}
+		return removed;
+	}
+	
+	public boolean isEmailVerified() {
+		return emailVerified;
+	}
+	
 	public Set<String> getLocation_channels() {
 		return location_channels;
 	}
@@ -117,52 +151,27 @@ public class User implements Serializable {
 		this.user_channels = user_channels;
 	}
 
-	private HashSet<String> user_channels; 
-
-	private HashMap<String, String> friends;
-	private HashMap<String, String> pendingFriends; 
-	private Map<String, String> settings;
-	
-	private boolean emailVerified; 
-
-	public boolean isEmailVerified() {
-		return emailVerified;
-	}
-
 
 	public void setEmailVerified(boolean emailVerified) {
 		this.emailVerified = emailVerified;
 	}
-	private Map<String, String> accounts;
-	private Map<Long, String> userLocations;
-	private String icon;
-
-	private List<String> authorizedDevices;
-	private String token;
-
-	private String syncToken;
-
-	private List<String> createdLocations;
-
-	private HashSet<String> silentSubscriptions;
 	
-	//these are updated using atomic prepend
-    private String upvoteTrackerId = UUID.randomUUID().toString();
-    
 	@JsonIgnore
-	public synchronized HashSet<String> purgeOlderThan(long unixTimeStamp){
-		if( video_channels == null) return null;
-		HashSet<String> removed = new HashSet<String>();
-		for(String id : video_channels.keySet()){
-			if(Long.parseLong(video_channels.get(id)) < unixTimeStamp){
-				//purge
-				this.video_channels.remove(id);
-				admin_channels.remove(id);
-				removed.add(id);
-			}
-		}
-		return removed;
-	}
+	public Set<String> silentSubscribeToLocations(Collection<KnownLocation> values) {
+
+        for(KnownLocation toSubTo : values){
+            if(!silentSubscriptions.contains(toSubTo.get_id())){
+                //add to set
+                silentSubscriptions.add(toSubTo.get_id());
+
+                //add to admin chanells
+                admin_channels.add(toSubTo.getChannelName());
+
+            }
+        }
+
+        return silentSubscriptions;
+    }
 
 	@JsonIgnore
 	public synchronized Map<String, String> updateVideoChannels(Set<String> videosToSubscribeTo){
@@ -327,7 +336,7 @@ public class User implements Serializable {
 
 	public User(){
 		if(this.userLocations == null){
-			userLocations = new HashMap<Long, String>();
+			userLocations = new HashMap<String, String>();
 		}
 
 		if(this.locationHistory== null){
@@ -528,12 +537,12 @@ public class User implements Serializable {
 	}
 
 
-	public Map<Long, String> getUserLocations() {
+	public Map<String, String> getUserLocations() {
 		return userLocations;
 	}
 
 
-	public void setUserLocations(Map<Long, String> userLocations) {
+	public void setUserLocations(Map<String, String> userLocations) {
 		this.userLocations = userLocations;
 	}
 
@@ -542,17 +551,17 @@ public class User implements Serializable {
 	public synchronized Collection<String> subscribeToLocation(String loc_id) {
 		//check for duplicate
 		if(this.userLocations == null){
-			userLocations = new HashMap<Long, String>();
+			userLocations = new HashMap<String, String>();
 		}
 
-		Collection<String> existing = userLocations.values();
-		if(existing.contains(loc_id)){
+		
+		if(userLocations.containsKey(loc_id)){
 			//no changes needed
-			return existing; 
+			return userLocations.keySet(); 
 		}
 
 		//add in location + time it was added
-		userLocations.put(System.currentTimeMillis(), loc_id);
+		userLocations.put(loc_id, Long.toString(System.currentTimeMillis()) );
 
 		int end = loc_id.indexOf('-');
 		String channelName = loc_id.substring(0, end);
@@ -588,24 +597,24 @@ public class User implements Serializable {
 	public Collection<String> unsubscribeFromLocation(String idToRemove) {
 
 		if(this.userLocations == null){
-			userLocations = new HashMap<Long, String>();
+			userLocations = new HashMap<String, String>();
 		}
 
-		Collection<String> existing = userLocations.values();
-		if(!existing.contains(idToRemove)){
-			//no changes needed
-			return existing; 
+//		//add in location + time it was added
+//		Iterator<Entry<Long, String>> allSubs = userLocations.entrySet().iterator(); 
+//
+//		while(allSubs.hasNext()){
+//			Entry<Long, String> cur = allSubs.next();
+//			if(cur.getValue().equals(idToRemove)){
+//				allSubs.remove();
+//			}
+//		}
+		
+		String returned = userLocations.remove(idToRemove);
+		if(returned == null){
+			return userLocations.values();
 		}
-
-		//add in location + time it was added
-		Iterator<Entry<Long, String>> allSubs = userLocations.entrySet().iterator(); 
-
-		while(allSubs.hasNext()){
-			Entry<Long, String> cur = allSubs.next();
-			if(cur.getValue().equals(idToRemove)){
-				allSubs.remove();
-			}
-		}
+		
 
 		int end = idToRemove.indexOf('-');
 		String channelName = idToRemove.substring(0, end);

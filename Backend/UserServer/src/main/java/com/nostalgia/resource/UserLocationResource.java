@@ -87,8 +87,19 @@ private final SynchClient sync;
 		hasNewLoc.updateLocationChannels(nearbys);
 		sync.setSyncChannels(hasNewLoc);
 		
+		updateLocationSubscriptions(hasNewLoc, nearbys); 
+		
 		
 		return hasNewLoc; 
+	}
+
+	private void updateLocationSubscriptions(User hasNewLoc, HashMap<String, KnownLocation> nearbys) {
+		//loop through the nearbys, adding them to the subscribed locations if they do not exisit in it yet
+		
+		for(KnownLocation nearby : nearbys.values()){
+			hasNewLoc.subscribeToLocation(nearby.get_id()); 
+		}
+		
 	}
 
 	@SuppressWarnings("unused")
